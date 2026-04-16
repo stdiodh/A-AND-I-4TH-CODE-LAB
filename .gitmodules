@@ -3,3 +3,7 @@
 	path = spring-boot-rest-crud-lab
 	url = https://github.com/stdiodh/spring-boot-rest-crud-lab.git
 	branch = implementation
+[submodule "aandi-prerequisite-bootcamp"]
+	path = aandi-prerequisite-bootcamp
+	url = https://github.com/stdiodh/aandi-prerequisite-bootcamp.git
+	branch = implementation

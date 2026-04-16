@@ -74,13 +74,13 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 ## 현재 작업 상태
 
 - Current sequence: `00-prerequisite-bootcamp`
-- Status: `REVIEW`
-- Last completed sequence: `none`
+- Status: `DONE`
+- Last completed sequence: `00-prerequisite-bootcamp`
 - Next sequence: `01-request-response-and-memory-crud`
 
 | Sequence | Status | Repo | Docs Ready | Code Ready | Review |
 | --- | --- | --- | --- | --- | --- |
-| 00 | REVIEW | `.repo-builds/aandi-prerequisite-bootcamp` | Y | Y | N |
+| 00 | DONE | `aandi-prerequisite-bootcamp` | Y | Y | Y |
 | 01 | BLOCKED | - | N | N | N |
 | 02 | BLOCKED | - | N | N | N |
 | 03 | BLOCKED | - | N | N | N |
@@ -186,6 +186,7 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 
 현재 연결된 토픽 레포:
 
+- `aandi-prerequisite-bootcamp`: 시퀀스 00 선수지식 부트캠프 레포, `implementation` / `answer` 브랜치 운영
 - `spring-boot-rest-crud-lab`: 시퀀스 01 실습 레포, `implementation` / `answer` 브랜치 운영
 
 ## 표준 작업 프로토콜
