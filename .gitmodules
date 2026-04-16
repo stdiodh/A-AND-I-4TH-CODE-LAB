@@ -1,6 +1,5 @@
-[submodule "rest-crud"]
-	path = rest-crud
-	url = https://github.com/stdiodh/rest-crud
-[submodule "rest-crud-answer"]
-	path = rest-crud-answer
-	url = https://github.com/stdiodh/rest-crud-answer
+
+[submodule "spring-boot-rest-crud-lab"]
+	path = spring-boot-rest-crud-lab
+	url = https://github.com/stdiodh/spring-boot-rest-crud-lab.git
+	branch = implementation
