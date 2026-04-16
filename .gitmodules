@@ -7,3 +7,7 @@
 	path = aandi-prerequisite-bootcamp
 	url = https://github.com/stdiodh/aandi-prerequisite-bootcamp.git
 	branch = implementation
+[submodule "spring-boot-db-access-lab"]
+	path = spring-boot-db-access-lab
+	url = https://github.com/stdiodh/spring-boot-db-access-lab.git
+	branch = implementation
