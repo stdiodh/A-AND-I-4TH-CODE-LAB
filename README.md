@@ -112,10 +112,10 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 
 ## 현재 작업 상태
 
-- Current sequence: `04-authentication-and-jwt`
+- Current sequence: `05-external-authentication-or-email-verification`
 - Status: `DONE`
-- Last completed sequence: `04-authentication-and-jwt`
-- Next sequence: `05-external-authentication-or-email-verification`
+- Last completed sequence: `05-external-authentication-or-email-verification`
+- Next sequence: `06-testing-and-verification`
 
 | Sequence | Status | Repo | Docs Ready | Code Ready | Review |
 | --- | --- | --- | --- | --- | --- |
@@ -124,7 +124,7 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 | 02 | DONE | `spring-boot-db-access-lab` | Y | Y | Y |
 | 03 | DONE | `spring-boot-db-access-lab` | Y | Y | Y |
 | 04 | DONE | `spring-boot-db-access-lab` | Y | Y | Y |
-| 05 | BLOCKED | - | N | N | N |
+| 05 | DONE | `spring-boot-db-access-lab` | Y | Y | Y |
 | 06 | BLOCKED | - | N | N | N |
 | 07 | BLOCKED | - | N | N | N |
 | 08 | BLOCKED | - | N | N | N |
@@ -243,7 +243,7 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 
 - `aandi-prerequisite-bootcamp`: 시퀀스 00 선수지식 부트캠프 레포
 - `spring-boot-rest-crud-lab`: 시퀀스 01 실습 레포
-- `spring-boot-db-access-lab`: 시퀀스 02~04 실습 레포, `main` 안내 브랜치와 `02~04` 시퀀스 브랜치 운영
+- `spring-boot-db-access-lab`: 시퀀스 02~05 실습 레포, `main` 안내 브랜치와 `02~05` 시퀀스 브랜치 운영
 
 ## 표준 작업 프로토콜
 
