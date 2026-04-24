@@ -20,11 +20,13 @@ Codex는 항상 아래 순서로 문서를 읽습니다.
 2. `docs/curriculum/a-and-i-backend-curriculum-master-plan.md`
 3. `docs/curriculum/a-and-i-backend-implementation-scope-plan.md`
 4. `docs/curriculum/codex-implementation-playbook.md`
-5. `docs/guides/implementation-writing-guide.md`
-6. `docs/guides/theory-writing-guide.md`
-7. `docs/guides/checklist-writing-guide.md`
-8. `docs/sequences/0X-...md`
-9. 그 다음 해당 토픽 레포의 `README.md`, `docs/theory.md`, `docs/implementation.md`, starter 코드
+5. `docs/curriculum/sequence-execution-protocol.md`
+6. `docs/guides/implementation-writing-guide.md`
+7. `docs/guides/theory-writing-guide.md`
+8. `docs/guides/theory-doc-template.md`
+9. `docs/guides/checklist-writing-guide.md`
+10. `docs/sequences/0X-...md`
+11. 그 다음 해당 토픽 레포의 `README.md`, `docs/theory.md`, `docs/implementation.md`, `docs/checklist.md`, starter 코드
 
 즉, Codex는 아래 순서로만 움직입니다.
 
@@ -35,6 +37,29 @@ Codex는 항상 아래 순서로 문서를 읽습니다.
 5. 해당 도메인 문서 확인
 6. 실제 레포 구조와 starter 코드 확인
 7. TODO 설계 및 문서/코드 생성
+
+---
+
+## 문서 종류별 강제 기준
+
+Codex는 문서 종류에 따라 아래 가이드를 반드시 따라야 합니다.
+
+- `theory.md`
+  - `docs/guides/theory-doc-template.md`
+  - `docs/guides/theory-writing-guide.md`
+- `implementation.md`
+  - `docs/guides/implementation-writing-guide.md`
+- `checklist.md`
+  - `docs/guides/checklist-writing-guide.md`
+- 전체 범위와 구조 판단
+  - `docs/curriculum/a-and-i-backend-curriculum-master-plan.md`
+  - `docs/curriculum/a-and-i-backend-implementation-scope-plan.md`
+  - `docs/sequences/0X-...md`
+- 시퀀스 작업 순서
+  - `docs/curriculum/sequence-execution-protocol.md`
+
+즉, Codex는 문서를 쓸 때 감으로 쓰지 않고,
+"어떤 문서를 쓰는가"에 따라 먼저 참조 문서를 확인해야 합니다.
 
 ---
 
@@ -59,6 +84,48 @@ Codex는 항상 현재 시퀀스 하나만 작업합니다.
 - 다음 시퀀스를 미리 만들지 않습니다.
 - 사용자 승인 없이 다음 시퀀스로 넘어가지 않습니다.
 - 현재 시퀀스와 무관한 파일을 함께 생성하지 않습니다.
+
+### 1-2. 주제가 분리되면 레포도 분리합니다
+
+Codex는 학습 주제가 분명히 갈라질 때,
+하나의 레포 안에서 선택형으로 억지로 묶지 않습니다.
+
+예:
+
+- OAuth2 로그인
+- Email Verification
+
+이처럼 별도 트랙으로 운영하는 편이 더 자연스러운 주제는
+별도 레포로 분리하는 것을 기본 원칙으로 봅니다.
+
+### 1-3. 시퀀스 브랜치는 `NN-implementation`, `NN-answer`로 운영합니다
+
+Codex는 시퀀스 작업 시 아래 브랜치 구조를 기본으로 사용합니다.
+
+- `NN-implementation`
+- `NN-answer`
+
+예:
+
+- `02-implementation`, `02-answer`
+- `03-implementation`, `03-answer`
+
+즉, 단일 `implementation`, `answer` 브랜치를 계속 덮어쓰는 방식으로 운영하지 않습니다.
+
+### 1-4. 각 서브모듈의 `main` 브랜치는 안내 브랜치입니다
+
+Codex는 각 서브모듈 레포의 `main` 브랜치를
+실습 starter 브랜치가 아니라 안내 브랜치로 유지해야 합니다.
+
+`main`에는 최소한 아래가 있어야 합니다.
+
+- 레포 소개
+- 문서 목록
+- 브랜치 안내
+- 학생 시작 브랜치 / 강사 비교 브랜치 안내
+
+즉, 사용자가 `main`에 들어오면
+"이 레포는 무엇이고 어디로 가야 하는가"를 바로 이해할 수 있어야 합니다.
 
 ### 2. 학생 구현 범위는 핵심 흐름만 남깁니다
 
@@ -109,6 +176,35 @@ Codex는 파일을 만들기 전에 아래를 먼저 짧게 정리합니다.
 - 생성할 파일 목록
 - 이번 턴에서 만들지 않을 범위
 
+### 3-2. 큰 작업은 계획서를 먼저 보여줍니다
+
+Codex는 아래 조건 중 하나라도 해당하면
+바로 구현하지 않고 먼저 계획서를 사용자에게 보여줘야 합니다.
+
+- 브랜치나 레포 구조를 다시 짜야 할 때
+- 여러 문서를 함께 고쳐야 할 때
+- 문서와 코드가 동시에 흔들릴 때
+- 시퀀스 전체 구조를 다시 잡아야 할 때
+
+계획서에는 최소한 아래가 들어가야 합니다.
+
+1. 현재 문제 진단
+2. 수정 범위
+3. 작업 순서
+4. 이번 턴에서 바꾸는 것 / 바꾸지 않는 것
+
+### 3-3. 이해가 불충분하면 질문을 먼저 합니다
+
+Codex는 사용자 요구를 정확히 이해하지 못했다고 판단되면
+추측으로 진행하지 않고 질문을 먼저 해야 합니다.
+
+질문이 필요한 대표 상황:
+
+- 어떤 시퀀스를 고정 기준으로 삼을지 모를 때
+- 레포를 분리할지 기존 레포를 재사용할지 애매할 때
+- 문서 목적이 학생용인지 강사용인지 불분명할 때
+- 현재 턴에서 코드까지 바꿀지 문서만 바꿀지 불분명할 때
+
 ### 4. 문서는 주차명이 아니라 도메인 이름으로 씁니다
 
 중앙 문서와 구현 설계 문서는 `Week 13` 같은 제목을 쓰지 않습니다.
@@ -131,7 +227,33 @@ Codex는 이 둘 중 하나만 작성하면 안 됩니다.
 
 - 구현 문서는 결과보다 순서를 먼저 보여줘야 합니다.
 - 이론 문서는 정의보다 문제 상황과 코드 연결을 먼저 보여줘야 합니다.
+- 이론 문서는 반드시 템플릿 구조를 확인한 뒤 작성합니다.
 - 두 문서의 문장 구조와 목적을 섞지 않습니다.
+
+### 7. 브랜치가 바뀌면 docs도 반드시 바뀌어야 합니다
+
+Codex는 아래를 반드시 지켜야 합니다.
+
+- `02` 브랜치의 `docs/theory.md`와 `03` 브랜치의 `docs/theory.md`는 같으면 안 됩니다.
+- `NN-implementation`과 `NN-answer`는 같은 시퀀스를 설명해야 합니다.
+- 이전 시퀀스 문서를 복사해두고 제목만 바꾸는 식으로 끝내면 안 됩니다.
+
+즉, 시퀀스 브랜치가 바뀌면
+`README.md`, `docs/theory.md`, `docs/implementation.md`, `docs/answer-guide.md`, `docs/checklist.md`, `docs/assets.md`도 함께 현재 시퀀스에 맞게 교체되어야 합니다.
+
+### 8. `main` 브랜치도 문서 유지 대상입니다
+
+Codex는 시퀀스 브랜치만 보지 않고,
+서브모듈 `main` 브랜치의 안내 문서도 함께 유지해야 합니다.
+
+권장 구성:
+
+- `README.md`
+- `docs/branch-guide.md`
+- `docs/sequence-map.md`
+
+이 문서는 시퀀스 문서와 다른 역할을 하며,
+레포 전체를 요약하고 브랜치 진입 경로를 설명해야 합니다.
 
 ---
 

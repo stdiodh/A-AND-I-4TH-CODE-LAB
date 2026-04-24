@@ -36,6 +36,32 @@ Codex는 항상 이 저장소 루트를 현재 작업 기준점으로 보고 문
 특히 시퀀스 순서와 범위 판단의 최종 기준은 `docs/sequences`입니다.
 중앙 문서에 없는 범위를 Codex가 임의로 추가하면 안 됩니다.
 
+## 작업 전 필독 문서
+
+Codex는 작업 전에 아래 문서를 반드시 읽어야 합니다.
+이 순서를 건너뛰면 안 됩니다.
+
+1. `README.md`
+2. `docs/curriculum/a-and-i-backend-curriculum-master-plan.md`
+3. `docs/curriculum/a-and-i-backend-implementation-scope-plan.md`
+4. `docs/curriculum/codex-implementation-playbook.md`
+5. `docs/curriculum/sequence-execution-protocol.md`
+6. `docs/guides/implementation-writing-guide.md`
+7. `docs/guides/theory-writing-guide.md`
+8. `docs/guides/theory-doc-template.md`
+9. `docs/guides/checklist-writing-guide.md`
+10. 현재 작업 대상인 `docs/sequences/0X-...md`
+11. 해당 토픽 레포의 `README.md`, `docs/theory.md`, `docs/implementation.md`, `docs/checklist.md`, starter 코드
+
+문서 종류별 강제 기준은 아래와 같습니다.
+
+- `theory.md`: `docs/guides/theory-doc-template.md`, `docs/guides/theory-writing-guide.md`를 반드시 따릅니다.
+- `implementation.md`: `docs/guides/implementation-writing-guide.md`를 반드시 따릅니다.
+- `checklist.md`: `docs/guides/checklist-writing-guide.md`를 반드시 따릅니다.
+- 전체 구조와 범위 판단: `docs/curriculum/*`, `docs/sequences/*`를 반드시 따릅니다.
+- 시퀀스 실행 순서와 브랜치/레포 규칙: `docs/curriculum/sequence-execution-protocol.md`를 반드시 따릅니다.
+- 서브모듈 대표 브랜치 운영 규칙: 각 서브모듈의 `main` 브랜치는 레포 요약/문서 안내 브랜치로 유지합니다.
+
 ## Codex 작업 원칙
 
 Codex는 아래 원칙을 반드시 지켜야 합니다.
@@ -51,6 +77,11 @@ Codex는 아래 원칙을 반드시 지켜야 합니다.
 9. 체크리스트는 `docs/guides/checklist-writing-guide.md`를 따릅니다.
 10. 상세 이론은 중앙 `docs`에 다시 쓰지 않고 각 토픽 레포 내부 문서에서만 작성합니다.
 11. 생성 후에는 README 링크, 진행 상태, 체크리스트 반영 여부를 다시 점검합니다.
+12. 문서 기준이 모호하거나 사용자 의도를 정확히 이해하지 못하면 추측하지 말고 질문합니다.
+13. 작업 범위가 크거나 여러 단계로 나뉘면, 실행 전에 계획서를 먼저 보여줍니다.
+14. 학습 주제가 분명히 갈라지면 같은 레포에서 선택형으로 섞지 않고 별도 레포로 분리합니다.
+15. 현재 시퀀스 문서에서 벗어나는 구현, 문서, 예시를 임의로 추가하지 않습니다.
+16. 각 서브모듈 레포의 `main` 브랜치에는 레포 소개, 문서 안내, 브랜치 안내가 있어야 합니다.
 
 ## 문서 참조 순서
 
@@ -59,32 +90,40 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 1. `docs/curriculum/a-and-i-backend-curriculum-master-plan.md`
 2. `docs/curriculum/a-and-i-backend-implementation-scope-plan.md`
 3. `docs/curriculum/codex-implementation-playbook.md`
-4. `docs/guides/implementation-writing-guide.md`
-5. `docs/guides/theory-writing-guide.md`
-6. `docs/guides/checklist-writing-guide.md`
-7. `docs/sequences/0X-...md`
-8. 해당 토픽 레포의 `README.md`, `docs/theory.md`, `docs/implementation.md`, starter 코드
+4. `docs/curriculum/sequence-execution-protocol.md`
+5. `docs/guides/implementation-writing-guide.md`
+6. `docs/guides/theory-writing-guide.md`
+7. `docs/guides/theory-doc-template.md`
+8. `docs/guides/checklist-writing-guide.md`
+9. `docs/sequences/0X-...md`
+10. 해당 토픽 레포의 `README.md`, `docs/theory.md`, `docs/implementation.md`, `docs/checklist.md`, starter 코드
 
 추가 규칙도 함께 고정합니다.
 
 - `implementation.md`를 쓸 때는 결과보다 순서를 먼저 보여줘야 합니다.
 - `theory.md`를 쓸 때는 정의보다 문제 상황과 코드 연결을 먼저 보여줘야 합니다.
+- `checklist.md`를 쓸 때는 학생용과 강사용을 반드시 분리해야 합니다.
 - 문서 작성 중 범위 판단이 흔들리면 시퀀스 문서로 다시 돌아갑니다.
+- 큰 작업은 바로 구현에 들어가지 않고 계획서부터 사용자에게 보여줘야 합니다.
+- Codex가 사용자 요청을 제대로 이해하지 못했다고 판단되면 먼저 질문해야 합니다.
+- 시퀀스 작업 순서는 `docs/curriculum/sequence-execution-protocol.md`를 기준으로 고정합니다.
+- 각 브랜치의 `docs/*`는 반드시 그 시퀀스 주제에 맞게 바뀌어야 하며, 이전 시퀀스 문서를 그대로 재사용하면 안 됩니다.
+- 각 서브모듈의 `main` 브랜치는 실습 브랜치가 아니라 안내 브랜치이며, 학생/강사가 들어와도 어떤 브랜치로 가야 하는지 바로 알 수 있어야 합니다.
 
 ## 현재 작업 상태
 
-- Current sequence: `02-persistence-and-layered-architecture`
+- Current sequence: `04-authentication-and-jwt`
 - Status: `DONE`
-- Last completed sequence: `02-persistence-and-layered-architecture`
-- Next sequence: `03-safe-request-handling`
+- Last completed sequence: `04-authentication-and-jwt`
+- Next sequence: `05-external-authentication-or-email-verification`
 
 | Sequence | Status | Repo | Docs Ready | Code Ready | Review |
 | --- | --- | --- | --- | --- | --- |
 | 00 | DONE | `aandi-prerequisite-bootcamp` | Y | Y | Y |
 | 01 | DONE | `spring-boot-rest-crud-lab` | Y | Y | Y |
 | 02 | DONE | `spring-boot-db-access-lab` | Y | Y | Y |
-| 03 | BLOCKED | - | N | N | N |
-| 04 | BLOCKED | - | N | N | N |
+| 03 | DONE | `spring-boot-db-access-lab` | Y | Y | Y |
+| 04 | DONE | `spring-boot-db-access-lab` | Y | Y | Y |
 | 05 | BLOCKED | - | N | N | N |
 | 06 | BLOCKED | - | N | N | N |
 | 07 | BLOCKED | - | N | N | N |
@@ -132,10 +171,24 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 - `sequence/01-request-response-and-memory-crud`
 - `sequence/02-persistence-and-layered-architecture`
 
-각 토픽 레포는 기본적으로 아래 브랜치 구조를 유지합니다.
+각 토픽 레포는 시퀀스별로 아래 브랜치 구조를 유지합니다.
 
-- `implementation`
-- `answer`
+- `main`
+- `NN-implementation`
+- `NN-answer`
+
+예:
+
+- `main`
+- `02-implementation`, `02-answer`
+- `03-implementation`, `03-answer`
+
+여기서 `main`은 아래 역할을 맡습니다.
+
+- 이 레포가 어떤 시퀀스를 담는지 요약
+- 어떤 문서가 있는지 안내
+- 학생이 시작할 브랜치와 강사가 비교할 브랜치 안내
+- 시퀀스 맵 또는 브랜치 맵 제공
 
 ## 토픽 레포 운영 전략
 
@@ -155,6 +208,7 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 아래 조건이면 새 토픽 레포를 만드는 편이 좋습니다.
 
 - 학습 도메인이 분명히 달라질 때
+- 선택형 주제가 아니라 별도 트랙으로 운영해야 할 때
 - starter 구조와 answer 구조가 크게 달라질 때
 - 독립 실습으로 운영하는 편이 더 자연스러울 때
 
@@ -178,31 +232,33 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 
 1. 로컬에서 토픽 레포를 정비합니다.
 2. GitHub 원격 레포를 생성하거나 기존 레포를 확인합니다.
-3. `implementation` / `answer` 브랜치를 푸시합니다.
-4. 중앙 허브 루트에 같은 이름의 디렉터리로 서브모듈을 연결합니다.
-5. 중앙 README 상태 표에 연결 결과를 반영합니다.
+3. `main` 브랜치에 레포 요약과 브랜치 안내를 구성합니다.
+4. `NN-implementation` / `NN-answer` 브랜치를 푸시합니다.
+5. 중앙 허브 루트에 같은 이름의 디렉터리로 서브모듈을 연결합니다.
+6. 중앙 README 상태 표에 연결 결과를 반영합니다.
 
 즉, 중앙 허브는 토픽 레포의 소유자이자 연결 지점이고, 실제 실습 산출물은 각 토픽 레포가 맡습니다.
 
 현재 연결된 토픽 레포:
 
-- `aandi-prerequisite-bootcamp`: 시퀀스 00 선수지식 부트캠프 레포, `implementation` / `answer` 브랜치 운영
-- `spring-boot-rest-crud-lab`: 시퀀스 01 실습 레포, `implementation` / `answer` 브랜치 운영
-- `spring-boot-db-access-lab`: 시퀀스 02 실습 레포, `implementation` / `answer` 브랜치 운영
+- `aandi-prerequisite-bootcamp`: 시퀀스 00 선수지식 부트캠프 레포
+- `spring-boot-rest-crud-lab`: 시퀀스 01 실습 레포
+- `spring-boot-db-access-lab`: 시퀀스 02~04 실습 레포, `main` 안내 브랜치와 `02~04` 시퀀스 브랜치 운영
 
 ## 표준 작업 프로토콜
 
 매 시퀀스 작업은 아래 순서로 진행합니다.
 
 1. 루트 `README.md`에서 현재 시퀀스를 확인합니다.
-2. 해당 시퀀스 문서를 읽고 이번 범위를 확정합니다.
-3. 이번 작업 범위와 목표 산출물을 짧게 요약합니다.
-4. 생성할 파일 목록을 먼저 정리합니다.
-5. 문서를 생성합니다.
-6. starter 코드를 생성하거나 보정합니다.
-7. answer 기준을 검토합니다.
-8. 루트 `README.md`의 상태를 갱신합니다.
-9. 작업을 멈추고 사용자 승인 대기를 합니다.
+2. `docs/curriculum/sequence-execution-protocol.md`를 다시 확인합니다.
+3. 해당 시퀀스 문서를 읽고 이번 범위를 확정합니다.
+4. 이번 작업 범위와 목표 산출물을 짧게 요약합니다.
+5. `NN-implementation`, `NN-answer` 브랜치 전략을 확정합니다.
+6. 문서를 생성하거나 교체합니다.
+7. starter 코드를 생성하거나 보정합니다.
+8. answer 기준을 검토합니다.
+9. 루트 `README.md`의 상태를 갱신합니다.
+10. 작업을 멈추고 사용자 승인 대기를 합니다.
 
 다음 시퀀스로 자동 진행하면 안 됩니다.
 

@@ -22,7 +22,8 @@ docs/
 ├── curriculum/
 │   ├── a-and-i-backend-curriculum-master-plan.md
 │   ├── a-and-i-backend-implementation-scope-plan.md
-│   └── codex-implementation-playbook.md
+│   ├── codex-implementation-playbook.md
+│   └── sequence-execution-protocol.md
 │
 ├── guides/
 │   ├── implementation-writing-guide.md
@@ -100,6 +101,20 @@ Swagger는 초반부터 붙여두되, 깊게 가르치지 않습니다.
 - 리팩토링과 기초 보강
 - 이벤트 기반 사고 확장
 
+### 4-1. 주제가 달라지면 레포도 분리합니다
+
+한 시퀀스 안에서 선택형으로 보일 수 있는 주제라도,
+실제 학습 흐름과 starter 구조가 크게 달라지면 별도 레포로 분리합니다.
+
+예:
+
+- OAuth2 로그인
+- Email Verification
+
+이 둘은 같은 "인증 확장" 범주에 있어도
+학생이 따라치는 코드, 설정, 설명 구조가 달라지므로
+동일 레포에서 선택형으로 오래 유지하지 않는 것을 원칙으로 합니다.
+
 ### 5. 루트 README를 작업 통제 문서로 사용합니다
 
 Codex는 항상 루트 `README.md`를 먼저 읽고 아래를 확인합니다.
@@ -111,6 +126,43 @@ Codex는 항상 루트 `README.md`를 먼저 읽고 아래를 확인합니다.
 - 완료 조건
 
 즉, README는 소개문이 아니라 작업 통제 문서 역할을 맡습니다.
+
+그리고 Codex는 작업을 시작하기 전에
+README에 적힌 필독 문서 순서를 먼저 확인해야 합니다.
+
+### 6. 시퀀스별 브랜치와 문서는 함께 움직여야 합니다
+
+각 시퀀스는 아래 브랜치 쌍으로 운영하는 것을 기본으로 합니다.
+
+- `NN-implementation`
+- `NN-answer`
+
+그리고 브랜치가 바뀌면 아래 문서도 같이 바뀌어야 합니다.
+
+- `README.md`
+- `docs/theory.md`
+- `docs/implementation.md`
+- `docs/answer-guide.md`
+- `docs/checklist.md`
+- `docs/assets.md`
+
+즉, `02`의 이론 문서와 `03`의 이론 문서가 같은 내용으로 남아 있으면 안 됩니다.
+문서도 시퀀스 순서에 따라 계속 갱신되어야 합니다.
+
+### 7. 서브모듈 `main` 브랜치는 대표 안내 브랜치로 둡니다
+
+각 서브모듈 레포의 `main` 브랜치는
+그 레포의 대표 안내 브랜치로 유지합니다.
+
+`main`에는 아래가 있어야 합니다.
+
+- 레포가 다루는 주제 요약
+- 문서 목록
+- 시퀀스 브랜치 목록
+- 학생 시작 브랜치와 강사 비교 브랜치 안내
+
+즉, 루트 레포의 `README`가 중앙 허브 안내 역할을 하듯,
+서브모듈의 `main`도 해당 레포의 진입 안내 역할을 해야 합니다.
 
 ---
 
