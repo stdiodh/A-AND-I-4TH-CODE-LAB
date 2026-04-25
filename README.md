@@ -112,10 +112,10 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 
 ## 현재 작업 상태
 
-- Current sequence: `05-external-authentication-or-email-verification`
+- Current sequence: `06-testing-and-verification`
 - Status: `DONE`
-- Last completed sequence: `05-external-authentication-or-email-verification`
-- Next sequence: `06-testing-and-verification`
+- Last completed sequence: `06-testing-and-verification`
+- Next sequence: `07-caching-and-performance-basics`
 
 | Sequence | Status | Repo | Docs Ready | Code Ready | Review |
 | --- | --- | --- | --- | --- | --- |
@@ -125,7 +125,7 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 | 03 | DONE | `spring-boot-db-access-lab` | Y | Y | Y |
 | 04 | DONE | `spring-boot-db-access-lab` | Y | Y | Y |
 | 05 | DONE | `spring-boot-db-access-lab` | Y | Y | Y |
-| 06 | BLOCKED | - | N | N | N |
+| 06 | DONE | `spring-boot-db-access-lab` | Y | Y | Y |
 | 07 | BLOCKED | - | N | N | N |
 | 08 | BLOCKED | - | N | N | N |
 | 09 | BLOCKED | - | N | N | N |
