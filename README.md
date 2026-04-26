@@ -112,10 +112,10 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 
 ## 현재 작업 상태
 
-- Current sequence: `07-caching-and-redis`
+- Current sequence: `08-realtime-communication`
 - Status: `DONE`
-- Last completed sequence: `07-caching-and-redis`
-- Next sequence: `08-realtime-communication`
+- Last completed sequence: `08-realtime-communication`
+- Next sequence: `09-deployment-and-runtime-environment`
 
 | Sequence | Status | Repo | Docs Ready | Code Ready | Review |
 | --- | --- | --- | --- | --- | --- |
@@ -127,7 +127,7 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 | 05 | DONE | `spring-boot-db-access-lab` | Y | Y | Y |
 | 06 | DONE | `spring-boot-db-access-lab` | Y | Y | Y |
 | 07 | DONE | `spring-boot-redis-cache-lab` | Y | Y | Y |
-| 08 | BLOCKED | - | N | N | N |
+| 08 | DONE | `spring-boot-realtime-communication-lab` | Y | Y | Y |
 | 09 | BLOCKED | - | N | N | N |
 | 10 | BLOCKED | - | N | N | N |
 | 11 | BLOCKED | - | N | N | N |
@@ -245,6 +245,7 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 - `spring-boot-rest-crud-lab`: 시퀀스 01 실습 레포
 - `spring-boot-db-access-lab`: 시퀀스 02~06 실습 레포, `main` 안내 브랜치와 `02~06` 시퀀스 브랜치 운영
 - `spring-boot-redis-cache-lab`: 시퀀스 07 실습 레포, Redis cache-aside 시퀀스 전용 레포
+- `spring-boot-realtime-communication-lab`: 시퀀스 08 실습 레포, WebSocket/STOMP 실시간 통신 전용 레포
 
 ## 표준 작업 프로토콜
 

@@ -15,3 +15,7 @@
 	path = spring-boot-redis-cache-lab
 	url = https://github.com/stdiodh/spring-boot-redis-cache-lab.git
 	branch = main
+[submodule "spring-boot-realtime-communication-lab"]
+	path = spring-boot-realtime-communication-lab
+	url = https://github.com/stdiodh/spring-boot-realtime-communication-lab.git
+	branch = main
