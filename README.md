@@ -112,10 +112,10 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 
 ## 현재 작업 상태
 
-- Current sequence: `06-testing-and-verification`
+- Current sequence: `07-caching-and-redis`
 - Status: `DONE`
-- Last completed sequence: `06-testing-and-verification`
-- Next sequence: `07-caching-and-performance-basics`
+- Last completed sequence: `07-caching-and-redis`
+- Next sequence: `08-realtime-communication`
 
 | Sequence | Status | Repo | Docs Ready | Code Ready | Review |
 | --- | --- | --- | --- | --- | --- |
@@ -126,7 +126,7 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 | 04 | DONE | `spring-boot-db-access-lab` | Y | Y | Y |
 | 05 | DONE | `spring-boot-db-access-lab` | Y | Y | Y |
 | 06 | DONE | `spring-boot-db-access-lab` | Y | Y | Y |
-| 07 | BLOCKED | - | N | N | N |
+| 07 | DONE | `spring-boot-redis-cache-lab` | Y | Y | Y |
 | 08 | BLOCKED | - | N | N | N |
 | 09 | BLOCKED | - | N | N | N |
 | 10 | BLOCKED | - | N | N | N |
@@ -243,7 +243,8 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 
 - `aandi-prerequisite-bootcamp`: 시퀀스 00 선수지식 부트캠프 레포
 - `spring-boot-rest-crud-lab`: 시퀀스 01 실습 레포
-- `spring-boot-db-access-lab`: 시퀀스 02~05 실습 레포, `main` 안내 브랜치와 `02~05` 시퀀스 브랜치 운영
+- `spring-boot-db-access-lab`: 시퀀스 02~06 실습 레포, `main` 안내 브랜치와 `02~06` 시퀀스 브랜치 운영
+- `spring-boot-redis-cache-lab`: 시퀀스 07 실습 레포, Redis cache-aside 시퀀스 전용 레포
 
 ## 표준 작업 프로토콜
 

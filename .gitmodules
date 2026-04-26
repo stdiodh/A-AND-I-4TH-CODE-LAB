@@ -11,3 +11,7 @@
 	path = spring-boot-db-access-lab
 	url = https://github.com/stdiodh/spring-boot-db-access-lab.git
 	branch = implementation
+[submodule "spring-boot-redis-cache-lab"]
+	path = spring-boot-redis-cache-lab
+	url = https://github.com/stdiodh/spring-boot-redis-cache-lab.git
+	branch = main
