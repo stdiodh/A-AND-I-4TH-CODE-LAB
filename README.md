@@ -130,7 +130,7 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 | 08 | DONE | `spring-boot-realtime-communication-lab` | Y | Y | Y |
 | 09 | DONE | `spring-boot-deployment-runtime-lab` | Y | Y | Y |
 | 10 | DONE | `spring-boot-deployment-runtime-lab` | Y | Y | Y |
-| 11 | BLOCKED | - | N | N | N |
+| 11 | READY | `spring-boot-refactoring-foundation-lab` | N | N | N |
 | 12 | BLOCKED | - | N | N | N |
 
 상태 값은 아래 의미로 사용합니다.

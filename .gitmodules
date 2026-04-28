@@ -23,3 +23,7 @@
 	path = spring-boot-deployment-runtime-lab
 	url = https://github.com/stdiodh/spring-boot-deployment-runtime-lab.git
 	branch = main
+[submodule "spring-boot-refactoring-foundation-lab"]
+	path = spring-boot-refactoring-foundation-lab
+	url = https://github.com/stdiodh/spring-boot-refactoring-foundation-lab.git
+	branch = main
