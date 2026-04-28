@@ -19,3 +19,7 @@
 	path = spring-boot-realtime-communication-lab
 	url = https://github.com/stdiodh/spring-boot-realtime-communication-lab.git
 	branch = main
+[submodule "spring-boot-deployment-runtime-lab"]
+	path = spring-boot-deployment-runtime-lab
+	url = https://github.com/stdiodh/spring-boot-deployment-runtime-lab.git
+	branch = main

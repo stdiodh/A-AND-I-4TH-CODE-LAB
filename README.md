@@ -112,10 +112,10 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 
 ## 현재 작업 상태
 
-- Current sequence: `08-realtime-communication`
+- Current sequence: `09-deployment-and-runtime-environment`
 - Status: `DONE`
-- Last completed sequence: `08-realtime-communication`
-- Next sequence: `09-deployment-and-runtime-environment`
+- Last completed sequence: `09-deployment-and-runtime-environment`
+- Next sequence: `10-cicd-and-operations-automation`
 
 | Sequence | Status | Repo | Docs Ready | Code Ready | Review |
 | --- | --- | --- | --- | --- | --- |
@@ -128,7 +128,7 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 | 06 | DONE | `spring-boot-db-access-lab` | Y | Y | Y |
 | 07 | DONE | `spring-boot-redis-cache-lab` | Y | Y | Y |
 | 08 | DONE | `spring-boot-realtime-communication-lab` | Y | Y | Y |
-| 09 | BLOCKED | - | N | N | N |
+| 09 | DONE | `spring-boot-deployment-runtime-lab` | Y | Y | Y |
 | 10 | BLOCKED | - | N | N | N |
 | 11 | BLOCKED | - | N | N | N |
 | 12 | BLOCKED | - | N | N | N |
