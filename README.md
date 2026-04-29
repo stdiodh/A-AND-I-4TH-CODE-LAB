@@ -112,10 +112,10 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 
 ## 현재 작업 상태
 
-- Current sequence: `10-cicd-and-operations-automation`
+- Current sequence: `11-refactoring-and-foundation-reinforcement`
 - Status: `DONE`
-- Last completed sequence: `10-cicd-and-operations-automation`
-- Next sequence: `11-refactoring-and-foundation-reinforcement`
+- Last completed sequence: `11-refactoring-and-foundation-reinforcement`
+- Next sequence: `12-message-queue-and-event-driven-thinking`
 
 | Sequence | Status | Repo | Docs Ready | Code Ready | Review |
 | --- | --- | --- | --- | --- | --- |
@@ -130,7 +130,7 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 | 08 | DONE | `spring-boot-realtime-communication-lab` | Y | Y | Y |
 | 09 | DONE | `spring-boot-deployment-runtime-lab` | Y | Y | Y |
 | 10 | DONE | `spring-boot-deployment-runtime-lab` | Y | Y | Y |
-| 11 | READY | `spring-boot-refactoring-foundation-lab` | N | N | N |
+| 11 | DONE | `spring-boot-refactoring-foundation-lab` | Y | Y | Y |
 | 12 | BLOCKED | - | N | N | N |
 
 상태 값은 아래 의미로 사용합니다.
