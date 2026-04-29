@@ -23,6 +23,12 @@
 
 다만 범위는 반드시 작게 유지합니다.
 
+이번 시퀀스의 핵심은 기술 자체를 많이 붙이는 것이 아니라,
+아래 두 질문에 답할 수 있게 만드는 것입니다.
+
+1. 외부 로그인 사용자를 우리 DB 사용자와 어떻게 안전하게 연결할 것인가
+2. 계정 복구 메일 요청은 왜 보안 관점에서 조심해야 하는가
+
 ## 시작 기준
 
 이번 시퀀스는 반드시 `04-answer`를 기준으로 시작합니다.
@@ -52,6 +58,34 @@
 2. email 기준 비밀번호 재설정 메일 요청 흐름을 설명할 수 있다.
 3. reset 링크를 왜 만들어 메일에 넣는지 설명할 수 있다.
 4. 이번 시퀀스가 실제 비밀번호 변경 완료까지는 다루지 않는다는 점을 설명할 수 있다.
+
+## 이번 시퀀스의 실무 확장 개념
+
+### 1. 계정 연결 정책
+
+Google 로그인은 성공했지만, 우리 서비스 입장에서는
+"이 사용자를 기존 사용자와 연결할 것인가, 신규 사용자로 볼 것인가"를 다시 판단해야 합니다.
+
+같은 email의 로컬 계정이 이미 있는데도 무조건 신규 사용자를 만들면,
+한 사람에게 계정이 여러 개 생길 수 있습니다.
+
+이번 시퀀스 문서와 코드는 반드시 아래 분기를 설명해야 합니다.
+
+1. 이미 같은 `provider + providerId` 사용자가 있는가
+2. 그건 없지만 같은 `email` 사용자가 있는가
+3. 둘 다 없으면 신규 사용자로 볼 수 있는가
+
+### 2. 계정 복구 보안 관점
+
+비밀번호 재설정 메일 요청은 단순 편의 기능처럼 보여도,
+아래 보안 포인트가 같이 붙습니다.
+
+- 존재하지 않는 email에 대해 응답을 다르게 주면 계정 존재 여부가 노출될 수 있다.
+- reset 링크에 들어가는 token은 민감한 값이다.
+- reset 링크를 로그, 화면, 예외 메시지에 쉽게 노출하면 안 된다.
+
+이번 시퀀스는 전체 복구 시스템을 완성하지 않더라도,
+이 보안 감각은 문서에 반드시 같이 남깁니다.
 
 ## 현재 도메인에서의 SMTP 범위
 
@@ -85,6 +119,82 @@
 6. SMTP 설정을 확인한다.
 7. 비밀번호 재설정 메일 요청 API를 연결한다.
 8. reset 링크를 만들고 메일 발송 Service를 연결한다.
+
+## 문제 상황과 해결 방향을 코드로 보기
+
+### 문제 1. OAuth 로그인 성공 때마다 새 사용자를 만들면 어떤 문제가 생기는가
+
+```kotlin
+fun handleOAuthLogin(profile: OAuthUserProfile): OAuthLoginResponse {
+    val newUser = userRepository.save(
+        User(
+            email = profile.email,
+            password = passwordEncoder.encode(UUID.randomUUID().toString()),
+            authProvider = profile.provider,
+            providerId = profile.providerId
+        )
+    )
+
+    return createSuccessResponse(newUser, true)
+}
+```
+
+이 코드는 OAuth 로그인 자체는 성공시킬 수 있습니다.
+하지만 기존 Google 사용자 재로그인, 기존 로컬 계정 연결, 신규 사용자 생성을 구분하지 못합니다.
+
+### 해결 방향 1. provider 기준과 email 기준을 둘 다 본다
+
+```kotlin
+val existingOAuthUser = userRepository.findByAuthProviderAndProviderId(provider, profile.providerId)
+    .orElse(null)
+
+if (existingOAuthUser != null) {
+    return OAuthLinkResult(userRepository.save(existingOAuthUser), false)
+}
+
+val existingEmailUser = userRepository.findByEmail(profile.email).orElse(null)
+if (existingEmailUser != null) {
+    existingEmailUser.authProvider = provider
+    existingEmailUser.providerId = profile.providerId
+    return OAuthLinkResult(userRepository.save(existingEmailUser), false)
+}
+```
+
+이 흐름이면
+
+- 같은 `provider + providerId` 사용자는 재사용하고
+- 같은 email의 로컬 사용자는 OAuth 계정으로 연결하고
+- 둘 다 없을 때만 신규 생성
+
+이라는 정책을 코드로 설명할 수 있습니다.
+
+### 문제 2. 비밀번호 재설정 요청에서 존재하지 않는 email을 바로 알려주면 어떤 문제가 생기는가
+
+```kotlin
+fun requestPasswordReset(email: String) {
+    val user = userRepository.findByEmail(email)
+        .orElseThrow { IllegalArgumentException("존재하지 않는 사용자입니다.") }
+
+    val resetLink = createResetLink(user.email)
+    recoveryMailSender.sendPasswordResetMail(user.email, resetLink)
+}
+```
+
+이 코드는 개발 중에는 편하지만,
+실무에서는 공격자에게 "이 email이 가입돼 있는지"를 알려줄 수 있습니다.
+
+### 해결 방향 2. 존재하지 않는 email은 조용히 종료한다
+
+```kotlin
+fun requestPasswordReset(email: String) {
+    val user = userRepository.findByEmail(email).orElse(null) ?: return
+    val resetLink = createResetLink(user.email)
+    recoveryMailSender.sendPasswordResetMail(user.email, resetLink)
+}
+```
+
+이번 시퀀스는 여기까지만 다룹니다.
+실무에서는 여기에 token 저장, 만료, 재사용 방지, 링크 검증까지 추가됩니다.
 
 ## TODO를 넣을 파일
 
@@ -130,6 +240,16 @@ SMTP 핵심 TODO:
 - 실제 비밀번호 변경 완료까지는 가지 않는다.
 - refresh token, 계정 연결 고급 정책, SMTP 고급 보안 정책까지 확장하지 않는다.
 - 테스트는 본격 확장이 아니라 실행 가능 검증 수준으로 유지한다.
+
+## 문서에 반드시 남겨야 하는 것
+
+이번 시퀀스 문서에는 아래가 함께 들어가야 합니다.
+
+1. 문제 상황
+2. 문제 코드
+3. 왜 운영상 위험한지
+4. 해결 코드 예시
+5. 이번 시퀀스에서 실제 구현 범위와 설명-only 범위
 
 ## 산출물
 
