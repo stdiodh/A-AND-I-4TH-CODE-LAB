@@ -27,3 +27,7 @@
 	path = spring-boot-refactoring-foundation-lab
 	url = https://github.com/stdiodh/spring-boot-refactoring-foundation-lab.git
 	branch = main
+[submodule "spring-boot-event-driven-lab"]
+	path = spring-boot-event-driven-lab
+	url = https://github.com/stdiodh/spring-boot-event-driven-lab.git
+	branch = main

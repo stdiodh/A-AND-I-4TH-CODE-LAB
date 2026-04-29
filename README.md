@@ -112,10 +112,10 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 
 ## 현재 작업 상태
 
-- Current sequence: `11-refactoring-and-foundation-reinforcement`
+- Current sequence: `12-message-queue-and-event-driven-thinking`
 - Status: `DONE`
-- Last completed sequence: `11-refactoring-and-foundation-reinforcement`
-- Next sequence: `12-message-queue-and-event-driven-thinking`
+- Last completed sequence: `12-message-queue-and-event-driven-thinking`
+- Next sequence: `-`
 
 | Sequence | Status | Repo | Docs Ready | Code Ready | Review |
 | --- | --- | --- | --- | --- | --- |
@@ -131,7 +131,7 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 | 09 | DONE | `spring-boot-deployment-runtime-lab` | Y | Y | Y |
 | 10 | DONE | `spring-boot-deployment-runtime-lab` | Y | Y | Y |
 | 11 | DONE | `spring-boot-refactoring-foundation-lab` | Y | Y | Y |
-| 12 | BLOCKED | - | N | N | N |
+| 12 | DONE | `spring-boot-event-driven-lab` | Y | Y | Y |
 
 상태 값은 아래 의미로 사용합니다.
 
@@ -246,6 +246,9 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 - `spring-boot-db-access-lab`: 시퀀스 02~06 실습 레포, `main` 안내 브랜치와 `02~06` 시퀀스 브랜치 운영
 - `spring-boot-redis-cache-lab`: 시퀀스 07 실습 레포, Redis cache-aside 시퀀스 전용 레포
 - `spring-boot-realtime-communication-lab`: 시퀀스 08 실습 레포, WebSocket/STOMP 실시간 통신 전용 레포
+- `spring-boot-deployment-runtime-lab`: 시퀀스 09~10 실습 레포, Docker/배포/CI-CD 시퀀스 레포
+- `spring-boot-refactoring-foundation-lab`: 시퀀스 11 실습 레포, 리팩토링과 기초 보강 전용 레포
+- `spring-boot-event-driven-lab`: 시퀀스 12 실습 레포, RabbitMQ 기반 이벤트 발행/소비 전용 레포
 
 ## 표준 작업 프로토콜
 
@@ -334,5 +337,6 @@ README에 아래 문장을 운영 규칙으로 고정합니다.
 
 ## 다음 작업 시작점
 
-다음 실제 산출물 작업은 `00-prerequisite-bootcamp` 시퀀스부터 시작합니다.
-작업 전에는 반드시 이 README와 중앙 `docs`를 다시 읽고, 이번 턴의 목표 산출물 목록을 먼저 요약한 뒤 진행합니다.
+현재 중앙 허브 기준 `00 ~ 12` 시퀀스 정리가 완료된 상태입니다.
+새 트랙을 추가하거나 기존 시퀀스를 다시 손보기 전에는 반드시 이 README와 중앙 `docs`를 다시 읽고,
+이번 턴의 목표 산출물 목록을 먼저 요약한 뒤 진행합니다.
