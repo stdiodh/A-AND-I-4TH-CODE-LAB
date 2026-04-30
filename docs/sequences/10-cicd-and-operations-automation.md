@@ -14,7 +14,7 @@
 5. 마지막에 verify가 실행된다.
 
 즉, 이번 시퀀스의 핵심은
-**GitHub Actions + build/test/deploy/verify + 배포 스크립트 분리**입니다.
+GitHub Actions + build/test/deploy/verify + 배포 스크립트 분리입니다.
 
 ## 이전 시퀀스와의 연결
 

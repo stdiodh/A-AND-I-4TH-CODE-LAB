@@ -13,7 +13,7 @@
 4. 배포 후 로그로 실제 기동 상태를 확인한다.
 
 즉, 이번 시퀀스의 핵심은
-**Docker + prod profile + GitHub Actions 기본 배포 + Secrets + 로그 확인**입니다.
+Docker + prod profile + GitHub Actions 기본 배포 + Secrets + 로그 확인입니다.
 
 ## 이전 시퀀스와의 연결
 
