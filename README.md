@@ -62,6 +62,156 @@ Codex는 작업 전에 아래 문서를 반드시 읽어야 합니다.
 - 시퀀스 실행 순서와 브랜치/레포 규칙: `docs/curriculum/sequence-execution-protocol.md`를 반드시 따릅니다.
 - 서브모듈 대표 브랜치 운영 규칙: 각 서브모듈의 `main` 브랜치는 레포 요약/문서 안내 브랜치로 유지합니다.
 
+## Codex 지침 파일
+
+Codex 작업 지침은 루트 `AGENTS.md`를 기준으로 관리합니다.
+
+`CLAUDE.md`는 Codex의 기본 프로젝트 지침 파일명이 아니므로, Codex용 규칙은 `AGENTS.md`에 둡니다.
+다른 파일명을 fallback 지침으로 쓰려면 Codex 설정의 `project_doc_fallback_filenames`에 별도로 등록해야 합니다.
+
+Codex는 프로젝트 루트부터 현재 작업 디렉터리까지 내려오며 `AGENTS.md` 계열 지침을 읽습니다.
+더 가까운 디렉터리의 지침이 더 구체적인 작업 범위에 우선 적용됩니다.
+
+공식 참고:
+
+- `https://developers.openai.com/codex/guides/agents-md`
+- `https://developers.openai.com/codex/learn/best-practices`
+
+이 레포의 Codex 지침 구조:
+
+```text
+AGENTS.md
+docs/
+  codex-behavior-guide.md
+  code-review.md
+  implementation-plan-template.md
+```
+
+작업 전 확인용 명령 예시:
+
+```bash
+codex --ask-for-approval never "Summarize the active instructions before making any changes."
+```
+
+## A&I Backend Visual Lab 계획 문서
+
+A&I Backend Visual Lab은 각 시퀀스 서브모듈 안에 만드는 정적 학습 시각화 페이지입니다.
+
+이 페이지는 A&I 백엔드 커리큘럼의 상세 이론을 대체하지 않고,
+각 시퀀스와 토픽 레포로 이동하기 위한 시각화 진입점 역할만 맡습니다.
+
+루트 레포는 Visual Lab 기준 문서와 작업 오케스트레이션만 관리합니다.
+실제 HTML/CSS/JS 구현물은 루트 `docs`가 아니라 각 시퀀스 서브모듈의 `docs/visual-lab` 아래에 둡니다.
+
+Visual Lab 구현 전에는 아래 기준 문서를 먼저 읽어야 합니다.
+
+1. `docs/visual-lab-sequence-workflow.md`
+2. `docs/visual-lab-design-guide.md`
+3. `docs/visual-lab-content-spec.md`
+4. `docs/visual-lab-implementation-plan.md`
+5. `docs/visual-lab-codex-prompt.md`
+
+Visual Lab 실행 프로토콜:
+
+1. 루트 기준 문서를 읽습니다.
+2. 대상 시퀀스 서브모듈을 확인합니다.
+3. 대상 서브모듈의 `docs/visual-lab` 아래에서만 HTML/CSS/JS를 구현합니다.
+4. 서브모듈에서 로컬 검수, commit, push를 마칩니다.
+5. 루트 레포로 돌아와 submodule pointer를 갱신합니다.
+6. 루트 레포에서 submodule pointer와 필요한 문서 변경을 commit, push합니다.
+7. 이 흐름이 끝나기 전에는 다음 시퀀스를 시작하지 않습니다.
+
+Visual Lab은 모든 시퀀스를 아래 브랜치 기준으로 연결합니다.
+
+- `NN-implementation`: 학생 실습용 starter 브랜치
+- `NN-answer`: 강사용 비교/정답 브랜치
+
+`NN`은 중앙 `docs/sequences` 번호와 같아야 합니다.
+예를 들어 시퀀스 02는 `02-implementation`과 `02-answer`를 기준으로 연결합니다.
+
+첫 번째 대표 시각화 기준은 `spring-boot-db-access-lab`의 `02-answer` 브랜치입니다.
+이 기준에서 아래 흐름을 Visual Lab의 첫 핵심 케이스로 사용합니다.
+
+```text
+Client
+-> POST /posts
+-> PostController
+-> PostCreateRequest
+-> PostService
+-> PostEntity
+-> PostRepository
+-> MySQL
+-> PostResponse
+-> JSON Response
+```
+
+참조 문서:
+
+- `https://github.com/stdiodh/spring-boot-db-access-lab/blob/02-answer/docs/theory.md`
+- `https://github.com/stdiodh/spring-boot-db-access-lab/blob/02-answer/docs/implementation.md`
+- `https://github.com/stdiodh/spring-boot-db-access-lab/tree/02-answer`
+
+Visual Lab 구현 명령 프롬프트는 `docs/visual-lab-codex-prompt.md`를 기준으로 사용합니다.
+
+Visual Lab 작업 순서:
+
+1. `README.md`를 읽고 중앙 레포가 상세 이론 저장소가 아니라는 원칙을 확인합니다.
+2. `docs/visual-lab-sequence-workflow.md`에서 서브모듈 기반 실행 프로토콜을 확인합니다.
+3. `docs/visual-lab-design-guide.md`에서 디자인 기준과 금지 사항을 확인합니다.
+4. `docs/visual-lab-content-spec.md`에서 모든 시퀀스의 `NN-implementation` / `NN-answer` 연결 규칙을 확인합니다.
+5. `docs/visual-lab-implementation-plan.md`에서 대상 서브모듈과 생성할 파일을 확인합니다.
+6. 해당 시퀀스 서브모듈로 이동해 `docs/visual-lab/*`를 구현합니다.
+7. 서브모듈에서 검수, commit, push를 마칩니다.
+8. 루트 레포로 돌아와 submodule pointer를 갱신하고 루트 README 링크가 필요하면 보강합니다.
+9. 루트 레포에서 submodule pointer를 commit, push합니다.
+
+Visual Lab 구현 요청은 아래 형태로 시작합니다.
+
+```text
+현재 저장소에 A&I Backend Visual Lab을 구현해주세요.
+
+작업 전에 반드시 아래 문서를 읽으세요.
+
+1. README.md
+2. docs/visual-lab-sequence-workflow.md
+3. docs/visual-lab-design-guide.md
+4. docs/visual-lab-content-spec.md
+5. docs/visual-lab-implementation-plan.md
+6. docs/visual-lab-codex-prompt.md
+
+이번 작업의 목표는 대상 시퀀스 서브모듈의 docs/visual-lab/index.html을 진입점으로 하는 정적 HTML 학습 시각화 페이지를 만드는 것입니다.
+HTML/CSS/Vanilla JS만 사용하고, 외부 라이브러리는 사용하지 마세요.
+모든 시퀀스는 NN-implementation / NN-answer 브랜치 기준으로 연결하세요.
+중앙 레포에 상세 이론을 과도하게 복붙하지 말고, DB Access Lab의 핵심 흐름을 첫 대표 케이스로 시각화하세요.
+```
+
+00 시퀀스 Visual Lab 대상 위치:
+
+```text
+aandi-prerequisite-bootcamp/docs/visual-lab/index.html
+```
+
+00 시퀀스 로컬 확인 명령:
+
+```bash
+cd aandi-prerequisite-bootcamp
+python3 -m http.server 8080 -d docs/visual-lab
+```
+
+접속 주소:
+
+```text
+http://localhost:8080
+```
+
+Visual Lab 작업에서 금지되는 범위:
+
+- 루트 레포에 `docs/index.html` 또는 `docs/visualizer/*` 구현 파일을 만들지 않습니다.
+- 중앙 `docs`에 상세 이론을 길게 복붙하지 않습니다.
+- 기존 `docs/sequences/*`의 범위나 완료 상태를 임의로 바꾸지 않습니다.
+- 정답 코드를 HTML에 길게 복제하지 않습니다.
+- 외부 JS 라이브러리, React, Vue, Next.js, Bootstrap, Tailwind CDN을 사용하지 않습니다.
+
 ## Codex 작업 원칙
 
 Codex는 아래 원칙을 반드시 지켜야 합니다.
