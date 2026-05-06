@@ -163,6 +163,17 @@ N+1 문제 입문
 - 카드 클릭 시 상세 내용이 변경되어야 한다.
 - 첫 번째 카드는 기본 선택 상태여야 한다.
 - 선택된 카드는 `aria-pressed="true"`를 가져야 한다.
+- 상세 영역에는 Step Explorer를 둔다.
+- Step Explorer는 단계 rail, 현재 카드, 입력/결과/다음 카드, 재생/정지, 속도, 이전/다음, 진행률을 포함한다.
+- topic card는 개념 인덱스이고, Step Explorer는 `visualLabFocusFlows`의 핵심 흐름 1~2개만 보여준다.
+- Step Explorer가 단계 흐름을 담당하므로 별도 Flow card는 만들지 않는다.
+- 상단 detail 영역은 `.detail-context-layout`으로 분리해 full-width compact context card로 배치한다.
+- 하단 핵심/자료 영역은 필요하면 `.visual-layout.support-layout`으로 유지한다.
+- focus flow 변경 시 첫 단계로 초기화한다.
+- topic card 클릭은 detail, point, related 영역만 바꾸고 Step Explorer를 카드별 단계로 바꾸지 않는다.
+- 단계 선택, 이전/다음, 재생/정지, 속도 조절이 동작해야 한다.
+- 마지막 단계에서는 자동 재생을 멈춘다.
+- `sourceUrl`이 있는 step과 관련 문서/코드 링크는 새 탭으로 열어 학습 맥락이 끊기지 않게 한다.
 - DOM 요소가 없어도 에러가 나지 않도록 방어 코드를 작성한다.
 - 모바일 반응형을 구현한다.
 
@@ -192,6 +203,17 @@ const visualLabTopics = [
     exampleResponse: {}
   }
 ];
+
+const visualLabFocusFlows = [
+  {
+    id: "db-access-flow",
+    sequence: "02",
+    title: "DB 접근 핵심 흐름",
+    relatedTopicIds: ["repository", "database"],
+    actors: [],
+    steps: []
+  }
+];
 ```
 
 ## 10. app.js 필수 함수
@@ -201,13 +223,44 @@ const visualLabTopics = [
 ```js
 renderTopicCards()
 renderTopicDetail(topic)
-renderFlow(flow)
+renderFocusFlowTabs()
+renderStepExplorer(flow)
+renderArchitectureDiagram(flow)
+renderStepRail(steps)
+renderCurrentStep(step, index, total)
+selectFocusFlow(flowId)
+selectStep(index)
+goToPrevStep()
+goToNextStep()
 renderTransforms(transforms)
 renderPoints(points)
 renderExamples(topic)
 renderRelatedLinks(topic)
 selectTopic(topicId)
 ```
+
+`visualLabFocusFlows[].steps` 필드 기준:
+
+```js
+{
+  order: 1,
+  from: "client",
+  to: "server",
+  label: "Client",
+  title: "사용자 요청 시작",
+  description: "사용자가 브라우저나 Postman에서 API 요청을 실행합니다.",
+  input: "사용자 행동",
+  output: "HTTP Request",
+  handoff: "요청 메시지가 서버로 이동합니다.",
+  sourceLabel: "GET 요청 예시",
+  sourceUrl: "../../starter/http/get-post.http"
+}
+```
+
+`visualLabFocusFlows`를 학습 흐름의 기준으로 사용한다.
+`visualLabTopics`는 개념 카드와 자료 연결에 집중한다.
+`flow`, 변환, 예시는 가능하면 focus flow의 `steps`에서 파생한다.
+단, `flow`는 fallback 데이터로 보존하고 화면 렌더링용 Flow card, `flowTimeline`, `renderFlow()`는 만들지 않는다.
 
 ## 11. README 추가 내용
 

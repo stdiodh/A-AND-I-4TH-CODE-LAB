@@ -129,8 +129,24 @@ Visual Lab은 모든 시퀀스를 아래 브랜치 기준으로 연결합니다.
 `NN`은 중앙 `docs/sequences` 번호와 같아야 합니다.
 예를 들어 시퀀스 02는 `02-implementation`과 `02-answer`를 기준으로 연결합니다.
 
-첫 번째 대표 시각화 기준은 `spring-boot-db-access-lab`의 `02-answer` 브랜치입니다.
-이 기준에서 아래 흐름을 Visual Lab의 첫 핵심 케이스로 사용합니다.
+Visual Lab은 재생형 Step Explorer를 기본 패턴으로 사용합니다.
+각 topic card는 개념 인덱스 역할을 맡고, Step Explorer는 해당 시퀀스의 핵심 흐름 1~2개만 보여줍니다.
+핵심 흐름은 `visualLabFocusFlows`의 `actors`와 `steps`를 기준으로 입력, 결과, 다음 흐름을 보여줍니다.
+자료 링크는 새 탭으로 열어 학습 맥락을 유지합니다.
+
+시퀀스 00의 첫 대표 시각화 기준은 `aandi-prerequisite-bootcamp`의 이론/구현 문서입니다.
+이 기준에서는 아래 흐름을 핵심 케이스로 사용합니다.
+
+```text
+Client
+-> HTTP Request
+-> Server
+-> Status Code
+-> Response Body
+```
+
+시퀀스 02의 대표 백엔드 흐름은 `spring-boot-db-access-lab`의 `02-answer` 브랜치를 기준으로 삼습니다.
+이 기준에서는 아래 흐름을 핵심 케이스로 사용합니다.
 
 ```text
 Client

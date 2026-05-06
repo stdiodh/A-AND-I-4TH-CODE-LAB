@@ -116,7 +116,7 @@ NN-answer
 - Hero 영역
 - Topic Cards 영역
 - Detail 영역
-- Flow Timeline 영역
+- Step Explorer 영역
 - Related Docs 영역
 - Footer 영역
 
@@ -145,7 +145,19 @@ HTML 구조 예시:
       </section>
 
       <section class="detail-section">
-        <div id="topicDetail"></div>
+        <div class="detail-context-layout">
+          <article class="visual-card detail-panel detail-panel-compact">
+            ...
+          </article>
+        </div>
+
+        <section class="step-explorer-section">
+          ...
+        </section>
+
+        <div class="visual-layout support-layout">
+          ...
+        </div>
       </section>
     </main>
 
@@ -165,7 +177,19 @@ detailEnglishTitle
 detailCategory
 detailDescription
 detailWhy
-flowTimeline
+stepRail
+currentStepMeta
+currentStepTitle
+currentStepDescription
+currentStepInput
+currentStepOutput
+currentStepHandoff
+currentStepSource
+prevStepButton
+nextStepButton
+stepProgress
+stepProgressFill
+playStepButton
 transformList
 pointList
 exampleRequest
@@ -206,7 +230,6 @@ relatedCode
 - 카드
 - 버튼
 - 배지
-- 타임라인
 - 도식
 - 코드 박스
 - 관련 링크 카드
@@ -219,9 +242,24 @@ topic-card
 topic-card.is-selected
 topic-badge
 sequence-badge
-flow-timeline
-flow-step
-flow-arrow
+detail-context-layout
+detail-panel-compact
+support-layout
+step-explorer
+step-rail
+step-rail-button
+step-stage
+step-meta
+step-io-grid
+step-io-card
+step-controls
+step-source-link
+step-playback
+step-play-button
+step-speed-group
+step-speed-button
+step-progress-track
+step-progress-fill
 transform-card
 point-list
 code-box
@@ -288,30 +326,66 @@ sourceImplementationBranch: "NN-implementation",
 sourceAnswerBranch: "NN-answer"
 ```
 
+모든 topic은 개념 카드와 자료 연결의 기준으로 사용한다.
+`flow`는 mini badge나 fallback용 짧은 흐름으로만 둔다.
+단, 화면에는 별도 Flow card를 만들지 않는다.
+Step Explorer는 `visualLabFocusFlows`의 핵심 흐름 1~2개만 렌더링한다.
+
+```js
+const visualLabFocusFlows = [
+  {
+    id: "http-request-response-flow",
+    sequence: "00",
+    title: "HTTP 요청/응답 핵심 흐름",
+    relatedTopicIds: ["client-server", "http-request-response"],
+    actors: [],
+    steps: []
+  }
+];
+```
+
+`sourceUrl`과 `example`은 필요할 때만 넣는다.
+긴 이론과 정답 코드 전체는 focus flow step에 넣지 않는다.
+
 ### 7.5 docs/visual-lab/app.js
 
 역할:
 
 - `visualLabTopics` 데이터를 렌더링한다.
 - 카드 클릭 이벤트를 처리한다.
-- 선택된 주제 상세를 표시한다.
-- flow를 타임라인으로 표시한다.
-- transform을 데이터 변환 카드로 표시한다.
-- points를 리스트로 표시한다.
-- 관련 문서와 코드 링크를 표시한다.
+- 선택된 주제, 핵심 흐름, 예시, 링크를 표시한다.
 
 필수 함수:
 
 ```js
 renderTopicCards()
 renderTopicDetail(topic)
-renderFlow(flow)
+renderFocusFlowTabs()
+renderStepExplorer(flow)
+renderArchitectureDiagram(flow)
+renderStepRail(steps)
+renderCurrentStep(step, index, total)
+selectFocusFlow(flowId)
+selectStep(index)
+goToPrevStep()
+goToNextStep()
 renderTransforms(transforms)
 renderPoints(points)
 renderExamples(topic)
 renderRelatedLinks(topic)
 selectTopic(topicId)
 ```
+
+Step Explorer 기준:
+
+- focus flow 변경 시 첫 단계로 초기화한다.
+- `visualLabFocusFlows[].steps`를 우선 렌더링하고, 없으면 해당 focus flow의 `flow`로 fallback한다.
+- topic card 클릭은 detail, point, related 영역만 바꾸고 Step Explorer를 카드별 단계로 바꾸지 않는다.
+- 별도 Flow card, `flowTimeline`, `renderFlow()`는 만들지 않는다.
+- 단계 선택, 이전/다음, 재생/정지, 속도 조절이 동작한다.
+- 마지막 단계에서는 자동 재생을 멈춘다.
+- 첫/마지막 단계의 이동 버튼은 disabled 처리한다.
+- 모든 자료 링크는 새 탭으로 연다.
 
 방어 코드:
 
@@ -340,6 +414,9 @@ selectTopic(topicId)
 - Hero Section 생성
 - Topic Grid 컨테이너 생성
 - Detail Section 생성
+- 상단 detail 영역은 `.detail-context-layout`으로 분리한다.
+- Flow card는 만들지 않는다.
+- 하단 핵심/자료 영역은 `.visual-layout.support-layout`으로 유지한다.
 - Footer 생성
 
 ### Step 3. CSS 토큰과 레이아웃 생성
@@ -353,10 +430,10 @@ selectTopic(topicId)
 
 - 카드
 - 배지
-- 타임라인
 - 도식 노드
 - 코드 박스
 - 관련 링크
+- 더 이상 쓰지 않는 `.flow-*` 스타일은 만들지 않는다.
 
 ### Step 5. 콘텐츠 데이터 생성
 
@@ -364,13 +441,22 @@ selectTopic(topicId)
 - DB Access Lab 기준 주제 우선 작성
 - 나머지 주제는 짧은 개념 수준으로 작성
 - 전체 시퀀스 확장 시 `NN-implementation` / `NN-answer` 링크를 함께 작성
+- `visualLabFocusFlows`에 핵심 흐름 1~2개만 작성해 현재 단계의 input/output/handoff가 보이게 한다.
 
 ### Step 6. JS 렌더링 구현
 
 - 카드 목록 렌더링
 - 첫 번째 카드 기본 선택
 - 클릭 시 상세 업데이트
+- 핵심 흐름 탭 렌더링
+- Step Explorer 렌더링
+- step rail 클릭 처리
+- 이전/다음 단계 이동 처리
+- 재생/일시정지 처리
+- 속도 조절 처리
+- 현재 단계 전환 애니메이션 상태 처리
 - 관련 문서/코드 링크 렌더링
+- 사용하지 않는 `flowTimeline` DOM 참조와 `renderFlow()` 함수는 만들지 않는다.
 
 ### Step 7. 로컬 확인
 
@@ -405,9 +491,11 @@ A&I Backend Visual Lab은 각 시퀀스 서브모듈의 docs/visual-lab/index.ht
 - 카드 목록이 렌더링된다.
 - 첫 번째 카드가 기본 선택된다.
 - 카드 클릭 시 상세 내용이 바뀐다.
-- flow timeline이 표시된다.
-- transform card가 표시된다.
-- 관련 문서와 코드 링크가 표시된다.
+- Step Explorer가 표시된다.
+- Flow card 없이 detail card가 full-width로 보인다.
+- 단계 선택, 이전/다음, 재생/정지, 속도 조절이 동작한다.
+- 첫/마지막 단계의 이동 버튼 상태가 맞다.
+- 자료 링크는 새 탭으로 열린다.
 
 ### 9.2 디자인 검수
 
