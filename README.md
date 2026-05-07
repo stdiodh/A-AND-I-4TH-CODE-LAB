@@ -220,6 +220,25 @@ python3 -m http.server 8080 -d docs/visual-lab
 http://localhost:8080
 ```
 
+01 시퀀스 Visual Lab 대상 위치:
+
+```text
+spring-boot-rest-crud-lab/docs/visual-lab/index.html
+```
+
+01 시퀀스 로컬 확인 명령:
+
+```bash
+cd spring-boot-rest-crud-lab
+python3 -m http.server 8080 -d docs/visual-lab
+```
+
+접속 주소:
+
+```text
+http://localhost:8080
+```
+
 Visual Lab 작업에서 금지되는 범위:
 
 - 루트 레포에 `docs/index.html` 또는 `docs/visualizer/*` 구현 파일을 만들지 않습니다.
