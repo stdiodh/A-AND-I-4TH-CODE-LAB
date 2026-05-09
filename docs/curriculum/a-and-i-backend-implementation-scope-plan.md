@@ -386,16 +386,6 @@ Message Queue + Event-Driven Architecture + MSA 관점 소개
   그 사이를 이벤트 큐가 이어주는 그림을 설명하되,
   MSA 전체 구현과 운영 심화로 과하게 확장하지는 않습니다.
 
-### 11. 리팩토링과 기초 보강
-
-주제:
-종합 리팩토링 + 구조 보강 + 테스트 보강
-
-### 12. 이벤트 기반 사고 확장
-
-주제:
-Message Queue + Event-Driven Architecture + MSA 관점 소개
-
 ---
 
 ## 각 도메인 문서 템플릿

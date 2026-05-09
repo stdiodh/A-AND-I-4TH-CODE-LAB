@@ -41,9 +41,11 @@ Check:
 - Does the implementation use HTML, CSS, and Vanilla JavaScript only?
 - Is detailed theory kept out of central HTML?
 - Are source docs and source code linked?
-- Does the first DB Access flow match the expected path?
+- Does each sequence link to the matching `NN-implementation` and `NN-answer` branches?
+- Does each focus flow match the target sequence's `NN-answer` branch?
+- For sequence 02, does the DB Access representative flow match the expected path?
 
-Expected first flow:
+Expected sequence 02 representative flow:
 
 ```text
 Client

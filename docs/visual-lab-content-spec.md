@@ -149,8 +149,8 @@ https://github.com/stdiodh/spring-boot-db-access-lab/blob/02-answer/docs/theory.
 ```text
 POST /posts
 -> PostController
--> PostService
 -> PostCreateRequest
+-> PostService
 -> PostEntity
 -> PostRepository
 -> MySQL

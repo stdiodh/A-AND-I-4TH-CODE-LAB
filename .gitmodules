@@ -2,15 +2,15 @@
 [submodule "spring-boot-rest-crud-lab"]
 	path = spring-boot-rest-crud-lab
 	url = https://github.com/stdiodh/spring-boot-rest-crud-lab.git
-	branch = implementation
+	branch = main
 [submodule "aandi-prerequisite-bootcamp"]
 	path = aandi-prerequisite-bootcamp
 	url = https://github.com/stdiodh/aandi-prerequisite-bootcamp.git
-	branch = implementation
+	branch = main
 [submodule "spring-boot-db-access-lab"]
 	path = spring-boot-db-access-lab
 	url = https://github.com/stdiodh/spring-boot-db-access-lab.git
-	branch = implementation
+	branch = main
 [submodule "spring-boot-redis-cache-lab"]
 	path = spring-boot-redis-cache-lab
 	url = https://github.com/stdiodh/spring-boot-redis-cache-lab.git
