@@ -1,0 +1,35 @@
+name: Repository Integrity
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  validate:
+    name: Validate docs, manifest, and Visual Labs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Show Python version
+        run: python3 --version
+
+      - name: Check whitespace
+        run: git diff --check
+
+      - name: Compile validation scripts
+        run: |
+          python3 -m py_compile scripts/validate-manifest.py
+          python3 -m py_compile scripts/validate-visual-labs.py
+
+      - name: Validate manifest and sequence documents
+        run: python3 scripts/validate-manifest.py
+
+      - name: Validate Visual Lab structure
+        run: python3 scripts/validate-visual-labs.py

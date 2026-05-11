@@ -1,388 +1,104 @@
-당신은 A&I 백엔드 커리큘럼용 실습 레포와 문서를 설계하는 Codex입니다.
+# 01. 요청/응답과 메모리 CRUD
 
-지금부터는 전체 커리큘럼 중 01. 요청-응답과 메모리 CRUD 시퀀스만 다룹니다.
-다른 시퀀스 내용은 절대 섞지 말고, 이번 요청에서는 01 시퀀스에 필요한 레포 구조, 학생용 starter 코드, 정답 가이드, 이론 문서만 정확하게 만드세요.
+## 목표
 
-## 1. 이번 작업의 목표
+Spring Boot에서 요청이 들어오고 응답이 나가는 가장 기본 흐름을 구현합니다.
+DB 없이 메모리 저장소를 사용해 CRUD와 HTTP 흐름에 집중합니다.
 
-이번 시퀀스의 목적은 백엔드의 가장 기본 흐름인 아래를 학생이 직접 손으로 경험하게 만드는 것입니다.
+## 이 시퀀스에서 배우는 것
 
-- 요청이 들어온다
-- Controller가 요청을 받는다
-- Service가 처리 흐름을 맡는다
-- 메모리 저장소에 저장된다
-- 응답 DTO로 반환된다
-- Swagger에서 직접 확인한다
+- Controller가 요청을 받는 방식
+- Service가 처리 흐름을 맡는 이유
+- Repository가 임시 메모리 저장소를 다루는 방식
+- Request DTO와 Response DTO의 역할
+- Swagger에서 API를 실행하고 응답을 확인하는 방법
 
-즉, 이번 시퀀스는 DB, JPA, Validation, Security를 다루는 단계가 아닙니다.
-가장 단순한 메모리 기반 CRUD로 백엔드의 출발점을 경험하게 만드는 단계입니다.
+## 시작 브랜치
 
----
-
-## 2. 이번 시퀀스에서 학생이 완성해야 하는 최종 상태
-
-학생은 이 시퀀스를 마친 뒤 아래를 할 수 있어야 합니다.
-
-1. 생성 요청을 보내면 메모리에 저장되고 응답이 돌아오는 흐름을 설명할 수 있다.
-2. 전체 조회와 단건 조회가 가능하다.
-3. 요청이 어디서 시작하고 어디서 처리되는지 말할 수 있다.
-4. Controller와 Service의 역할 차이를 설명할 수 있다.
-5. 서버 재시작 시 왜 데이터가 사라지는지 설명할 수 있다.
-6. Swagger에서 API를 직접 실행할 수 있다.
-
----
-
-## 3. 이번 시퀀스에서 학생이 직접 구현할 순서
-
-구현 순서는 반드시 아래 순서를 기준으로 설계하세요.
-
-1. `Request DTO`를 만든다.
-2. `Response DTO`를 만든다.
-3. 저장할 데이터 클래스를 만든다.
-4. 메모리 저장소 구현체를 만든다.
-5. `Service.create()`를 구현한다.
-6. `Service.getAll()`을 구현한다.
-7. `Service.getById()`를 구현한다.
-8. Controller에서 API를 연결한다.
-9. Swagger에서 POST/GET을 실행한다.
-
-이 순서는 바꾸지 마세요.
-문서와 코드 TODO도 반드시 이 순서에 맞게 설계하세요.
-
----
-
-## 4. 이번 시퀀스에서 TODO를 넣을 파일
-
-학생이 직접 수정하는 핵심 파일은 아래로 제한하세요.
-
-- `PostCreateRequest.kt`
-- `PostResponse.kt`
-- `Post.kt`
-- `PostMemoryRepository.kt`
-- `PostService.kt`
-- `PostController.kt`
-
-이 외의 반복 설정과 무거운 부가 요소는 가급적 미리 제공하세요.
-
----
-
-## 5. 이번 시퀀스에서 미리 제공해야 하는 것
-
-문서와 코드 설계 시 아래는 반드시 제공 전제로 처리하세요.
-
-- 프로젝트 기본 설정
-- 패키지 구조
-- Swagger 설정
-- 예시 요청
-- 실행 환경
-- build 설정
-- application 기본 설정
-- 메인 애플리케이션 클래스
-- 불필요하게 긴 설정 코드
-
-학생에게는 핵심 흐름만 직접 구현하게 해야 합니다.
-
----
-
-## 6. 이번 시퀀스의 중요한 제약
-
-아래 제약을 반드시 지키세요.
-
-- JPA, DB, Repository 인터페이스, Security, Validation, Exception Handling은 넣지 마세요.
-- 과도한 기능 확장은 금지합니다.
-- CRUD 전체를 무겁게 만들지 말고, 생성 / 전체 조회 / 단건 조회 중심으로 설계하세요.
-- 삭제/수정은 있어도 좋지만, 이번 시퀀스의 핵심은 아닙니다.
-- 코드가 길어지지 않게 하세요.
-- 학생이 “역할 분리”를 느낄 수 있을 정도로만 구조를 만드세요.
-- Controller가 직접 저장하지 않도록 하세요.
-- Swagger는 문서화 전략 설명용이 아니라, 실습 확인용 UI로 사용하세요.
-- 문서는 학생용 복습과 강사용 PPT 준비까지 같이 고려해서 쓰세요.
-- 이번 응답에서는 오직 01 시퀀스 문서와 starter 코드 구조만 만드세요.
-
----
-
-## 7. 생성해야 할 결과물
-
-이번 시퀀스에서는 아래를 생성하세요.
-
-### (1) README.md
-역할:
-- 이 시퀀스 소개
-- 학생이 무엇을 배우는 단계인지 설명
-- 문서 링크 연결
-- 구현 순서 요약
-- 실행 방법 요약
-
-### (2) docs/theory.md
-역할:
-- 왜 이 시퀀스가 필요한지
-- 요청 → 처리 → 응답 흐름 설명
-- Controller / Service / DTO / 메모리 저장소를 쉬운 말로 설명
-- Swagger를 왜 붙이는지 설명
-- 메모리 저장의 한계를 다음 시퀀스와 연결
-
-### (3) docs/implementation.md
-역할:
-- 오늘 학생이 완성할 최종 흐름
-- 학생이 직접 구현할 순서
-- TODO를 넣을 파일
-- 각 파일의 역할
-- 단계별 구현 안내
-- 실행 확인 방법
-- 학생 체크 질문
-
-### (4) docs/answer-guide.md
-역할:
-- 각 TODO 단계의 정답 가이드
-- 요청 예시 / 응답 예시
-- 흐름 설명
-- 강사가 빠르게 answer 비교할 수 있는 구조
-- 파일별 핵심 정답 코드 정리
-
-### (5) docs/checklist.md
-역할:
-- 학생 체크리스트
-- 강사 / 발표 / PPT 체크리스트
-- 수업 전 준비
-- 수업 중 확인 질문
-- 수업 후 점검 포인트
-
-### (6) docs/assets.md
-역할:
-- 미리 제공할 것 목록
-- 왜 제공하는지
-- 학생이 직접 작성하지 않는 범위 정리
-
-### (7) starter 코드 파일
-학생이 직접 따라칠 수 있도록 starter 코드를 만드세요.
-핵심 파일에는 TODO 주석을 넣으세요.
-
-### (8) answer 코드 기준
-별도 answer 브랜치를 전제로,
-docs/answer-guide.md 안에 정답 코드를 충분히 넣으세요.
-필요하면 “answer 기준 완성 형태”도 함께 설명하세요.
-
----
-
-## 8. 코드 설계 규칙
-
-이번 시퀀스의 코드는 아래 원칙을 따라야 합니다.
-
-- Kotlin + Spring Boot 기준
-- 가장 단순한 REST API 구조
-- 메모리 저장은 `mutableListOf` 같은 단순 방식으로 구현
-- id 생성은 가장 단순한 방식으로 처리
-- 코드 길이는 짧고 흐름이 잘 보이게 유지
-- DTO와 데이터 클래스를 분리
-- Controller는 요청의 입구 역할만 하도록 유지
-- Service는 처리 흐름 중심
-- 메모리 저장소는 “지금은 DB 대신 임시 저장소”라는 점이 드러나야 함
-
----
-
-## 9. TODO 작성 규칙
-
-TODO는 반드시 순서형 힌트로 작성하세요.
-
-좋지 않은 예:
-```kotlin
-// TODO: 서비스 구현
-````
-
-좋은 예:
-
-```kotlin
-// TODO 1. request에서 title, content 값을 꺼내세요.
-// TODO 2. 이 값으로 Post 객체를 만드세요.
-// TODO 3. repository.save(...)를 호출하세요.
-// TODO 4. 저장 결과를 PostResponse로 변환하세요.
+```bash
+git checkout 01-implementation
 ```
 
-또 아래 원칙을 반드시 지키세요.
+## 실습 전 확인
 
-* `TODO 1`, `TODO 2`, `TODO 3`처럼 번호를 붙인다.
-* 한 TODO에는 한 동작만 넣는다.
-* 문법 설명보다 흐름 설명을 적는다.
-* 학생이 하지 말아야 할 것도 적는다.
-* 역할이 섞이지 않게 유도한다.
+- 토픽 레포: `spring-boot-rest-crud-lab`
+- 가이드 브랜치: `main`
+- 시작 브랜치: `01-implementation`
+- Java와 Gradle 실행 환경이 준비되어 있어야 합니다.
+- 이번 시퀀스에서는 DB, JPA, Security, Validation을 다루지 않습니다.
 
-예:
+## 구현할 TODO
 
-```kotlin
-// TODO: Controller에서 직접 저장하지 마세요.
-// Service를 호출해서 역할을 분리해보세요.
+1. `PostCreateRequest`를 작성합니다.
+2. `PostResponse`를 작성합니다.
+3. 메모리에 저장할 `Post` 모델을 확인합니다.
+4. `PostMemoryRepository` 저장/조회 흐름을 구현합니다.
+5. `PostService.create()`를 구현합니다.
+6. `PostService.getAll()`과 `getById()`를 구현합니다.
+7. `PostController`에서 POST/GET API를 연결합니다.
+8. Swagger에서 생성, 전체 조회, 단건 조회를 실행합니다.
+
+## 실행 방법
+
+```bash
+./gradlew bootRun
 ```
 
----
+## 테스트 방법
 
-## 10. theory.md 작성 규칙
+```bash
+./gradlew test
+```
 
-docs/theory.md 는 아래 구조를 따르세요.
+테스트가 확인하는 것:
 
-1. 제목
-2. 한 줄 소개
-3. 이번 시퀀스 한 줄 요약
-4. 먼저 이것만 기억해도 됩니다
-5. 왜 이 시퀀스를 배우는가
-6. 이번 실습 흐름 한눈에 보기
-7. 중요한 코드 먼저 보기
-8. 핵심 개념 쉬운 설명
+- Controller smoke test로 Spring MVC 요청 경로가 연결되는지 확인합니다.
+- 게시글 생성, 전체 조회, 단건 조회의 기본 성공 케이스가 통과하는지 확인합니다.
+- 메모리 Repository가 요청 흐름 안에서 값을 저장하고 다시 반환하는지 확인합니다.
 
-   * Request DTO
-   * Response DTO
-   * Controller
-   * Service
-   * 메모리 저장소
-   * Swagger
-9. 자주 헷갈리는 포인트
-10. 직접 말해보기
-11. 복습 체크리스트
-12. 오늘 꼭 기억할 것
+실패하면 먼저 볼 것:
 
-주의:
+- 실패한 테스트 이름에서 어떤 API가 깨졌는지 먼저 읽습니다.
+- Controller mapping 경로, HTTP method, DTO 필드 이름이 테스트 요청과 같은지 확인합니다.
+- 메모리 저장소는 서버 재시작 후 비어 있는 것이 정상입니다.
 
-* 정의만 길게 쓰지 마세요.
-* 코드와 반드시 연결하세요.
-* 짧은 코드 블록을 사용하세요.
-* 코드 블록에는 설명용 주석을 넣어도 됩니다.
-* 학생이 “아 이 코드가 그 말이었구나”를 느끼게 써야 합니다.
+완료 기준:
 
----
+- Controller smoke test가 통과합니다.
+- CRUD API 기본 성공 케이스가 통과합니다.
+- 실패 메시지를 보고 Controller, Service, Repository 중 어디를 볼지 설명할 수 있습니다.
 
-## 11. implementation.md 작성 규칙
+## 확인할 API 또는 화면
 
-docs/implementation.md 는 아래 구조를 따르세요.
+- Swagger: `http://localhost:8080/swagger`
+- `POST /posts`
+- `GET /posts`
+- `GET /posts/{id}`
 
-1. 제목
-2. 오늘 학생이 완성할 최종 흐름
-3. 학생이 직접 구현할 순서
-4. TODO를 넣을 파일
-5. 파일별 역할 설명
-6. 단계별 구현 안내
+## 자주 발생하는 문제
 
-   * Step 1. Request DTO 만들기
-   * Step 2. Response DTO 만들기
-   * Step 3. Post 데이터 클래스 만들기
-   * Step 4. 메모리 저장소 만들기
-   * Step 5. Service.create() 구현
-   * Step 6. Service.getAll() 구현
-   * Step 7. Service.getById() 구현
-   * Step 8. Controller 연결
-   * Step 9. Swagger 실행 확인
-7. 각 단계의 확인 포인트
-8. 학생 체크 질문
-9. 강사용 확인 포인트
-10. 다음 시퀀스 연결 포인트
+- Controller에서 직접 저장하려고 합니다. Controller는 Service를 호출하는 입구 역할만 합니다.
+- 서버 재시작 후 데이터가 사라집니다. 메모리 저장소라서 정상입니다.
+- DTO와 내부 모델을 같은 것으로 생각합니다. 요청/응답 모양과 내부 저장 모양은 분리합니다.
+- Swagger 경로가 열리지 않으면 서버가 정상 기동했는지 로그를 먼저 확인합니다.
 
-주의:
+## 완료 기준
 
-* 결과만 적지 말고 손의 순서가 보여야 합니다.
-* 단계별로 학생이 막히기 쉬운 부분을 짧게 힌트로 적으세요.
-* 각 단계가 끝났을 때 무엇이 보이면 성공인지 써주세요.
+- POST 요청으로 게시글을 생성할 수 있습니다.
+- 전체 조회와 단건 조회가 동작합니다.
+- Controller -> Service -> Repository 흐름을 설명할 수 있습니다.
+- 서버 재시작 시 메모리 데이터가 사라지는 이유를 설명할 수 있습니다.
+- `./gradlew test`가 통과합니다.
 
----
+## 정답과 비교하는 방법
 
-## 12. answer-guide.md 작성 규칙
+막혔거나 실습을 마친 뒤에만 참고 정답과 비교합니다.
 
-docs/answer-guide.md 는 정답 문서입니다.
+```bash
+git diff 01-implementation..01-answer
+```
 
-반드시 아래를 포함하세요.
+## 다음 시퀀스
 
-* 각 파일의 최종 형태 설명
-* 핵심 정답 코드
-* POST 요청 예시
-* GET 전체 조회 예시
-* GET 단건 조회 예시
-* 예시 응답
-* Controller → Service → 저장소 흐름 해설
-* 학생이 자주 틀리는 포인트
-* 왜 메모리 저장이라 서버 재시작 시 사라지는지 설명
-* 다음 시퀀스에서 왜 DB 저장이 필요한지 연결
-
-정답 문서는 너무 장황하게 쓰지 말고,
-강사가 빠르게 비교하고 학생도 복습하기 쉬운 형태로 만드세요.
-
----
-
-## 13. starter 코드 파일 작성 규칙
-
-starter 코드는 아래 성격을 가져야 합니다.
-
-* 바로 실행은 가능해야 함
-* 핵심 부분은 비어 있거나 TODO로 남아 있어야 함
-* TODO는 학생이 수업 시간 안에 채울 수 있어야 함
-* TODO 없는 보일러플레이트는 제공
-* Swagger에서 확인 가능한 최소 API 구조 유지
-
-필수 starter 파일 예시:
-
-* `src/main/kotlin/.../controller/PostController.kt`
-* `src/main/kotlin/.../service/PostService.kt`
-* `src/main/kotlin/.../repository/PostMemoryRepository.kt`
-* `src/main/kotlin/.../dto/PostCreateRequest.kt`
-* `src/main/kotlin/.../dto/PostResponse.kt`
-* `src/main/kotlin/.../domain/Post.kt`
-
-필요하면 패키지 구조도 제안하세요.
-
----
-
-## 14. checklist.md 작성 규칙
-
-docs/checklist.md 에는 반드시 아래를 넣으세요.
-
-### 학생 체크리스트
-
-예:
-
-* 요청이 어디서 시작하는지 말할 수 있다.
-* Controller와 Service의 차이를 설명할 수 있다.
-* 서버 재시작 시 데이터가 왜 사라지는지 말할 수 있다.
-* Swagger에서 API를 직접 실행할 수 있다.
-
-### 강사 / PPT 체크리스트
-
-예:
-
-* 요청 → Controller → Service → 응답 흐름 그림이 있는가
-* 메모리 저장의 한계를 설명할 예시가 있는가
-* Swagger 실행 화면을 보여줄 수 있는가
-* Controller가 직접 저장하지 않는 이유를 설명할 수 있는가
-
-또 아래도 포함하세요.
-
-* 수업 전 준비 체크
-* 수업 중 질문 체크
-* 수업 후 복습 체크
-
----
-
-## 15. assets.md 작성 규칙
-
-docs/assets.md 에는 아래를 넣으세요.
-
-* 제공 파일/설정 목록
-* 각 항목의 목적
-* 왜 학생이 직접 치지 않아도 되는지
-* 수업에서 언제 쓰는지
-
-예:
-
-* Swagger 설정: API 실행 확인용 UI 제공
-* application 설정: 반복 설정이므로 제공
-* 패키지 구조: 학생이 흐름에 집중하도록 제공
-
----
-
-## 16. 절대 하지 말아야 할 것
-
-* JPA를 넣지 마세요.
-* DB를 연결하지 마세요.
-* Validation, Exception Handling, Security를 미리 넣지 마세요.
-* 너무 많은 API를 만들지 마세요.
-* 코드 없는 추상 설명만 길게 쓰지 마세요.
-* 반대로 설명 없는 코드만 길게 나열하지도 마세요.
-* 이번 요청에서는 01 시퀀스 범위를 벗어나지 마세요.
-
-각 파일은 바로 복붙해서 저장할 수 있게
-완성된 형태로 작성하세요.
+다음은 `02. 영속성 저장과 계층 분리`입니다.
+메모리 저장소를 MySQL/JPA 기반 저장소로 바꿉니다.

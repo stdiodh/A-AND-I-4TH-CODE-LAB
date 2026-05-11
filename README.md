@@ -15,6 +15,53 @@
 중앙 `docs`는 상세 이론 저장소가 아닙니다.
 상세 이론과 실습 문서는 각 토픽 레포 안에서 작성하고, 이 저장소는 운영 기준과 생성 순서를 관리합니다.
 
+## 문서 입구
+
+읽는 사람에 따라 아래 문서부터 시작합니다.
+
+| 대상 | 시작 문서 | 목적 |
+| --- | --- | --- |
+| 학생 | [docs/student/how-to-use-this-course.md](./docs/student/how-to-use-this-course.md) | 실습 시작, 실행, 테스트, 문제 해결 |
+| 강사/운영자 | [docs/instructor/checklist.md](./docs/instructor/checklist.md) | 수업 전후 점검과 리뷰 |
+| 자동화 에이전트 | [docs/agent/codex-behavior-guide.md](./docs/agent/codex-behavior-guide.md) | 수정 범위, 금지 사항, 검증 규칙 |
+
+관련 문서:
+
+- [학생 Learning Path](./docs/student/learning-path.md)
+- [학생 Troubleshooting](./docs/student/troubleshooting.md)
+- [강사용 브랜치 정책](./docs/instructor/branch-policy.md)
+- [강사용 정답 브랜치 정책](./docs/instructor/answer-branch-policy.md)
+- [에이전트 Repository Rules](./docs/agent/repository-rules.md)
+- [에이전트 Visual Lab Rules](./docs/agent/visual-lab-rules.md)
+
+## 학생 실습 시작 흐름
+
+학생은 중앙 레포를 서브모듈까지 clone할 필요가 없습니다.
+중앙 레포는 수업 운영자가 오늘의 시퀀스와 토픽 레포를 확인하는 허브이고,
+학생은 해당 토픽 레포만 clone해서 실습을 시작합니다.
+
+학생 안내 흐름은 아래 순서로 고정합니다.
+
+1. 중앙 README 또는 수업 안내에서 오늘의 시퀀스를 확인합니다.
+2. 오늘의 시퀀스에 해당하는 토픽 레포로 이동합니다.
+3. 토픽 레포에서 `NN-implementation` 브랜치로 checkout합니다.
+4. `README.md`, `docs/theory.md`, `docs/implementation.md` 순서로 실습합니다.
+5. 막혔거나 실습을 마친 뒤에만 `NN-answer` 브랜치와 비교합니다.
+
+예를 들어 시퀀스 01은 아래처럼 시작합니다.
+
+```bash
+git clone https://github.com/stdiodh/spring-boot-rest-crud-lab.git
+cd spring-boot-rest-crud-lab
+git checkout 01-implementation
+```
+
+정답 비교는 학생 첫 진입 흐름이 아니라, 실습 후 검토 흐름입니다.
+
+```bash
+git diff 01-implementation..01-answer
+```
+
 ## 작업 공간 기준
 
 - 로컬 작업 기준 루트: 이 저장소의 루트 디렉터리
@@ -27,11 +74,15 @@ Codex는 항상 이 저장소 루트를 현재 작업 기준점으로 보고 문
 
 ## Source Of Truth
 
-아래 세 가지가 중앙 기준입니다.
+코스 구조의 단일 관리 기준은 `docs/manifest/sequences.yml`입니다.
+시퀀스별 레포, 브랜치, 실행 명령, 테스트 명령, Visual Lab 위치를 확인할 때는 먼저 manifest를 봅니다.
 
-1. `README.md`
-2. `docs/curriculum/*`
-3. `docs/sequences/*`
+아래 문서들은 중앙 기준입니다.
+
+1. `docs/manifest/sequences.yml`
+2. `README.md`
+3. `docs/curriculum/*`
+4. `docs/sequences/*`
 
 특히 시퀀스 순서와 범위 판단의 최종 기준은 `docs/sequences`입니다.
 중앙 문서에 없는 범위를 Codex가 임의로 추가하면 안 됩니다.
@@ -82,6 +133,10 @@ Codex는 프로젝트 루트부터 현재 작업 디렉터리까지 내려오며
 ```text
 AGENTS.md
 docs/
+  agent/
+    codex-behavior-guide.md
+    repository-rules.md
+    visual-lab-rules.md
   codex-behavior-guide.md
   code-review.md
   implementation-plan-template.md
@@ -398,6 +453,19 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 - 학생이 시작할 브랜치와 강사가 비교할 브랜치 안내
 - 시퀀스 맵 또는 브랜치 맵 제공
 
+학생에게 안내하는 기본 흐름은 항상 아래 순서입니다.
+
+```text
+오늘의 시퀀스 확인
+-> 해당 토픽 레포 이동
+-> NN-implementation 브랜치에서 시작
+-> 막혔을 때 또는 완료 후 NN-answer와 비교
+```
+
+legacy 브랜치명인 `implementation` / `answer`는 새 안내 문서에서 사용하지 않습니다.
+이미 원격에 남아 있는 경우에는 deprecated로만 표시하고,
+삭제나 default branch 변경은 GitHub UI에서 수동으로 처리합니다.
+
 ## 토픽 레포 운영 전략
 
 토픽 레포는 시퀀스별로 무조건 새로 만드는 것이 아니라, 도메인 기준으로 관리합니다.
@@ -457,6 +525,19 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 - `spring-boot-deployment-runtime-lab`: 시퀀스 09~10 실습 레포, Docker/배포/CI-CD 시퀀스 레포
 - `spring-boot-refactoring-foundation-lab`: 시퀀스 11 실습 레포, 리팩토링과 기초 보강 전용 레포
 - `spring-boot-event-driven-lab`: 시퀀스 12 실습 레포, RabbitMQ 기반 이벤트 발행/소비 전용 레포
+
+## 수동 GitHub 조치 목록
+
+아래 작업은 문서 정리와 별개로 GitHub UI에서 수동으로 처리합니다.
+Codex가 원격 default branch를 직접 바꾸거나 remote branch를 삭제하지 않습니다.
+
+| Repo | 필요한 수동 조치 | 이유 |
+| --- | --- | --- |
+| `spring-boot-rest-crud-lab` | default branch를 `main`으로 변경 | 현재 원격 HEAD가 legacy `implementation`을 가리킬 수 있어 학생 시작 흐름과 충돌합니다. |
+| `spring-boot-event-driven-lab` | default branch를 `main`으로 변경 | 현재 원격 HEAD가 `12-answer`를 가리킬 수 있어 정답 브랜치가 먼저 노출될 위험이 있습니다. |
+| `spring-boot-rest-crud-lab` | legacy `implementation`, `answer` 브랜치를 deprecated 처리 후 삭제 여부 결정 | 정식 수업 브랜치는 `01-implementation`, `01-answer`입니다. |
+| `aandi-prerequisite-bootcamp` | legacy `implementation`, `answer` 브랜치가 남아 있으면 deprecated 처리 후 삭제 여부 결정 | 정식 수업 브랜치는 `00-implementation`, `00-answer`입니다. |
+| `spring-boot-db-access-lab` | legacy `implementation` 브랜치가 남아 있으면 deprecated 처리 후 삭제 여부 결정 | 정식 수업 브랜치는 `02~06-implementation`, `02~06-answer`입니다. |
 
 ## 표준 작업 프로토콜
 

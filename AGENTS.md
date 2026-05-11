@@ -3,6 +3,16 @@
 This repository uses `AGENTS.md` as the Codex project instruction file.
 Follow these instructions before making code or document changes.
 
+This file is the entry point for automated agents.
+For the split agent-facing documentation, read:
+
+- `docs/agent/codex-behavior-guide.md`
+- `docs/agent/repository-rules.md`
+- `docs/agent/visual-lab-rules.md`
+
+Student-facing instructions belong under `docs/student`.
+Instructor and operator instructions belong under `docs/instructor`.
+
 ## Core Principle
 
 Bias toward caution over speed.
@@ -19,6 +29,9 @@ For sequence work, also read the curriculum, guides, sequence document, and topi
 
 When relevant, read these project-specific documents:
 
+- `docs/agent/codex-behavior-guide.md`
+- `docs/agent/repository-rules.md`
+- `docs/agent/visual-lab-rules.md`
 - `docs/codex-behavior-guide.md`
 - `docs/code-review.md`
 - `docs/implementation-plan-template.md`
@@ -88,6 +101,8 @@ For this repository:
 - Use `NN-implementation` for student starter branches.
 - Use `NN-answer` for instructor comparison or answer branches.
 - Keep topic repository `main` branches as guide branches, not student starter branches.
+- Do not use legacy `implementation` or `answer` branch names in new student-facing instructions.
+- If legacy `implementation` or `answer` branches still exist, document them as deprecated and leave deletion/default-branch changes as manual GitHub actions.
 
 ## 6. Visual Lab Rules
 
