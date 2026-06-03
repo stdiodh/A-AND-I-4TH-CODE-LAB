@@ -55,6 +55,10 @@
 | `spring-boot-redis-cache-lab-07-answer-worktree` | `07-answer` | `5aae22a` | answer theory 문서를 PAAR, 실행 시퀀스, 계층/DTO 흐름, 실무 포인트, 용어 정리 중심으로 재작성 |
 | `spring-boot-realtime-communication-lab-08-implementation-worktree` | `08-implementation` | `ff0e0c1` | theory 문서를 PAAR, 실행 시퀀스, 계층/DTO 흐름, 실무 포인트, 용어 정리 중심으로 재작성 |
 | `spring-boot-realtime-communication-lab-08-answer-worktree` | `08-answer` | `a64f5ee` | answer theory 문서를 PAAR, 실행 시퀀스, 계층/DTO 흐름, 실무 포인트, 용어 정리 중심으로 재작성 |
+| `spring-boot-deployment-runtime-lab-09-implementation-worktree` | `09-implementation` | `0192b4f` | theory 문서를 PAAR, 실행 시퀀스, 설정 메시지 흐름, 실무 포인트, 용어 정리 중심으로 재작성 |
+| `spring-boot-deployment-runtime-lab-09-answer-worktree` | `09-answer` | `c188298` | answer theory 문서를 PAAR, 실행 시퀀스, 설정 메시지 흐름, 실무 포인트, 용어 정리 중심으로 재작성 |
+| `spring-boot-deployment-runtime-lab-10-implementation-worktree` | `10-implementation` | `d51af85` | theory 문서를 PAAR, 실행 시퀀스, workflow 메시지 흐름, 실무 포인트, 용어 정리 중심으로 재작성 |
+| `spring-boot-deployment-runtime-lab-10-answer-worktree` | `10-answer` | `dd2141d` | answer theory 문서를 PAAR, 실행 시퀀스, workflow 메시지 흐름, 실무 포인트, 용어 정리 중심으로 재작성 |
 | `aandi-prerequisite-bootcamp` | `main` | `66def0b` | SEQ 00 main Visual Lab 스펙 정리와 main 정답 자료 노출 축소 |
 | `aandi-prerequisite-bootcamp-00-implementation-worktree` | `00-implementation` | `e787d95` | starter 문서의 answer 브랜치명/정답 자료 경로 노출 제거 |
 | `aandi-prerequisite-bootcamp-00-answer-worktree` | `00-answer` | `1bf3a1b` | answer 문서 구조 정리와 멘토 비교 포인트 보강 |
@@ -233,8 +237,16 @@
 | 07 | `07-answer` | `5aae22a` | 금지 메타 필드 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test` 통과 |
 | 08 | `08-implementation` | `ff0e0c1` | 금지 노출 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test` 통과 |
 | 08 | `08-answer` | `a64f5ee` | 금지 메타 필드 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test` 통과 |
+| 09 | `09-implementation` | `0192b4f` | 금지 노출 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test bootJar` 통과 |
+| 09 | `09-answer` | `c188298` | 금지 메타 필드 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test bootJar` 통과 |
+| 10 | `10-implementation` | `d51af85` | theory 금지 노출 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test bootJar`와 `bash -n scripts/deploy.sh scripts/check-deploy.sh` 통과 |
+| 10 | `10-answer` | `dd2141d` | 금지 메타 필드 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test bootJar`와 `bash -n scripts/deploy.sh scripts/check-deploy.sh` 통과 |
 
 남은 theory 재작성 대상:
 
 - SEQ 00~04
-- SEQ 09~12
+- SEQ 11~12
+
+추가로 확인한 범위 밖 위험:
+
+- `spring-boot-deployment-runtime-lab` `10-implementation`의 `.github/workflows/ci.yml`에는 PR target 목록에 `10-answer`가 남아 있습니다. 이번 theory 재작성 범위에서는 수정하지 않았고, 별도 answer 노출 정리 작업에서 처리해야 합니다.
