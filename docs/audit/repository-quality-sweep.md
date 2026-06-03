@@ -235,6 +235,8 @@
 | 01 | `01-answer` | `1b28dad` | 금지 메타 필드 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test` 통과 |
 | 02 | `02-implementation` | `1fb6a7c` | 금지 노출 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test` 통과 |
 | 02 | `02-answer` | `ce9a3ff` | 금지 메타 필드 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test` 통과 |
+| 03 | `03-implementation` | `413347c` | 금지 노출 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test` 통과 |
+| 03 | `03-answer` | `7c79839` | 금지 메타 필드 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test` 통과 |
 | 05 | `05-implementation` | `9bd6b11` | 금지 노출 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test` 통과 |
 | 05 | `05-answer` | `dc5bdd3` | 금지 메타 필드 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test` 통과 |
 | 06 | `06-implementation` | `0ff8336` | 금지 노출 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test` 통과 |
@@ -254,7 +256,7 @@
 
 남은 theory 재작성 대상:
 
-- SEQ 03~04
+- SEQ 04
 
 추가로 확인한 범위 밖 위험:
 
