@@ -24,6 +24,8 @@
 | `spring-boot-rest-crud-lab-01-implementation-worktree` | `01-implementation` | `f7edadc` | starter 문서의 answer 브랜치명/정답 안내 노출 제거 |
 | `spring-boot-rest-crud-lab-01-answer-worktree` | `01-answer` | `df86d7d` | answer 문서 구조 정리와 멘토 비교 포인트 보강 |
 | `spring-boot-event-driven-lab` | `main` | `809df6a` | SEQ 12 Visual Lab 스펙 정리와 main legacy 정답 가이드 축소 |
+| `spring-boot-event-driven-lab-12-implementation-worktree` | `12-implementation` | `6b2c924` | starter 문서의 answer 브랜치명/구현 코드 노출 제거 |
+| `spring-boot-event-driven-lab-12-answer-worktree` | `12-answer` | `02a94a3` | answer 문서 구조 정리와 멘토 비교 포인트 보강 |
 | `spring-boot-refactoring-foundation-lab` | `main` | `4cc498d` | SEQ 11 main 문서 범위 복구와 Visual Lab 스펙 정리 |
 | `spring-boot-redis-cache-lab` | `main` | `6d306f0` | SEQ 07 main Visual Lab 스펙 정리와 guide 문서 보정 |
 | `spring-boot-realtime-communication-lab` | `main` | `c71e913` | SEQ 08 main Visual Lab 스펙 정리와 guide 문서 보정 |
@@ -49,7 +51,7 @@
 | 09 | Docker/Runtime | `spring-boot-deployment-runtime-lab` | `09-implementation` | `09-answer` | main guide 보정 완료, implementation/answer 추가 점검 필요 | main 4파일 스펙 정리 완료 | implementation/answer 문서 추가 감사 필요 | 4 |
 | 10 | CI/CD Deployment | `spring-boot-deployment-runtime-lab` | `10-implementation` | `10-answer` | main guide 보정 완료, implementation/answer 추가 점검 필요 | main 4파일 스펙 정리 완료 | implementation/answer 문서 추가 감사 필요 | 4 |
 | 11 | Refactoring Foundation | `spring-boot-refactoring-foundation-lab` | `11-implementation` | `11-answer` | main 범위 혼입 정리 완료, implementation/answer 추가 점검 필요 | main 4파일 스펙 정리 완료 | implementation/answer 문서 추가 감사 필요 | 3 |
-| 12 | Event Driven | `spring-boot-event-driven-lab` | `12-implementation` | `12-answer` | main legacy 정리 완료, implementation/answer 추가 점검 필요 | main 4파일 스펙 정리 완료 | 원격 HEAD가 `12-answer`를 가리킬 수 있음 | 2 |
+| 12 | Event Driven | `spring-boot-event-driven-lab` | `12-implementation` | `12-answer` | main/implementation/answer 정리 완료 | main 4파일 스펙 정리 완료 | 원격 HEAD/default branch 수동 확인 필요 | 2 |
 
 ## 3. 레포별 문제 요약
 
@@ -67,6 +69,8 @@
 | `spring-boot-deployment-runtime-lab` | 09~10 공통 main Visual Lab을 현재 4파일 스펙에 맞춰 정리하고, guide 문서의 완성 코드 표현을 비교 기준으로 낮췄습니다. |
 | `spring-boot-refactoring-foundation-lab` | main에 남아 있던 10 CI/CD 문서 범위 혼입을 SEQ 11 리팩토링 범위로 정리하고 Visual Lab을 현재 4파일 스펙에 맞췄습니다. |
 | `spring-boot-event-driven-lab` | main Visual Lab을 현재 4파일 스펙에 맞춰 정리하고, main의 긴 정답 가이드를 deprecated 안내로 낮췄습니다. 원격 default branch가 `12-answer`를 가리킬 가능성은 GitHub UI 수동 조치가 필요합니다. |
+| `spring-boot-event-driven-lab` `12-implementation` | `README.md`, `docs/theory.md`, `docs/implementation.md`, `docs/checklist.md`, `docs/answer-guide.md`, `docs/branch-guide.md`에서 answer 브랜치명, 완성 구현 코드 조각, 금지 표현을 제거했습니다. |
+| `spring-boot-event-driven-lab` `12-answer` | `README.md`, `docs/theory.md`, `docs/implementation.md`, `docs/checklist.md`를 starter 흐름과 맞추고 answer 브랜치에서만 필요한 비교/멘토 리뷰 포인트를 보강했습니다. |
 
 ## 4. 정답 노출 의심 목록
 
@@ -89,7 +93,8 @@
 | `spring-boot-refactoring-foundation-lab` main Visual Lab/legacy answer guide | answerBranch, `11-answer`, 정답 코드, 긴 완성 구현 코드 노출 제거 | 처리 완료 |
 | `spring-boot-refactoring-foundation-lab` `11-implementation` | 추가 검색 필요 | 미처리 |
 | `spring-boot-event-driven-lab` main Visual Lab/legacy answer guide | answerBranch, `12-answer`, 정답 코드, 긴 완성 구현 코드 노출 제거 | 처리 완료 |
-| `spring-boot-event-driven-lab` `12-implementation` | 추가 검색 필요 | 미처리 |
+| `spring-boot-event-driven-lab` `12-implementation` | `12-answer`, 완성 구현 코드 조각, 금지 표현 노출 제거 | 처리 완료 |
+| `spring-boot-event-driven-lab` `12-answer` | answer 브랜치 내부 비교 코드와 멘토 포인트로 정리. 금지 표현과 answerBranch 메타 필드 없음 | 처리 완료 |
 
 ## 5. Visual Lab 스펙 미준수 목록
 
@@ -141,8 +146,9 @@
 
 ## 8. 이번 5시간 안에 처리하지 못한 항목
 
-- SEQ 02~12 각 implementation 브랜치의 정답 노출 검색과 문서 보강은 아직 수행하지 않았습니다. 단, SEQ 00~01 implementation 정답 노출 제거는 완료했습니다.
+- SEQ 02~11 각 implementation 브랜치의 정답 노출 검색과 문서 보강은 아직 수행하지 않았습니다. 단, SEQ 00~01, 12 implementation 정답 노출 제거는 완료했습니다.
 - SEQ 00~12 main Visual Lab 정리는 완료했습니다. 남은 항목은 implementation/answer 문서 감사입니다.
 - SEQ 00은 Gradle 프로젝트가 아니라 `./gradlew test`를 실행하지 않았습니다. 대신 main/implementation/answer에서 `java -version`, `git --version`을 확인했고, main Visual Lab은 정적 서버, `node --check`, 중앙 validator로 검증했습니다.
 - SEQ 02~06 `./gradlew test`는 실패했습니다. 실패 원인은 `CustomOAuthUserService` 처리 중 `org/springframework/security/oauth2/client/userinfo/OAuth2UserService.class`를 찾지 못하는 Spring 컨텍스트 로딩 오류입니다. 이번 변경 범위는 문서와 정적 Visual Lab 파일이라 코드/의존성 수정은 하지 않았습니다.
+- SEQ 12 `./gradlew test`는 implementation/answer 모두 통과했습니다. 단, `Jackson2JsonMessageConverter` deprecation warning은 코드/의존성 범위라 이번 문서 정리에서 수정하지 않았습니다.
 - legacy 브랜치 삭제, default branch 변경, 원격 branch 정리는 수행하지 않았습니다. 이는 GitHub UI 또는 명시적 승인 후 처리해야 합니다.
