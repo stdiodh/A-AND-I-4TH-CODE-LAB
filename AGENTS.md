@@ -104,6 +104,25 @@ For this repository:
 - Do not use legacy `implementation` or `answer` branch names in new student-facing instructions.
 - If legacy `implementation` or `answer` branches still exist, document them as deprecated and leave deletion/default-branch changes as manual GitHub actions.
 
+## 5-1. Minimal Sequence Documentation Rule
+
+Each sequence should avoid increasing document count by default.
+The standard sequence document set is:
+
+- `README.md`
+- `docs/theory.md`
+- `docs/implementation.md`
+- `docs/checklist.md`
+- `docs/visual-lab/index.html`
+- `docs/visual-lab/styles.css`
+- `docs/visual-lab/visual-lab-data.js`
+- `docs/visual-lab/visual-lab.js`
+
+Do not split mentor and mentee guidance into new files.
+Put mentor-only review points inside existing documents with `<details>` sections.
+Do not create separate blog artifacts; apply Problem -> Analyze -> Action -> Result as a writing and revision flow for existing documents.
+Legacy files such as `docs/answer-guide.md`, `docs/assets.md`, or `docs/branch-guide.md` may remain when external links may exist, but new sequence cleanup should first merge useful content into the four standard documents.
+
 ## 6. Visual Lab Rules
 
 For A&I Backend Visual Lab work:
@@ -117,7 +136,7 @@ For A&I Backend Visual Lab work:
 - Do not use external JS libraries, React, Vue, Next.js, Bootstrap, or Tailwind CDN.
 - Use relative paths so GitHub Pages can open the page.
 - Do not paste long theory text or full answer code into central HTML.
-- Connect every sequence through `NN-implementation` and `NN-answer` when possible.
+- Do not expose `answerBranch`, `NN-answer`, or long completed implementation code in Visual Lab files.
 - After each sequence is complete, commit/push the submodule first, then commit/push the root submodule pointer.
 - Do not start the next sequence until the previous sequence's submodule and root pointer updates are complete or the user explicitly redirects.
 

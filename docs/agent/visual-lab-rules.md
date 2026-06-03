@@ -31,8 +31,8 @@ docs/visualizer/*
 
 - Visual Lab은 이론 문서 대체물이 아닙니다.
 - 긴 이론과 정답 코드 전체를 넣지 않습니다.
-- `NN-implementation`은 학생 시작 링크로 둡니다.
-- `NN-answer`는 완성 흐름 비교 기준으로만 사용합니다.
+- `answerBranch`, `sourceAnswerBranch`, `NN-answer` 문자열을 노출하지 않습니다.
+- 학생이 흐름을 이해하는 진입점으로 두고, 정답 비교 안내는 README, checklist의 멘토용 접힘 영역 또는 answer 브랜치 문서에서 처리합니다.
 
 ## 확인 명령
 

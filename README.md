@@ -87,6 +87,30 @@ Codex는 항상 이 저장소 루트를 현재 작업 기준점으로 보고 문
 특히 시퀀스 순서와 범위 판단의 최종 기준은 `docs/sequences`입니다.
 중앙 문서에 없는 범위를 Codex가 임의로 추가하면 안 됩니다.
 
+## Minimal Sequence Documentation Rule
+
+각 시퀀스는 문서 수를 늘리지 않는 것을 기본 원칙으로 삼습니다.
+
+기본 문서 세트는 다음입니다.
+
+- `README.md`
+- `docs/theory.md`
+- `docs/implementation.md`
+- `docs/checklist.md`
+- `docs/visual-lab/index.html`
+- `docs/visual-lab/styles.css`
+- `docs/visual-lab/visual-lab-data.js`
+- `docs/visual-lab/visual-lab.js`
+
+멘토와 멘티 정보를 파일로 분리하지 않습니다.
+멘토용 진행 포인트, 리뷰 기준, answer 브랜치에서 비교할 지점은 기존 문서 안의 `<details>` 영역에 넣습니다.
+
+블로그 산출물 파일은 별도로 만들지 않습니다.
+대신 기존 문서를 Problem -> Analyze -> Action -> Result 흐름으로 다듬습니다.
+
+`docs/answer-guide.md`, `docs/assets.md`, `docs/branch-guide.md` 같은 legacy 파일은 외부 링크 가능성이 있으면 바로 삭제하지 않습니다.
+필요한 내용이 네 기본 문서에 흡수된 뒤 삭제 여부를 판단합니다.
+
 ## 작업 전 필독 문서
 
 Codex는 작업 전에 아래 문서를 반드시 읽어야 합니다.
@@ -176,7 +200,8 @@ Visual Lab 실행 프로토콜:
 6. 루트 레포에서 submodule pointer와 필요한 문서 변경을 commit, push합니다.
 7. 이 흐름이 끝나기 전에는 다음 시퀀스를 시작하지 않습니다.
 
-Visual Lab은 모든 시퀀스를 아래 브랜치 기준으로 연결합니다.
+Visual Lab 작성과 검수는 아래 브랜치 기준을 참고합니다.
+다만 화면과 데이터 파일에는 정답 브랜치명이나 완성 구현 코드를 노출하지 않습니다.
 
 - `NN-implementation`: 학생 실습용 starter 브랜치
 - `NN-answer`: 강사용 비교/정답 브랜치
@@ -186,7 +211,7 @@ Visual Lab은 모든 시퀀스를 아래 브랜치 기준으로 연결합니다.
 
 Visual Lab은 재생형 Step Explorer를 기본 패턴으로 사용합니다.
 각 topic card는 개념 인덱스 역할을 맡고, Step Explorer는 해당 시퀀스의 핵심 흐름 1~2개만 보여줍니다.
-핵심 흐름은 `visualLabFocusFlows`의 `actors`와 `steps`를 기준으로 입력, 결과, 다음 흐름을 보여줍니다.
+핵심 흐름은 각 서브모듈의 `window.visualLabData.flow`를 기준으로 Problem, Concept, Action, Check를 보여줍니다.
 자료 링크는 새 탭으로 열어 학습 맥락을 유지합니다.
 
 시퀀스 00의 첫 대표 시각화 기준은 `aandi-prerequisite-bootcamp`의 이론/구현 문서입니다.
@@ -229,7 +254,7 @@ Visual Lab 작업 순서:
 1. `README.md`를 읽고 중앙 레포가 상세 이론 저장소가 아니라는 원칙을 확인합니다.
 2. `docs/visual-lab-sequence-workflow.md`에서 서브모듈 기반 실행 프로토콜을 확인합니다.
 3. `docs/visual-lab-design-guide.md`에서 디자인 기준과 금지 사항을 확인합니다.
-4. `docs/visual-lab-content-spec.md`에서 모든 시퀀스의 `NN-implementation` / `NN-answer` 연결 규칙을 확인합니다.
+4. `docs/visual-lab-content-spec.md`에서 브랜치 운영 기준과 Visual Lab 노출 제한을 확인합니다.
 5. `docs/visual-lab-implementation-plan.md`에서 대상 서브모듈과 생성할 파일을 확인합니다.
 6. 해당 시퀀스 서브모듈로 이동해 `docs/visual-lab/*`를 구현합니다.
 7. 서브모듈에서 검수, commit, push를 마칩니다.
@@ -252,7 +277,7 @@ Visual Lab 구현 요청은 아래 형태로 시작합니다.
 
 이번 작업의 목표는 대상 시퀀스 서브모듈의 docs/visual-lab/index.html을 진입점으로 하는 정적 HTML 학습 시각화 페이지를 만드는 것입니다.
 HTML/CSS/Vanilla JS만 사용하고, 외부 라이브러리는 사용하지 마세요.
-모든 시퀀스는 NN-implementation / NN-answer 브랜치 기준으로 연결하세요.
+브랜치 기준은 manifest와 시퀀스 문서로 확인하되, 화면과 데이터에는 정답 브랜치명이나 완성 구현 코드를 노출하지 마세요.
 중앙 레포에 상세 이론을 과도하게 복붙하지 말고, DB Access Lab의 핵심 흐름을 첫 대표 케이스로 시각화하세요.
 ```
 
@@ -328,8 +353,7 @@ Codex는 실무 확장 개념이 있는 시퀀스를 작업할 때 아래를 반
 1. 루트 `docs/sequences/0X-...md`
 2. 토픽 레포 `docs/theory.md`
 3. 토픽 레포 `docs/implementation.md`
-4. 토픽 레포 `docs/answer-guide.md`
-5. 필요하면 `docs/checklist.md`
+4. 토픽 레포 `docs/checklist.md`
 
 그리고 문서 안에는 아래 흐름이 빠지면 안 됩니다.
 
@@ -411,9 +435,11 @@ Codex는 아래 순서로만 중앙 문서를 읽고 작업합니다.
 - `README.md`
 - `docs/theory.md`
 - `docs/implementation.md`
-- `docs/answer-guide.md`
 - `docs/checklist.md`
-- `docs/assets.md`
+- `docs/visual-lab/index.html`
+- `docs/visual-lab/styles.css`
+- `docs/visual-lab/visual-lab-data.js`
+- `docs/visual-lab/visual-lab.js`
 - starter 코드
 - answer 기준 검토 완료
 - README 링크 정리 완료
@@ -563,9 +589,11 @@ Codex가 원격 default branch를 직접 바꾸거나 remote branch를 삭제하
 - `README.md`
 - `docs/theory.md`
 - `docs/implementation.md`
-- `docs/answer-guide.md`
 - `docs/checklist.md`
-- `docs/assets.md`
+- `docs/visual-lab/index.html`
+- `docs/visual-lab/styles.css`
+- `docs/visual-lab/visual-lab-data.js`
+- `docs/visual-lab/visual-lab.js`
 - starter 코드
 - answer 기준 설명 또는 비교 기준
 

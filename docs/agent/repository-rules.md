@@ -28,8 +28,20 @@
 ## 문서 분리
 
 - 학생용: 시작, 실행, 테스트, 문제 해결
-- 강사용: answer 브랜치, 리뷰, 운영 기준
+- 강사용: 기존 문서 안의 접힘 영역, answer 브랜치, 리뷰, 운영 기준
 - 에이전트용: 작업 규칙, 금지 범위, 검증 절차
+
+## 최소 문서 세트
+
+시퀀스별 기본 문서 세트는 아래로 제한합니다.
+
+- `README.md`
+- `docs/theory.md`
+- `docs/implementation.md`
+- `docs/checklist.md`
+
+새 블로그 파일, 새 멘토 전용 파일, 새 archive 폴더를 기본값으로 만들지 않습니다.
+`docs/answer-guide.md`, `docs/assets.md`, `docs/branch-guide.md` 같은 기존 파일은 legacy 후보로 보고, 외부 링크 가능성이 있으면 안내 문서로 낮춘 뒤 삭제 여부를 별도로 판단합니다.
 
 ## 검증
 

@@ -5,7 +5,8 @@
 이 문서는 A&I Backend Visual Lab에서 보여줄 학습 콘텐츠의 범위와 데이터 구조를 정의한다.
 
 Visual Lab은 상세 이론 문서를 대체하지 않는다.
-각 시퀀스와 토픽 레포의 이론 문서, 구현 문서, 체크리스트, 정답 브랜치를 시각적으로 연결하는 진입점이다.
+각 시퀀스와 토픽 레포의 이론 문서, 구현 문서, 체크리스트로 이동하기 위한 시각적 진입점이다.
+정답 브랜치는 작성자가 흐름을 검증할 때 참고할 수 있지만 화면과 데이터에는 직접 노출하지 않는다.
 
 ## 2. 모든 시퀀스 공통 브랜치 기준
 
@@ -21,7 +22,7 @@ NN-implementation
 NN-answer
 -> 강사용 비교/정답 브랜치
 -> 완성된 코드와 정답 문서가 있는 기준점
--> Visual Lab에서는 "실행 흐름을 시각화할 기준 코드"로 연결한다.
+-> Visual Lab 작성자는 검수 때 참고하되 화면과 데이터에는 브랜치명을 노출하지 않는다.
 ```
 
 `NN`은 `docs/sequences`의 번호와 같아야 한다.
@@ -39,97 +40,64 @@ NN-answer
 Visual Lab 콘텐츠를 만들 때는 각 시퀀스마다 아래 순서를 따른다.
 
 1. 중앙 `docs/sequences/NN-...md`에서 학습 범위를 확인한다.
-2. 해당 토픽 레포의 `NN-answer` 브랜치에서 실제 완성 흐름을 확인한다.
+2. 해당 토픽 레포의 `NN-answer` 브랜치에서 실제 완성 흐름을 검수한다.
 3. 해당 토픽 레포의 `NN-implementation` 브랜치에서 학생이 따라갈 구현 순서를 확인한다.
 4. HTML에는 상세 이론이나 정답 코드 전체를 복붙하지 않는다.
-5. 핵심 실행 흐름, 데이터 변환, 관련 문서/코드 링크만 보여준다.
+5. 핵심 실행 흐름과 확인 지점만 보여주고 정답 브랜치명은 숨긴다.
 
 ## 3. 모든 시퀀스 데이터 정의 규칙
 
-각 시퀀스 주제는 해당 시퀀스 서브모듈의 `docs/visual-lab/sequences.js`에서 아래 필드를 가져야 한다.
+각 시퀀스 주제는 해당 시퀀스 서브모듈의 `docs/visual-lab/visual-lab-data.js`에서 아래 필드를 가져야 한다.
 
 ```js
-{
-  id: "sequence-topic-id",
+window.visualLabData = {
   sequence: "NN",
   title: "한국어 주제명",
-  englishTitle: "English Topic Name",
-  category: "Category",
-  shortDescription: "학습 진입점 수준의 짧은 설명",
-  whyItMatters: "왜 이 흐름을 이해해야 하는지",
-  sourceRepo: "topic-repo-name",
-  sourceImplementationBranch: "NN-implementation",
-  sourceAnswerBranch: "NN-answer",
-  sourceDocs: [],
-  sourceCode: [],
-  flow: [],
-  transform: [],
-  points: [],
-  exampleRequest: {},
-  exampleResponse: {}
+  goal: "한 줄 목표",
+  problem: "이 시퀀스가 해결하는 문제",
+  flow: [
+    {
+      id: "step-1",
+      label: "단계 이름",
+      problem: "왜 이 단계가 필요한가",
+      concept: "어떤 개념을 보는가",
+      action: "무엇을 구현하거나 확인하는가",
+      check: "무엇으로 확인하는가"
+    }
+  ],
+  concepts: [],
+  practice: [],
+  mentorHints: []
 }
 ```
 
 필드 작성 규칙:
 
-- `sourceImplementationBranch`는 학생 실습 시작 브랜치를 가리킨다.
-- `sourceAnswerBranch`는 Visual Lab이 흐름을 검증할 기준 브랜치를 가리킨다.
-- `sourceDocs`는 이론/구현/체크리스트/정답 가이드 링크를 담는다.
-- `sourceCode`는 핵심 코드 파일 링크만 담는다.
-- `flow`는 topic card의 mini badge나 focus flow fallback에 쓸 짧은 실행 흐름이어야 한다.
-- topic 객체에는 기본적으로 `steps`를 두지 않는다.
-- `transform`은 JSON, DTO, Entity, DB Row, Response DTO 변환만 짧게 보여준다.
-- `points`는 3개 이내의 핵심 포인트로 제한한다.
+- `sequence`, `title`, `goal`, `flow`는 필수 필드다.
+- `flow`는 4~6개 정도의 학습 흐름으로 제한한다.
+- Visual Lab 데이터에는 `answerBranch`, `sourceAnswerBranch`, `NN-answer` 문자열을 넣지 않는다.
+- 긴 이론, 정답 코드, 완성 구현 코드는 넣지 않는다.
 
 ## 3.1 핵심 흐름 데이터 규칙
 
-각 시퀀스는 topic card와 별도로 `visualLabFocusFlows`를 가진다.
-Topic card는 개념 인덱스 역할을 맡고, Step Explorer는 `visualLabFocusFlows`의 핵심 흐름 1~2개만 보여준다.
-화면에서는 별도 Flow card를 만들지 않고, focus flow tab과 step rail이 단계 흐름을 담당한다.
-
-`visualLabFocusFlows`의 각 항목은 아래 구조를 기준으로 작성한다.
+각 시퀀스의 핵심 흐름은 `window.visualLabData.flow`에 둔다.
+Flow는 정답 비교가 아니라 학생이 따라갈 문제 해결 순서다.
+각 단계는 Problem, Concept, Action, Check를 모두 가져야 한다.
 
 ```js
 {
-  id: "http-request-response-flow",
-  sequence: "00",
-  title: "HTTP 요청/응답 핵심 흐름",
-  relatedTopicIds: ["client-server", "http-request-response"],
-  actors: [
-    { id: "client", label: "Client", type: "client" },
-    { id: "server", label: "Server", type: "server" }
-  ],
-  steps: []
+  id: "step-1",
+  label: "요청 시작",
+  problem: "요청이 어느 코드로 들어오는지 확인해야 합니다.",
+  concept: "Controller는 HTTP 입구입니다.",
+  action: "`POST /posts` 요청을 Controller 메서드와 연결합니다.",
+  check: "Swagger 또는 테스트로 요청 경로를 확인합니다."
 }
 ```
 
-`steps`는 아래 필드를 기준으로 작성한다.
-
-```js
-{
-  order: 1,
-  label: "Client",
-  title: "사용자 요청 시작",
-  description: "사용자가 브라우저나 Postman에서 API 요청을 실행합니다.",
-  input: "사용자 행동",
-  output: "HTTP Request",
-  handoff: "요청 메시지가 서버로 이동합니다.",
-  sourceLabel: "GET 요청 예시",
-  sourceUrl: "../../starter/http/get-post.http",
-  example: {
-    method: "GET",
-    path: "/posts/1"
-  }
-}
-```
-
-- `order`, `from`, `to`, `label`, `title`, `description`, `input`, `output`, `handoff`는 기본 필드다.
-- `sourceLabel`, `sourceUrl`, `example`은 필요할 때만 넣는다.
 - 한 단계에는 긴 이론이나 정답 코드 전체를 넣지 않는다.
-- `handoff`에는 다음으로 넘어가는 값을 짧게 쓴다.
-
-Step Explorer 기본 동작은 단계 선택, 이전/다음, 재생/정지, 속도 조절이다.
-Topic card 클릭은 detail, point, related 영역만 바꾸고 Step Explorer의 선택 흐름을 바꾸지 않는다.
+- Step Explorer 기본 동작은 단계 선택, 이전/다음, 진행률 표시다.
+- 버튼은 기본 focus 흐름을 유지하고 키보드 접근성을 해치지 않는다.
 단, 00 시퀀스는 HTTP, JSON, Postman, Git, DB 기초 수준을 넘지 않는다.
 
 ## 4. 반드시 참조해야 할 대표 백엔드 문서
@@ -227,7 +195,7 @@ https://github.com/stdiodh/spring-boot-db-access-lab/tree/02-answer
 
 - `02-implementation`: 학생 실습용 starter 브랜치
 - `02-answer`: 비교용 정답 브랜치
-- Visual Lab은 정답 브랜치의 흐름을 학습용으로 시각화한다.
+- Visual Lab 작성자는 정답 브랜치의 흐름을 검수 기준으로 참고한다.
 - 학생이 직접 구현할 코드를 대신 작성해주는 페이지가 아니다.
 - 코드 실행 흐름을 이해하게 만드는 페이지다.
 
@@ -401,107 +369,33 @@ PostCreateRequest
 
 ## 7. 주제 데이터 구조 예시
 
-각 시퀀스 서브모듈의 `docs/visual-lab/sequences.js`에는 아래 구조의 데이터를 사용한다.
+각 시퀀스 서브모듈의 `docs/visual-lab/visual-lab-data.js`에는 아래 구조의 데이터를 사용한다.
 
 ```js
-const visualLabTopics = [
-  {
-    id: "db-access-flow",
-    sequence: "02",
-    title: "DB 접근 흐름",
-    englishTitle: "DB Access Flow",
-    category: "Persistence",
-    shortDescription: "메모리 저장 대신 MySQL에 데이터를 저장하는 계층 흐름입니다.",
-    whyItMatters: "백엔드에서는 요청 데이터가 단순히 메모리에 머무르지 않고 DB에 영속적으로 저장되어야 합니다.",
-    sourceRepo: "spring-boot-db-access-lab",
-    sourceImplementationBranch: "02-implementation",
-    sourceAnswerBranch: "02-answer",
-    sourceDocs: [
-      {
-        label: "이론 문서",
-        url: "https://github.com/stdiodh/spring-boot-db-access-lab/blob/02-answer/docs/theory.md"
-      },
-      {
-        label: "구현 문서",
-        url: "https://github.com/stdiodh/spring-boot-db-access-lab/blob/02-answer/docs/implementation.md"
-      }
-    ],
-    sourceCode: [
-      {
-        label: "PostController.kt",
-        url: "https://raw.githubusercontent.com/stdiodh/spring-boot-db-access-lab/02-answer/src/main/kotlin/com/andi/rest_crud/controller/PostController.kt"
-      },
-      {
-        label: "PostService.kt",
-        url: "https://raw.githubusercontent.com/stdiodh/spring-boot-db-access-lab/02-answer/src/main/kotlin/com/andi/rest_crud/service/PostService.kt"
-      },
-      {
-        label: "PostEntity.kt",
-        url: "https://raw.githubusercontent.com/stdiodh/spring-boot-db-access-lab/02-answer/src/main/kotlin/com/andi/rest_crud/domain/PostEntity.kt"
-      },
-      {
-        label: "PostRepository.kt",
-        url: "https://raw.githubusercontent.com/stdiodh/spring-boot-db-access-lab/02-answer/src/main/kotlin/com/andi/rest_crud/repository/PostRepository.kt"
-      }
-    ],
-    flow: [
-      "Client",
-      "POST /posts",
-      "PostController",
-      "PostCreateRequest",
-      "PostService",
-      "PostEntity",
-      "PostRepository",
-      "MySQL",
-      "PostResponse",
-      "JSON Response"
-    ],
-    transform: [
-      {
-        from: "JSON Request",
-        to: "PostCreateRequest",
-        description: "클라이언트가 보낸 JSON 요청이 생성 DTO로 매핑됩니다."
-      },
-      {
-        from: "PostCreateRequest",
-        to: "PostEntity",
-        description: "Service에서 요청 DTO를 DB 저장용 Entity로 변환합니다."
-      },
-      {
-        from: "PostEntity",
-        to: "posts table",
-        description: "Repository가 Entity를 MySQL 테이블에 저장합니다."
-      },
-      {
-        from: "saved PostEntity",
-        to: "PostResponse",
-        description: "저장 결과를 클라이언트 응답 DTO로 변환합니다."
-      }
-    ],
-    points: [
-      "Controller는 요청의 입구입니다.",
-      "Service는 처리 흐름을 조립합니다.",
-      "Repository는 DB 접근을 담당합니다.",
-      "Entity는 DB 테이블과 연결됩니다.",
-      "Response DTO는 Entity를 그대로 노출하지 않기 위해 사용합니다."
-    ],
-    exampleRequest: {
-      method: "POST",
-      path: "/posts",
-      body: {
-        title: "A&I Backend",
-        content: "DB 저장 흐름을 학습합니다.",
-        author: "student"
-      }
-    },
-    exampleResponse: {
-      id: 1,
-      title: "A&I Backend",
-      content: "DB 저장 흐름을 학습합니다.",
-      author: "student"
+window.visualLabData = {
+  sequence: "02",
+  title: "DB 접근 흐름",
+  goal: "메모리 저장 대신 DB에 저장하는 계층 흐름을 이해한다.",
+  problem: "서버 재시작 후에도 데이터가 남으려면 메모리 밖의 저장소가 필요합니다.",
+  flow: [
+    {
+      id: "step-1",
+      label: "POST 요청",
+      problem: "생성 요청이 어느 계층으로 들어오는지 확인해야 합니다.",
+      concept: "Controller는 HTTP 입구입니다.",
+      action: "`POST /posts` 요청을 Controller에서 받습니다.",
+      check: "요청 method와 path가 의도와 맞는지 확인합니다."
     }
-  }
-];
+  ],
+  concepts: [
+    {
+      name: "Repository",
+      description: "저장소 접근 역할을 맡습니다."
+    }
+  ],
+  practice: [],
+  mentorHints: []
+};
 ```
 
 ## 8. 각 주제별 내용 정의

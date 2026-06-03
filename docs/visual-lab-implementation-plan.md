@@ -15,10 +15,9 @@ A&I Backend Visual Lab은 각 시퀀스 서브모듈 안에서 정적 HTML, CSS,
 
 ```text
 <sequence-submodule>/docs/visual-lab/index.html
-<sequence-submodule>/docs/visual-lab/style.css
-<sequence-submodule>/docs/visual-lab/components.css
-<sequence-submodule>/docs/visual-lab/sequences.js
-<sequence-submodule>/docs/visual-lab/app.js
+<sequence-submodule>/docs/visual-lab/styles.css
+<sequence-submodule>/docs/visual-lab/visual-lab-data.js
+<sequence-submodule>/docs/visual-lab/visual-lab.js
 ```
 
 루트 레포에는 위 구현 파일을 만들지 않는다.
@@ -57,7 +56,7 @@ https://github.com/stdiodh/spring-boot-db-access-lab/tree/02-answer
 ## 4. 모든 시퀀스 확장 원칙
 
 Visual Lab은 `02-answer`만을 위한 페이지가 아니다.
-`02-answer`는 DB Access 흐름을 보여주는 첫 대표 사례다.
+`02-answer`는 작성자가 DB Access 흐름을 검증할 때 참고할 수 있는 첫 대표 사례다.
 
 향후 모든 시퀀스는 아래 규칙으로 추가한다.
 
@@ -67,8 +66,8 @@ NN-implementation
 -> TODO와 구현 순서를 보여주는 링크로 연결
 
 NN-answer
--> 완성된 흐름을 시각화할 기준 브랜치
--> 코드 실행 흐름과 문서 링크의 기준으로 사용
+-> 완성된 흐름을 검증할 때 참고하는 브랜치
+-> 화면과 데이터에는 브랜치명이나 완성 구현 코드를 직접 노출하지 않음
 ```
 
 시퀀스별 콘텐츠 확장 순서:
@@ -76,9 +75,9 @@ NN-answer
 1. `docs/sequences/NN-...md`를 읽고 주제 범위를 확정한다.
 2. 해당 토픽 레포의 `NN-answer` 브랜치에서 완성 흐름을 확인한다.
 3. 해당 토픽 레포의 `NN-implementation` 브랜치에서 학생 실습 흐름을 확인한다.
-4. 해당 서브모듈의 `docs/visual-lab/sequences.js`에 한 개 이상의 topic 객체를 추가한다.
-5. `sourceImplementationBranch`, `sourceAnswerBranch`, `sourceDocs`, `sourceCode`를 반드시 넣는다.
-6. HTML에는 핵심 흐름만 표시하고 상세 이론은 링크로 연결한다.
+4. 해당 서브모듈의 `docs/visual-lab/visual-lab-data.js`에 `window.visualLabData`를 작성한다.
+5. `sequence`, `title`, `goal`, `flow`를 반드시 넣는다.
+6. HTML에는 핵심 흐름만 표시하고 상세 이론, 정답 브랜치명, 완성 구현 코드는 넣지 않는다.
 
 ## 5. 서브모듈 작업 완료 흐름
 
@@ -123,11 +122,10 @@ NN-answer
 필수 연결:
 
 ```html
-<link rel="stylesheet" href="./style.css" />
-<link rel="stylesheet" href="./components.css" />
+<link rel="stylesheet" href="./styles.css" />
 
-<script src="./sequences.js"></script>
-<script src="./app.js"></script>
+<script src="./visual-lab-data.js"></script>
+<script src="./visual-lab.js"></script>
 ```
 
 HTML 구조 예시:
@@ -198,7 +196,7 @@ relatedDocs
 relatedCode
 ```
 
-### 7.2 docs/visual-lab/style.css
+### 7.2 docs/visual-lab/styles.css
 
 역할:
 
@@ -223,7 +221,7 @@ relatedCode
 - `.section-heading`
 - 반응형 media query
 
-### 7.3 docs/visual-lab/components.css
+### 7.3 styles.css 안의 컴포넌트 스타일
 
 역할:
 
@@ -274,7 +272,7 @@ summary-box
 테두리와 배지 색상만 강조한다.
 ```
 
-### 7.4 docs/visual-lab/sequences.js
+### 7.4 docs/visual-lab/visual-lab-data.js
 
 역할:
 
@@ -283,7 +281,12 @@ summary-box
 전역 변수:
 
 ```js
-const visualLabTopics = [];
+window.visualLabData = {
+  sequence: "NN",
+  title: "...",
+  goal: "...",
+  flow: []
+};
 ```
 
 최소 포함 주제:
@@ -319,69 +322,44 @@ POST /posts
 -> JSON Response
 ```
 
-모든 topic은 가능하면 아래 브랜치 필드를 포함한다.
+Visual Lab 데이터에는 answer 브랜치명과 완성 구현 코드를 넣지 않는다.
+`flow`는 Problem, Concept, Action, Check가 드러나는 4~6단계 학습 흐름으로 둔다.
 
 ```js
-sourceImplementationBranch: "NN-implementation",
-sourceAnswerBranch: "NN-answer"
-```
-
-모든 topic은 개념 카드와 자료 연결의 기준으로 사용한다.
-`flow`는 mini badge나 fallback용 짧은 흐름으로만 둔다.
-단, 화면에는 별도 Flow card를 만들지 않는다.
-Step Explorer는 `visualLabFocusFlows`의 핵심 흐름 1~2개만 렌더링한다.
-
-```js
-const visualLabFocusFlows = [
-  {
-    id: "http-request-response-flow",
-    sequence: "00",
-    title: "HTTP 요청/응답 핵심 흐름",
-    relatedTopicIds: ["client-server", "http-request-response"],
-    actors: [],
-    steps: []
-  }
-];
+window.visualLabData = {
+  sequence: "NN",
+  title: "한국어 주제명",
+  goal: "한 줄 목표",
+  problem: "이 시퀀스가 해결하는 문제",
+  flow: [
+    {
+      id: "step-1",
+      label: "단계 이름",
+      problem: "왜 이 단계가 필요한가",
+      concept: "어떤 개념을 보는가",
+      action: "무엇을 구현하거나 확인하는가",
+      check: "무엇으로 확인하는가"
+    }
+  ]
+};
 ```
 
 `sourceUrl`과 `example`은 필요할 때만 넣는다.
-긴 이론과 정답 코드 전체는 focus flow step에 넣지 않는다.
+긴 이론과 정답 코드 전체는 `flow` 단계에 넣지 않는다.
 
-### 7.5 docs/visual-lab/app.js
+### 7.5 docs/visual-lab/visual-lab.js
 
 역할:
 
-- `visualLabTopics` 데이터를 렌더링한다.
+- `window.visualLabData` 데이터를 렌더링한다.
 - 카드 클릭 이벤트를 처리한다.
-- 선택된 주제, 핵심 흐름, 예시, 링크를 표시한다.
-
-필수 함수:
-
-```js
-renderTopicCards()
-renderTopicDetail(topic)
-renderFocusFlowTabs()
-renderStepExplorer(flow)
-renderArchitectureDiagram(flow)
-renderStepRail(steps)
-renderCurrentStep(step, index, total)
-selectFocusFlow(flowId)
-selectStep(index)
-goToPrevStep()
-goToNextStep()
-renderTransforms(transforms)
-renderPoints(points)
-renderExamples(topic)
-renderRelatedLinks(topic)
-selectTopic(topicId)
-```
+- Hero, Problem, Flow, Concepts, Practice Check, Mentor Hint를 표시한다.
 
 Step Explorer 기준:
 
-- focus flow 변경 시 첫 단계로 초기화한다.
-- `visualLabFocusFlows[].steps`를 우선 렌더링하고, 없으면 해당 focus flow의 `flow`로 fallback한다.
-- topic card 클릭은 detail, point, related 영역만 바꾸고 Step Explorer를 카드별 단계로 바꾸지 않는다.
-- 별도 Flow card, `flowTimeline`, `renderFlow()`는 만들지 않는다.
+- `window.visualLabData.flow`가 없으면 빈 상태 메시지를 보여준다.
+- 단계 선택 시 현재 단계와 진행률을 갱신한다.
+- topic card 또는 개념 카드 클릭은 Step Explorer의 기본 흐름을 깨지 않는다.
 - 단계 선택, 이전/다음, 재생/정지, 속도 조절이 동작한다.
 - 마지막 단계에서는 자동 재생을 멈춘다.
 - 첫/마지막 단계의 이동 버튼은 disabled 처리한다.
@@ -437,18 +415,17 @@ Step Explorer 기준:
 
 ### Step 5. 콘텐츠 데이터 생성
 
-- `visualLabTopics` 작성
-- DB Access Lab 기준 주제 우선 작성
-- 나머지 주제는 짧은 개념 수준으로 작성
-- 전체 시퀀스 확장 시 `NN-implementation` / `NN-answer` 링크를 함께 작성
-- `visualLabFocusFlows`에 핵심 흐름 1~2개만 작성해 현재 단계의 input/output/handoff가 보이게 한다.
+- `window.visualLabData` 작성
+- `sequence`, `title`, `goal`, `problem`, `flow`를 우선 작성
+- `flow`는 Problem, Concept, Action, Check가 드러나는 4~6단계로 제한
+- 전체 시퀀스 확장 시 브랜치 기준은 검수에만 사용하고 화면/데이터에는 정답 브랜치명을 넣지 않음
+- 긴 이론, 정답 코드, 완성 구현 코드는 데이터에 넣지 않음
 
 ### Step 6. JS 렌더링 구현
 
 - 카드 목록 렌더링
 - 첫 번째 카드 기본 선택
 - 클릭 시 상세 업데이트
-- 핵심 흐름 탭 렌더링
 - Step Explorer 렌더링
 - step rail 클릭 처리
 - 이전/다음 단계 이동 처리
@@ -456,7 +433,7 @@ Step Explorer 기준:
 - 속도 조절 처리
 - 현재 단계 전환 애니메이션 상태 처리
 - 관련 문서/코드 링크 렌더링
-- 사용하지 않는 `flowTimeline` DOM 참조와 `renderFlow()` 함수는 만들지 않는다.
+- 데이터가 없을 때도 화면이 깨지지 않도록 fallback 메시지 렌더링
 
 ### Step 7. 로컬 확인
 
@@ -511,7 +488,7 @@ A&I Backend Visual Lab은 각 시퀀스 서브모듈의 docs/visual-lab/index.ht
 
 - DB Access Lab의 실제 흐름이 반영되어 있다.
 - `PostController`, `PostService`, `PostEntity`, `PostRepository`, DTO 흐름이 빠지지 않았다.
-- 각 시퀀스 확장 시 `NN-implementation` / `NN-answer` 기준이 함께 표시된다.
+- 화면과 데이터에 정답 브랜치명 또는 완성 구현 코드가 표시되지 않는다.
 - 상세 이론을 과도하게 복붙하지 않았다.
 - 중앙 레포의 역할을 벗어나지 않는다.
 

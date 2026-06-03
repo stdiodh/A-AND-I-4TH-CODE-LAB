@@ -11,6 +11,12 @@
 
 ## 핵심 원칙
 
+### 0. 기존 문서 안에서 PAAR 흐름을 유지합니다
+
+구현 문서는 새 블로그 글이 아니라 기존 `docs/implementation.md`입니다.
+Problem -> Analyze -> Action -> Result 중 Action을 중심으로 쓰되, 각 코드 앞에는 왜 이 작업을 하는지 짧게 적고 코드 뒤에는 확인 방법을 붙입니다.
+멘토용 힌트는 새 문서가 아니라 문서 안의 `<details>` 영역에 둡니다.
+
 ### 1. 결과보다 순서를 먼저 씁니다
 
 좋지 않은 방식:
@@ -70,6 +76,8 @@
 6. 학생 체크리스트
 7. 강사 / PPT 체크리스트
 8. 다음 도메인 연결 포인트
+
+새 문서를 추가하기보다 위 내용을 `README.md`, `docs/theory.md`, `docs/implementation.md`, `docs/checklist.md` 안에 나누어 넣습니다.
 
 ---
 

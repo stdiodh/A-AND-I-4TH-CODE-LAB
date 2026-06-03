@@ -55,7 +55,7 @@ NN-implementation
 NN-answer
 -> 강사용 비교/정답 브랜치
 -> 완성된 코드 흐름을 확인하는 기준
--> Visual Lab에서는 실행 흐름을 시각화할 기준으로 사용한다.
+-> Visual Lab 작성자가 검수 때 참고하되 화면과 데이터에는 직접 노출하지 않는다.
 ```
 
 `NN`은 중앙 `docs/sequences` 번호와 같아야 한다.
@@ -86,10 +86,9 @@ NN-answer
 
 ```text
 docs/visual-lab/index.html
-docs/visual-lab/style.css
-docs/visual-lab/components.css
-docs/visual-lab/sequences.js
-docs/visual-lab/app.js
+docs/visual-lab/styles.css
+docs/visual-lab/visual-lab-data.js
+docs/visual-lab/visual-lab.js
 ```
 
 루트 레포에는 `docs/index.html` 또는 `docs/visualizer/*` 구현 파일을 만들지 않는다.
@@ -153,7 +152,7 @@ JPA 기본 CRUD
 N+1 문제 입문
 ```
 
-전체 시퀀스 확장 시에는 각 주제에 `sourceImplementationBranch`와 `sourceAnswerBranch`를 함께 둔다.
+전체 시퀀스 확장 시에도 화면과 데이터에는 `answerBranch`, `sourceAnswerBranch`, `NN-answer` 문자열을 노출하지 않는다.
 
 ## 8. 구현 요구사항
 
@@ -165,8 +164,8 @@ N+1 문제 입문
 - 선택된 카드는 `aria-pressed="true"`를 가져야 한다.
 - 상세 영역에는 Step Explorer를 둔다.
 - Step Explorer는 단계 rail, 현재 카드, 입력/결과/다음 카드, 재생/정지, 속도, 이전/다음, 진행률을 포함한다.
-- topic card는 개념 인덱스이고, Step Explorer는 `visualLabFocusFlows`의 핵심 흐름 1~2개만 보여준다.
-- Step Explorer가 단계 흐름을 담당하므로 별도 Flow card는 만들지 않는다.
+- topic card는 개념 인덱스이고, Step Explorer는 `window.visualLabData.flow`의 4~6단계 학습 흐름을 보여준다.
+- Step Explorer가 단계 흐름을 담당하므로 별도 정답 비교 Flow card는 만들지 않는다.
 - 상단 detail 영역은 `.detail-context-layout`으로 분리해 full-width compact context card로 배치한다.
 - 하단 핵심/자료 영역은 필요하면 `.visual-layout.support-layout`으로 유지한다.
 - focus flow 변경 시 첫 단계로 초기화한다.
@@ -177,90 +176,41 @@ N+1 문제 입문
 - DOM 요소가 없어도 에러가 나지 않도록 방어 코드를 작성한다.
 - 모바일 반응형을 구현한다.
 
-## 9. sequences.js 데이터 필수 구조
+## 9. visual-lab-data.js 데이터 필수 구조
 
-`visualLabTopics` 전역 상수를 사용한다.
-
-```js
-const visualLabTopics = [
-  {
-    id: "db-access-flow",
-    sequence: "02",
-    title: "DB 접근 흐름",
-    englishTitle: "DB Access Flow",
-    category: "Persistence",
-    shortDescription: "메모리 저장 대신 MySQL에 데이터를 저장하는 계층 흐름입니다.",
-    whyItMatters: "백엔드에서는 요청 데이터가 단순히 메모리에 머무르지 않고 DB에 영속적으로 저장되어야 합니다.",
-    sourceRepo: "spring-boot-db-access-lab",
-    sourceImplementationBranch: "02-implementation",
-    sourceAnswerBranch: "02-answer",
-    sourceDocs: [],
-    sourceCode: [],
-    flow: [],
-    transform: [],
-    points: [],
-    exampleRequest: {},
-    exampleResponse: {}
-  }
-];
-
-const visualLabFocusFlows = [
-  {
-    id: "db-access-flow",
-    sequence: "02",
-    title: "DB 접근 핵심 흐름",
-    relatedTopicIds: ["repository", "database"],
-    actors: [],
-    steps: []
-  }
-];
-```
-
-## 10. app.js 필수 함수
-
-아래 함수를 구현한다.
+`window.visualLabData` 전역 값을 사용한다.
 
 ```js
-renderTopicCards()
-renderTopicDetail(topic)
-renderFocusFlowTabs()
-renderStepExplorer(flow)
-renderArchitectureDiagram(flow)
-renderStepRail(steps)
-renderCurrentStep(step, index, total)
-selectFocusFlow(flowId)
-selectStep(index)
-goToPrevStep()
-goToNextStep()
-renderTransforms(transforms)
-renderPoints(points)
-renderExamples(topic)
-renderRelatedLinks(topic)
-selectTopic(topicId)
+window.visualLabData = {
+  sequence: "NN",
+  title: "한국어 주제명",
+  goal: "한 줄 목표",
+  problem: "이 시퀀스가 해결하는 문제",
+  flow: [
+    {
+      id: "step-1",
+      label: "단계 이름",
+      problem: "왜 이 단계가 필요한가",
+      concept: "어떤 개념을 보는가",
+      action: "무엇을 구현하거나 확인하는가",
+      check: "무엇으로 확인하는가"
+    }
+  ],
+  concepts: [],
+  practice: [],
+  mentorHints: []
+};
 ```
 
-`visualLabFocusFlows[].steps` 필드 기준:
+## 10. visual-lab.js 필수 동작
 
-```js
-{
-  order: 1,
-  from: "client",
-  to: "server",
-  label: "Client",
-  title: "사용자 요청 시작",
-  description: "사용자가 브라우저나 Postman에서 API 요청을 실행합니다.",
-  input: "사용자 행동",
-  output: "HTTP Request",
-  handoff: "요청 메시지가 서버로 이동합니다.",
-  sourceLabel: "GET 요청 예시",
-  sourceUrl: "../../starter/http/get-post.http"
-}
-```
+아래 동작을 구현한다.
 
-`visualLabFocusFlows`를 학습 흐름의 기준으로 사용한다.
-`visualLabTopics`는 개념 카드와 자료 연결에 집중한다.
-`flow`, 변환, 예시는 가능하면 focus flow의 `steps`에서 파생한다.
-단, `flow`는 fallback 데이터로 보존하고 화면 렌더링용 Flow card, `flowTimeline`, `renderFlow()`는 만들지 않는다.
+- `window.visualLabData`를 읽어 Hero, Problem, Flow, Concepts, Practice Check, Mentor Hint를 렌더링한다.
+- `flow` 단계 선택, 이전/다음 이동, 진행률 표시가 동작한다.
+- `concepts`, `practice`, `mentorHints`가 비어 있어도 화면이 깨지지 않는다.
+- 데이터가 없을 때 fallback 메시지를 보여준다.
+- 정답 브랜치명, answerBranch 필드, 긴 완성 구현 코드를 렌더링하지 않는다.
 
 ## 11. README 추가 내용
 
@@ -295,7 +245,7 @@ http://localhost:8080
 - `http://localhost:8080`에서 페이지가 열리는가
 - 카드 클릭이 동작하는가
 - DB Access Lab 흐름이 정확한가
-- 각 시퀀스 확장 기준에 `NN-implementation` / `NN-answer`가 정의되어 있는가
+- 화면과 데이터에 answer 브랜치명 또는 완성 구현 코드가 노출되지 않는가
 - 디자인 가이드 색상을 따르는가
 - 외부 라이브러리를 쓰지 않았는가
 - 기존 커리큘럼 문서를 임의로 수정하지 않았는가
