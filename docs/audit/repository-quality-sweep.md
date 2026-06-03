@@ -243,11 +243,12 @@
 | 10 | `10-answer` | `dd2141d` | 금지 메타 필드 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test bootJar`와 `bash -n scripts/deploy.sh scripts/check-deploy.sh` 통과 |
 | 11 | `11-implementation` | `a2b33f0` | 금지 노출 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test` 통과 |
 | 11 | `11-answer` | `8d200cc` | 금지 메타 필드 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test` 통과 |
+| 12 | `12-implementation` | `7936c85` | 금지 노출 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test` 통과 |
+| 12 | `12-answer` | `95e5206` | 금지 메타 필드 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test` 통과 |
 
 남은 theory 재작성 대상:
 
 - SEQ 00~04
-- SEQ 12
 
 추가로 확인한 범위 밖 위험:
 
