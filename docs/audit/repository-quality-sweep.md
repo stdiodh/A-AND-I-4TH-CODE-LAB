@@ -51,6 +51,10 @@
 | `spring-boot-db-access-lab-05-answer-worktree` | `05-answer` | `dc5bdd3` | answer theory 문서를 PAAR, 실행 시퀀스, 계층/DTO 흐름, 실무 포인트, 용어 정리 중심으로 재작성 |
 | `spring-boot-db-access-lab-06-implementation-worktree` | `06-implementation` | `0ff8336` | theory 문서를 PAAR, 실행 시퀀스, 계층/DTO 흐름, 실무 포인트, 용어 정리 중심으로 재작성 |
 | `spring-boot-db-access-lab-06-answer-worktree` | `06-answer` | `97c5be1` | answer theory 문서를 PAAR, 실행 시퀀스, 계층/DTO 흐름, 실무 포인트, 용어 정리 중심으로 재작성 |
+| `spring-boot-redis-cache-lab-07-implementation-worktree` | `07-implementation` | `2bd33bf` | theory 문서를 PAAR, 실행 시퀀스, 계층/DTO 흐름, 실무 포인트, 용어 정리 중심으로 재작성 |
+| `spring-boot-redis-cache-lab-07-answer-worktree` | `07-answer` | `5aae22a` | answer theory 문서를 PAAR, 실행 시퀀스, 계층/DTO 흐름, 실무 포인트, 용어 정리 중심으로 재작성 |
+| `spring-boot-realtime-communication-lab-08-implementation-worktree` | `08-implementation` | `ff0e0c1` | theory 문서를 PAAR, 실행 시퀀스, 계층/DTO 흐름, 실무 포인트, 용어 정리 중심으로 재작성 |
+| `spring-boot-realtime-communication-lab-08-answer-worktree` | `08-answer` | `a64f5ee` | answer theory 문서를 PAAR, 실행 시퀀스, 계층/DTO 흐름, 실무 포인트, 용어 정리 중심으로 재작성 |
 | `aandi-prerequisite-bootcamp` | `main` | `66def0b` | SEQ 00 main Visual Lab 스펙 정리와 main 정답 자료 노출 축소 |
 | `aandi-prerequisite-bootcamp-00-implementation-worktree` | `00-implementation` | `e787d95` | starter 문서의 answer 브랜치명/정답 자료 경로 노출 제거 |
 | `aandi-prerequisite-bootcamp-00-answer-worktree` | `00-answer` | `1bf3a1b` | answer 문서 구조 정리와 멘토 비교 포인트 보강 |
@@ -225,8 +229,12 @@
 | 05 | `05-answer` | `dc5bdd3` | 금지 메타 필드 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test` 통과 |
 | 06 | `06-implementation` | `0ff8336` | 금지 노출 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test` 통과 |
 | 06 | `06-answer` | `97c5be1` | 금지 메타 필드 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test` 통과 |
+| 07 | `07-implementation` | `2bd33bf` | 금지 노출 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test` 통과 |
+| 07 | `07-answer` | `5aae22a` | 금지 메타 필드 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test` 통과 |
+| 08 | `08-implementation` | `ff0e0c1` | 금지 노출 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test` 통과 |
+| 08 | `08-answer` | `a64f5ee` | 금지 메타 필드 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test` 통과 |
 
 남은 theory 재작성 대상:
 
 - SEQ 00~04
-- SEQ 07~12
+- SEQ 09~12
