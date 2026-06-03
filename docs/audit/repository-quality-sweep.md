@@ -47,6 +47,10 @@
 | `spring-boot-db-access-lab-03-answer-worktree` | `03-answer` | `1aa14b0` | answer 문서 구조 정리와 멘토 비교 포인트 보강 |
 | `spring-boot-db-access-lab-04-implementation-worktree` | `04-implementation` | `8a598b3` | starter 문서의 answer 브랜치명/구현 코드 노출 제거 |
 | `spring-boot-db-access-lab-04-answer-worktree` | `04-answer` | `c6376fb` | answer 문서 구조 정리와 멘토 비교 포인트 보강 |
+| `spring-boot-db-access-lab-05-implementation-worktree` | `05-implementation` | `9bd6b11` | theory 문서를 PAAR, 실행 시퀀스, 계층/DTO 흐름, 실무 포인트, 용어 정리 중심으로 재작성 |
+| `spring-boot-db-access-lab-05-answer-worktree` | `05-answer` | `dc5bdd3` | answer theory 문서를 PAAR, 실행 시퀀스, 계층/DTO 흐름, 실무 포인트, 용어 정리 중심으로 재작성 |
+| `spring-boot-db-access-lab-06-implementation-worktree` | `06-implementation` | `0ff8336` | theory 문서를 PAAR, 실행 시퀀스, 계층/DTO 흐름, 실무 포인트, 용어 정리 중심으로 재작성 |
+| `spring-boot-db-access-lab-06-answer-worktree` | `06-answer` | `97c5be1` | answer theory 문서를 PAAR, 실행 시퀀스, 계층/DTO 흐름, 실무 포인트, 용어 정리 중심으로 재작성 |
 | `aandi-prerequisite-bootcamp` | `main` | `66def0b` | SEQ 00 main Visual Lab 스펙 정리와 main 정답 자료 노출 축소 |
 | `aandi-prerequisite-bootcamp-00-implementation-worktree` | `00-implementation` | `e787d95` | starter 문서의 answer 브랜치명/정답 자료 경로 노출 제거 |
 | `aandi-prerequisite-bootcamp-00-answer-worktree` | `00-answer` | `1bf3a1b` | answer 문서 구조 정리와 멘토 비교 포인트 보강 |
@@ -204,3 +208,25 @@
 - SEQ 03 `./gradlew test`는 implementation/answer 모두 통과했습니다.
 - SEQ 04 `./gradlew test`는 implementation/answer 모두 통과했습니다.
 - legacy 브랜치 삭제, default branch 변경, 원격 branch 정리는 수행하지 않았습니다. 이는 GitHub UI 또는 명시적 승인 후 처리해야 합니다.
+
+## 9. theory.md 재작성 진행 기록
+
+새 목표 기준:
+
+- 대상: SEQ 00~12 각 시퀀스 브랜치의 `docs/theory.md`
+- 요구 구조: PAAR, API/실행 시퀀스 다이어그램, 계층/DTO/메시지 흐름, 실무 포인트, 용어 정리
+- implementation 브랜치 제한: answer 브랜치명, 정답 코드, 정답 해설 노출 금지
+
+현재 완료:
+
+| Seq | Branch | Commit | 검증 |
+|---|---|---|---|
+| 05 | `05-implementation` | `9bd6b11` | 금지 노출 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test` 통과 |
+| 05 | `05-answer` | `dc5bdd3` | 금지 메타 필드 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test` 통과 |
+| 06 | `06-implementation` | `0ff8336` | 금지 노출 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test` 통과 |
+| 06 | `06-answer` | `97c5be1` | 금지 메타 필드 검색 통과, 필수 구조 검색 통과, `git diff --check` 통과, `./gradlew test` 통과 |
+
+남은 theory 재작성 대상:
+
+- SEQ 00~04
+- SEQ 07~12
