@@ -23,6 +23,7 @@
 | `spring-boot-rest-crud-lab` | `main` | `405e1d1` | SEQ 01 legacy 문서 축소와 Visual Lab 4파일 스펙 정리 |
 | `spring-boot-rest-crud-lab-01-implementation-worktree` | `01-implementation` | `f7edadc` | starter 문서의 answer 브랜치명/정답 안내 노출 제거 |
 | `spring-boot-event-driven-lab` | `main` | `809df6a` | SEQ 12 Visual Lab 스펙 정리와 main legacy 정답 가이드 축소 |
+| `spring-boot-refactoring-foundation-lab` | `main` | `4cc498d` | SEQ 11 main 문서 범위 복구와 Visual Lab 스펙 정리 |
 
 ## 2. 전체 시퀀스 상태 표
 
@@ -39,7 +40,7 @@
 | 08 | Realtime WebSocket | `spring-boot-realtime-communication-lab` | `08-implementation` | `08-answer` | 확인 필요 | manifest상 `needs-visual-lab` | Visual Lab 미완성 | 4 |
 | 09 | Docker/Runtime | `spring-boot-deployment-runtime-lab` | `09-implementation` | `09-answer` | 확인 필요 | manifest상 `needs-visual-lab` | Visual Lab 미완성 | 4 |
 | 10 | CI/CD Deployment | `spring-boot-deployment-runtime-lab` | `10-implementation` | `10-answer` | 확인 필요 | manifest상 `needs-visual-lab` | Visual Lab 미완성 | 4 |
-| 11 | Refactoring Foundation | `spring-boot-refactoring-foundation-lab` | `11-implementation` | `11-answer` | 확인 필요 | manifest상 `needs-review` | 이전 감사에서 10 CI/CD 내용 혼입 의심 | 3 |
+| 11 | Refactoring Foundation | `spring-boot-refactoring-foundation-lab` | `11-implementation` | `11-answer` | main 범위 혼입 정리 완료, implementation/answer 추가 점검 필요 | main 4파일 스펙 정리 완료 | implementation/answer 문서 추가 감사 필요 | 3 |
 | 12 | Event Driven | `spring-boot-event-driven-lab` | `12-implementation` | `12-answer` | main legacy 정리 완료, implementation/answer 추가 점검 필요 | main 4파일 스펙 정리 완료 | 원격 HEAD가 `12-answer`를 가리킬 수 있음 | 2 |
 
 ## 3. 레포별 문제 요약
@@ -52,7 +53,7 @@
 | `spring-boot-redis-cache-lab` | manifest상 Visual Lab 미완성 구간입니다. |
 | `spring-boot-realtime-communication-lab` | manifest상 Visual Lab 미완성 구간입니다. |
 | `spring-boot-deployment-runtime-lab` | 09~10 공통 레포이며 Visual Lab 미완성 구간입니다. |
-| `spring-boot-refactoring-foundation-lab` | manifest notes 기준 main 문서에 10 CI/CD 내용 혼입 가능성이 있어 우선 감사가 필요합니다. |
+| `spring-boot-refactoring-foundation-lab` | main에 남아 있던 10 CI/CD 문서 범위 혼입을 SEQ 11 리팩토링 범위로 정리하고 Visual Lab을 현재 4파일 스펙에 맞췄습니다. |
 | `spring-boot-event-driven-lab` | main Visual Lab을 현재 4파일 스펙에 맞춰 정리하고, main의 긴 정답 가이드를 deprecated 안내로 낮췄습니다. 원격 default branch가 `12-answer`를 가리킬 가능성은 GitHub UI 수동 조치가 필요합니다. |
 
 ## 4. 정답 노출 의심 목록
@@ -65,6 +66,7 @@
 | `spring-boot-redis-cache-lab` `07-implementation` | 추가 검색 필요 | 미처리 |
 | `spring-boot-realtime-communication-lab` `08-implementation` | 추가 검색 필요 | 미처리 |
 | `spring-boot-deployment-runtime-lab` 09~10 implementation 브랜치 | 추가 검색 필요 | 미처리 |
+| `spring-boot-refactoring-foundation-lab` main Visual Lab/legacy answer guide | answerBranch, `11-answer`, 정답 코드, 긴 완성 구현 코드 노출 제거 | 처리 완료 |
 | `spring-boot-refactoring-foundation-lab` `11-implementation` | 추가 검색 필요 | 미처리 |
 | `spring-boot-event-driven-lab` main Visual Lab/legacy answer guide | answerBranch, `12-answer`, 정답 코드, 긴 완성 구현 코드 노출 제거 | 처리 완료 |
 | `spring-boot-event-driven-lab` `12-implementation` | 추가 검색 필요 | 미처리 |
@@ -87,7 +89,7 @@
 | `spring-boot-redis-cache-lab` | manifest상 `needs-visual-lab`. |
 | `spring-boot-realtime-communication-lab` | manifest상 `needs-visual-lab`. |
 | `spring-boot-deployment-runtime-lab` | manifest상 `needs-visual-lab`. |
-| `spring-boot-refactoring-foundation-lab` | manifest상 `needs-review`. |
+| `spring-boot-refactoring-foundation-lab` | SEQ 11 main에서 4파일 스펙 정리 완료. 외부 CDN 없음, `window.visualLabData` 사용, answer 노출 없음. |
 | `spring-boot-event-driven-lab` | SEQ 12 main에서 4파일 스펙 정리 완료. 외부 CDN 없음, `window.visualLabData` 사용, answer 노출 없음. |
 
 ## 6. 레거시 후보 목록
@@ -99,6 +101,7 @@
 | `spring-boot-rest-crud-lab` | `docs/assets.md`, `docs/branch-guide.md` | 삭제하지 않음. 오래된 표현만 낮은 위험으로 정리. |
 | `aandi-prerequisite-bootcamp` | legacy `implementation`, `answer` branch | 추가 확인 필요. |
 | `spring-boot-db-access-lab` | legacy `implementation` branch, 공통 Visual Lab 구버전 파일명 후보 | 추가 확인 필요. |
+| `spring-boot-refactoring-foundation-lab` | `docs/answer-guide.md` | 외부 링크 가능성 때문에 삭제하지 않고 deprecated 안내로 축소. |
 | `spring-boot-event-driven-lab` | 원격 HEAD/default branch가 `12-answer`일 가능성 | GitHub UI 수동 조치 필요. |
 | `spring-boot-event-driven-lab` | `docs/answer-guide.md` | 외부 링크 가능성 때문에 삭제하지 않고 deprecated 안내로 축소. |
 
@@ -107,7 +110,7 @@
 1. SEQ 01 REST CRUD: main Visual Lab, legacy 안내, implementation 정답 노출 제거를 우선 완료합니다.
 2. 중앙 기준 문서: Minimal Sequence Documentation Rule, PAAR 윤문 기준, Visual Lab 4파일 스펙, answer 노출 제한을 반영합니다.
 3. SEQ 12 Event Driven: main Visual Lab과 legacy guide 정리는 완료했습니다. 원격 HEAD/default branch 리스크와 implementation/answer 문서 감사는 남았습니다.
-4. SEQ 11 Refactoring Foundation: 10 CI/CD 내용 혼입 의심을 다음 우선 감사 대상으로 둡니다.
+4. SEQ 11 Refactoring Foundation: main의 10 CI/CD 내용 혼입 정리는 완료했습니다. implementation/answer 문서 감사는 남았습니다.
 5. SEQ 07~10: Visual Lab 미완성 구간을 중앙 스펙에 맞춰 순차 정리합니다.
 6. SEQ 02~06: 공통 DB Access 레포는 영향 범위가 커서 별도 묶음 감사 후 작업합니다.
 
@@ -115,5 +118,5 @@
 
 - SEQ 01 `01-answer` 문서 구조 보강은 아직 수행하지 않았습니다. implementation 구조와 맞춘 뒤 멘토 비교 포인트를 보강해야 합니다.
 - SEQ 02~12 각 implementation 브랜치의 정답 노출 검색과 문서 보강은 아직 수행하지 않았습니다. 단, SEQ 01 implementation 정답 노출 제거는 완료했습니다.
-- SEQ 07~11 Visual Lab 신규 구현 또는 보강은 아직 수행하지 않았습니다. SEQ 12 main Visual Lab 정리는 완료했습니다.
+- SEQ 07~10 Visual Lab 신규 구현 또는 보강은 아직 수행하지 않았습니다. SEQ 11, 12 main Visual Lab 정리는 완료했습니다.
 - legacy 브랜치 삭제, default branch 변경, 원격 branch 정리는 수행하지 않았습니다. 이는 GitHub UI 또는 명시적 승인 후 처리해야 합니다.
