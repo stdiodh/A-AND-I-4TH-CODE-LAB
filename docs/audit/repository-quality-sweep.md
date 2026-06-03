@@ -45,6 +45,8 @@
 | `spring-boot-db-access-lab-02-answer-worktree` | `02-answer` | `b4fc54f` | answer 문서 구조 정리와 멘토 비교 포인트 보강 |
 | `spring-boot-db-access-lab-03-implementation-worktree` | `03-implementation` | `2a008a0` | starter 문서의 answer 브랜치명/구현 코드 노출 제거 |
 | `spring-boot-db-access-lab-03-answer-worktree` | `03-answer` | `1aa14b0` | answer 문서 구조 정리와 멘토 비교 포인트 보강 |
+| `spring-boot-db-access-lab-04-implementation-worktree` | `04-implementation` | `8a598b3` | starter 문서의 answer 브랜치명/구현 코드 노출 제거 |
+| `spring-boot-db-access-lab-04-answer-worktree` | `04-answer` | `c6376fb` | answer 문서 구조 정리와 멘토 비교 포인트 보강 |
 | `aandi-prerequisite-bootcamp` | `main` | `66def0b` | SEQ 00 main Visual Lab 스펙 정리와 main 정답 자료 노출 축소 |
 | `aandi-prerequisite-bootcamp-00-implementation-worktree` | `00-implementation` | `e787d95` | starter 문서의 answer 브랜치명/정답 자료 경로 노출 제거 |
 | `aandi-prerequisite-bootcamp-00-answer-worktree` | `00-answer` | `1bf3a1b` | answer 문서 구조 정리와 멘토 비교 포인트 보강 |
@@ -57,7 +59,7 @@
 | 01 | REST CRUD | `spring-boot-rest-crud-lab` | `01-implementation` | `01-answer` | main/implementation/answer 정리 완료 | main 4파일 스펙 정리 완료 | 원격 default branch와 legacy branch 수동 조치 필요 | 1 |
 | 02 | DB Access | `spring-boot-db-access-lab` | `02-implementation` | `02-answer` | main/implementation/answer 정리 완료 | main 공통 4파일 스펙 정리 완료 | legacy branch 수동 조치 필요 | 5 |
 | 03 | Validation | `spring-boot-db-access-lab` | `03-implementation` | `03-answer` | main/implementation/answer 정리 완료 | main 공통 4파일 스펙 정리 완료 | legacy branch 수동 조치 필요 | 5 |
-| 04 | JWT | `spring-boot-db-access-lab` | `04-implementation` | `04-answer` | main guide 보정 완료, implementation/answer 추가 점검 필요 | main 공통 4파일 스펙 정리 완료 | implementation/answer 문서 추가 감사 필요 | 5 |
+| 04 | JWT | `spring-boot-db-access-lab` | `04-implementation` | `04-answer` | main/implementation/answer 정리 완료 | main 공통 4파일 스펙 정리 완료 | legacy branch 수동 조치 필요 | 5 |
 | 05 | OAuth2 + SMTP | `spring-boot-db-access-lab` | `05-implementation` | `05-answer` | main guide 보정 완료, implementation/answer 추가 점검 필요 | main 공통 4파일 스펙 정리 완료 | implementation/answer 문서 추가 감사 필요 | 5 |
 | 06 | Testing | `spring-boot-db-access-lab` | `06-implementation` | `06-answer` | main guide 보정 완료, implementation/answer 추가 점검 필요 | main 공통 4파일 스펙 정리 완료 | implementation/answer 문서 추가 감사 필요 | 5 |
 | 07 | Redis Cache | `spring-boot-redis-cache-lab` | `07-implementation` | `07-answer` | main/implementation/answer 정리 완료 | main 4파일 스펙 정리 완료 | legacy branch 수동 조치 필요 | 4 |
@@ -82,6 +84,8 @@
 | `spring-boot-db-access-lab` `02-answer` | `README.md`, `docs/theory.md`, `docs/implementation.md`, `docs/checklist.md`, `docs/answer-guide.md`를 starter 흐름과 맞추고 answer 브랜치에서만 필요한 비교/멘토 리뷰 포인트를 보강했습니다. |
 | `spring-boot-db-access-lab` `03-implementation` | `README.md`, `docs/theory.md`, `docs/implementation.md`, `docs/checklist.md`, `docs/answer-guide.md`에서 answer 브랜치명, 구현 코드 조각, 금지 표현을 제거했습니다. |
 | `spring-boot-db-access-lab` `03-answer` | `README.md`, `docs/theory.md`, `docs/implementation.md`, `docs/checklist.md`, `docs/answer-guide.md`를 starter 흐름과 맞추고 answer 브랜치에서만 필요한 비교/멘토 리뷰 포인트를 보강했습니다. |
+| `spring-boot-db-access-lab` `04-implementation` | `README.md`, `docs/theory.md`, `docs/implementation.md`, `docs/checklist.md`, `docs/answer-guide.md`에서 answer 브랜치명, JWT 완성 구현 코드 조각, 금지 표현을 제거했습니다. |
+| `spring-boot-db-access-lab` `04-answer` | `README.md`, `docs/theory.md`, `docs/implementation.md`, `docs/checklist.md`, `docs/answer-guide.md`를 starter 흐름과 맞추고 JWT answer 비교와 멘토 리뷰 포인트를 보강했습니다. |
 | `spring-boot-redis-cache-lab` | main Visual Lab을 현재 4파일 스펙에 맞춰 정리하고, 존재하지 않는 legacy answer-guide 안내를 제거했습니다. |
 | `spring-boot-redis-cache-lab` `07-implementation` | `README.md`, `docs/theory.md`, `docs/implementation.md`, `docs/checklist.md`, `docs/answer-guide.md`에서 answer 브랜치명, 구현 코드 조각, 금지 표현을 제거했습니다. |
 | `spring-boot-redis-cache-lab` `07-answer` | `README.md`, `docs/theory.md`, `docs/implementation.md`, `docs/checklist.md`를 starter 흐름과 맞추고 answer 브랜치에서만 필요한 비교/멘토 리뷰 포인트를 보강했습니다. |
@@ -115,7 +119,9 @@
 | `spring-boot-db-access-lab` `02-answer` | answer 브랜치 내부 비교 코드와 멘토 포인트로 정리. 금지 표현과 answerBranch 메타 필드 없음 | 처리 완료 |
 | `spring-boot-db-access-lab` `03-implementation` | `03-answer`, 구현 코드 조각, 금지 표현 노출 제거 | 처리 완료 |
 | `spring-boot-db-access-lab` `03-answer` | answer 브랜치 내부 비교 코드와 멘토 포인트로 정리. 금지 표현과 answerBranch 메타 필드 없음 | 처리 완료 |
-| `spring-boot-db-access-lab` 04~06 implementation 브랜치 | 추가 검색 필요 | 미처리 |
+| `spring-boot-db-access-lab` `04-implementation` | `04-answer`, 구현 코드 조각, 금지 표현 노출 제거 | 처리 완료 |
+| `spring-boot-db-access-lab` `04-answer` | answer 브랜치 내부 비교 코드와 멘토 포인트로 정리. 금지 표현과 answerBranch 메타 필드 없음 | 처리 완료 |
+| `spring-boot-db-access-lab` 05~06 implementation 브랜치 | 추가 검색 필요 | 미처리 |
 | `spring-boot-redis-cache-lab` main Visual Lab/guide docs | answerBranch, `07-answer`, 정답 코드, 긴 완성 구현 코드 노출 없음 | 처리 완료 |
 | `spring-boot-redis-cache-lab` `07-implementation` | `07-answer`, 구현 코드 조각, 금지 표현 노출 제거 | 처리 완료 |
 | `spring-boot-redis-cache-lab` `07-answer` | answer 브랜치 내부 비교 코드와 멘토 포인트로 정리. 금지 표현과 answerBranch 메타 필드 없음 | 처리 완료 |
@@ -179,12 +185,12 @@
 3. SEQ 12 Event Driven: main Visual Lab과 legacy guide 정리는 완료했습니다. 원격 HEAD/default branch 리스크와 implementation/answer 문서 감사는 남았습니다.
 4. SEQ 11 Refactoring Foundation: main, implementation, answer 문서 정리를 완료했습니다.
 5. SEQ 07~10: SEQ07~10은 implementation/answer까지 완료했습니다.
-6. SEQ 02~06: SEQ02~03은 implementation/answer까지 완료했습니다. SEQ04~06 브랜치 문서 감사는 남았습니다.
+6. SEQ 02~06: SEQ02~04는 implementation/answer까지 완료했습니다. SEQ05~06 브랜치 문서 감사는 남았습니다.
 7. SEQ 00: main Visual Lab과 implementation/answer 문서 정리를 완료했습니다.
 
 ## 8. 이번 5시간 안에 처리하지 못한 항목
 
-- SEQ 04~06 각 implementation 브랜치의 정답 노출 검색과 문서 보강은 아직 수행하지 않았습니다. 단, SEQ 00~03, 07~12 implementation 정답 노출 제거는 완료했습니다.
+- SEQ 05~06 각 implementation 브랜치의 정답 노출 검색과 문서 보강은 아직 수행하지 않았습니다. 단, SEQ 00~04, 07~12 implementation 정답 노출 제거는 완료했습니다.
 - SEQ 00~12 main Visual Lab 정리는 완료했습니다. 남은 항목은 implementation/answer 문서 감사입니다.
 - SEQ 00은 Gradle 프로젝트가 아니라 `./gradlew test`를 실행하지 않았습니다. 대신 main/implementation/answer에서 `java -version`, `git --version`을 확인했고, main Visual Lab은 정적 서버, `node --check`, 중앙 validator로 검증했습니다.
 - SEQ 02~06 `./gradlew test`는 실패했습니다. 실패 원인은 `CustomOAuthUserService` 처리 중 `org/springframework/security/oauth2/client/userinfo/OAuth2UserService.class`를 찾지 못하는 Spring 컨텍스트 로딩 오류입니다. 이번 변경 범위는 문서와 정적 Visual Lab 파일이라 코드/의존성 수정은 하지 않았습니다.
@@ -196,4 +202,5 @@
 - SEQ 10 `./gradlew test bootJar`와 `bash -n scripts/deploy.sh scripts/check-deploy.sh`는 implementation/answer 모두 통과했습니다.
 - SEQ 02 `./gradlew test`는 implementation/answer 모두 통과했습니다.
 - SEQ 03 `./gradlew test`는 implementation/answer 모두 통과했습니다.
+- SEQ 04 `./gradlew test`는 implementation/answer 모두 통과했습니다.
 - legacy 브랜치 삭제, default branch 변경, 원격 branch 정리는 수행하지 않았습니다. 이는 GitHub UI 또는 명시적 승인 후 처리해야 합니다.
