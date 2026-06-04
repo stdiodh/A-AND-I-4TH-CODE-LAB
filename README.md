@@ -101,6 +101,8 @@ Codex는 항상 이 저장소 루트를 현재 작업 기준점으로 보고 문
 - `docs/visual-lab/styles.css`
 - `docs/visual-lab/visual-lab-data.js`
 - `docs/visual-lab/visual-lab.js`
+- `docs/visual-lab/sequences/NN/index.html`
+- `docs/visual-lab/sequences/NN/visual-lab-data.js`
 
 멘토와 멘티 정보를 파일로 분리하지 않습니다.
 멘토용 진행 포인트, 리뷰 기준, answer 브랜치에서 비교할 지점은 기존 문서 안의 `<details>` 영역에 넣습니다.
@@ -210,8 +212,10 @@ Visual Lab 작성과 검수는 아래 브랜치 기준을 참고합니다.
 예를 들어 시퀀스 02는 `02-implementation`과 `02-answer`를 기준으로 연결합니다.
 
 Visual Lab은 재생형 Step Explorer를 기본 패턴으로 사용합니다.
-각 topic card는 개념 인덱스 역할을 맡고, Step Explorer는 해당 시퀀스의 핵심 흐름 1~2개만 보여줍니다.
-핵심 흐름은 각 서브모듈의 `window.visualLabData.flow`를 기준으로 Problem, Concept, Action, Check를 보여줍니다.
+각 토픽 레포 `main` 브랜치의 `docs/visual-lab/index.html`은 해당 레포가 담는 전체 시퀀스 허브입니다.
+실제 시퀀스 상세 Visual Lab은 `docs/visual-lab/sequences/NN/index.html`에서 확인합니다.
+기존 진입점인 `docs/visual-lab/index.html`, `styles.css`, `visual-lab.js`, `visual-lab-data.js`는 호환성을 위해 유지합니다.
+상세 페이지는 시퀀스별 `window.visualLabData`를 기준으로 Problem, Concept, Action, Check와 주요 코드 포인트를 보여줍니다.
 자료 링크는 새 탭으로 열어 학습 맥락을 유지합니다.
 
 시퀀스 00의 첫 대표 시각화 기준은 `aandi-prerequisite-bootcamp`의 이론/구현 문서입니다.
@@ -275,29 +279,30 @@ Visual Lab 구현 요청은 아래 형태로 시작합니다.
 5. docs/visual-lab-implementation-plan.md
 6. docs/visual-lab-codex-prompt.md
 
-이번 작업의 목표는 대상 시퀀스 서브모듈의 docs/visual-lab/index.html을 진입점으로 하는 정적 HTML 학습 시각화 페이지를 만드는 것입니다.
+이번 작업의 목표는 대상 토픽 레포의 docs/visual-lab/index.html을 허브로 유지하고,
+시퀀스 상세는 docs/visual-lab/sequences/NN/index.html에 분리하는 정적 HTML 학습 시각화 페이지를 만드는 것입니다.
 HTML/CSS/Vanilla JS만 사용하고, 외부 라이브러리는 사용하지 마세요.
 브랜치 기준은 manifest와 시퀀스 문서로 확인하되, 화면과 데이터에는 정답 브랜치명이나 완성 구현 코드를 노출하지 마세요.
 중앙 레포에 상세 이론을 과도하게 복붙하지 말고, DB Access Lab의 핵심 흐름을 첫 대표 케이스로 시각화하세요.
 ```
 
-시퀀스별 Visual Lab 대상 위치:
+시퀀스별 Visual Lab 위치:
 
-| Sequence | Submodule | Visual Lab entry |
-| --- | --- | --- |
-| 00 | `aandi-prerequisite-bootcamp` | `docs/visual-lab/index.html` |
-| 01 | `spring-boot-rest-crud-lab` | `docs/visual-lab/index.html` |
-| 02 | `spring-boot-db-access-lab` | `docs/visual-lab/index.html` |
-| 03 | `spring-boot-db-access-lab` | `docs/visual-lab/index.html` |
-| 04 | `spring-boot-db-access-lab` | `docs/visual-lab/index.html` |
-| 05 | `spring-boot-db-access-lab` | `docs/visual-lab/index.html` |
-| 06 | `spring-boot-db-access-lab` | `docs/visual-lab/index.html` |
-| 07 | `spring-boot-redis-cache-lab` | `docs/visual-lab/index.html` |
-| 08 | `spring-boot-realtime-communication-lab` | `docs/visual-lab/index.html` |
-| 09 | `spring-boot-deployment-runtime-lab` | `docs/visual-lab/index.html` |
-| 10 | `spring-boot-deployment-runtime-lab` | `docs/visual-lab/index.html` |
-| 11 | `spring-boot-refactoring-foundation-lab` | `docs/visual-lab/index.html` |
-| 12 | `spring-boot-event-driven-lab` | `docs/visual-lab/index.html` |
+| Sequence | Submodule | Hub | Detail |
+| --- | --- | --- | --- |
+| 00 | `aandi-prerequisite-bootcamp` | `docs/visual-lab/index.html` | `docs/visual-lab/sequences/00/index.html` |
+| 01 | `spring-boot-rest-crud-lab` | `docs/visual-lab/index.html` | `docs/visual-lab/sequences/01/index.html` |
+| 02 | `spring-boot-db-access-lab` | `docs/visual-lab/index.html` | `docs/visual-lab/sequences/02/index.html` |
+| 03 | `spring-boot-db-access-lab` | `docs/visual-lab/index.html` | `docs/visual-lab/sequences/03/index.html` |
+| 04 | `spring-boot-db-access-lab` | `docs/visual-lab/index.html` | `docs/visual-lab/sequences/04/index.html` |
+| 05 | `spring-boot-db-access-lab` | `docs/visual-lab/index.html` | `docs/visual-lab/sequences/05/index.html` |
+| 06 | `spring-boot-db-access-lab` | `docs/visual-lab/index.html` | `docs/visual-lab/sequences/06/index.html` |
+| 07 | `spring-boot-redis-cache-lab` | `docs/visual-lab/index.html` | `docs/visual-lab/sequences/07/index.html` |
+| 08 | `spring-boot-realtime-communication-lab` | `docs/visual-lab/index.html` | `docs/visual-lab/sequences/08/index.html` |
+| 09 | `spring-boot-deployment-runtime-lab` | `docs/visual-lab/index.html` | `docs/visual-lab/sequences/09/index.html` |
+| 10 | `spring-boot-deployment-runtime-lab` | `docs/visual-lab/index.html` | `docs/visual-lab/sequences/10/index.html` |
+| 11 | `spring-boot-refactoring-foundation-lab` | `docs/visual-lab/index.html` | `docs/visual-lab/sequences/11/index.html` |
+| 12 | `spring-boot-event-driven-lab` | `docs/visual-lab/index.html` | `docs/visual-lab/sequences/12/index.html` |
 
 시퀀스별 로컬 확인 명령:
 

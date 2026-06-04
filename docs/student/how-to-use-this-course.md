@@ -61,6 +61,8 @@ docker compose up -d
 ## Visual Lab 보기
 
 Visual Lab이 있는 레포에서는 아래처럼 확인합니다.
+`docs/visual-lab/index.html`은 토픽 레포의 허브이고,
+시퀀스별 상세 화면은 `docs/visual-lab/sequences/NN/index.html`에서 열 수 있습니다.
 
 ```bash
 python3 -m http.server 8080 -d docs/visual-lab

@@ -15,7 +15,9 @@
 - `implementationBranch`: 학생 시작 브랜치입니다. `NN-implementation` 형식을 사용합니다.
 - `answerBranch`: 참고 정답 브랜치입니다. `NN-answer` 형식을 사용합니다.
 - `sequenceDoc`: 중앙 시퀀스 문서 경로입니다.
-- `visualLabPath`: 해당 토픽 레포 안의 Visual Lab 진입점입니다.
+- `visualLabPath`: 해당 토픽 레포 안의 기존 Visual Lab 진입점입니다. 호환성을 위해 유지합니다.
+- `visualLabHubPath`: 해당 토픽 레포 안의 Visual Lab 허브 경로입니다.
+- `visualLabSequencePath`: 해당 시퀀스 전용 Visual Lab 상세 경로입니다.
 - `runCommand`: 로컬 실행 명령입니다. 서버 실행이 없는 시퀀스는 `null`을 사용합니다.
 - `testCommand`: 테스트 명령입니다. 자동 테스트가 없는 시퀀스는 `null`을 사용합니다.
 - `swaggerPath`: Swagger 또는 API 확인 경로입니다. 없거나 확인이 불확실하면 `null`을 사용합니다.

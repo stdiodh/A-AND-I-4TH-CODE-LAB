@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate Visual Lab files across topic subrepositories.
+"""Validate Visual Lab hub and sequence pages across topic subrepositories.
 
 This script intentionally uses only the Python standard library so it can run
 in a fresh checkout without package manager setup.
@@ -9,38 +9,43 @@ from __future__ import annotations
 
 import configparser
 import html.parser
+import json
 import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
 GITMODULES = ROOT / ".gitmodules"
 MANIFEST = ROOT / "docs" / "manifest" / "sequences.yml"
 VISUAL_LAB_DIR = Path("docs/visual-lab")
-REQUIRED_FILES = [
+REQUIRED_HUB_FILES = [
     "index.html",
     "styles.css",
     "visual-lab.js",
     "visual-lab-data.js",
 ]
-DATA_FIELDS = ["sequence", "title", "goal", "flow"]
-EXPECTED_LOCAL_ASSETS = {
-    "link": {"./styles.css", "styles.css"},
-    "script": {"./visual-lab-data.js", "visual-lab-data.js", "./visual-lab.js", "visual-lab.js"},
-}
+HUB_DATA_FIELDS = ["kind", "title", "sequences"]
+SEQUENCE_DATA_FIELDS = [
+    "kind",
+    "sequence",
+    "title",
+    "goal",
+    "problem",
+    "actors",
+    "flows",
+    "codePoints",
+]
 EXTERNAL_PREFIXES = ("http://", "https://", "//", "data:")
-CDN_PATTERNS = re.compile(
-    r"(cdn|unpkg|jsdelivr|cdnjs|bootstrap|tailwind|react|vue|next)",
+CDN_URL_PATTERN = re.compile(
+    r"(cdn|unpkg|jsdelivr|cdnjs|bootstrap|tailwind|react|vue|nextjs|next\.js)",
     re.IGNORECASE,
 )
+REMOTE_CSS_PATTERN = re.compile(r"@import\s+url\((['\"])?https?://", re.IGNORECASE)
 ANSWER_EXPOSURE_FAIL = re.compile(
     r"(sourceAnswerBranch|answerBranch|\b\d{2}-answer\b|git\s+(checkout|switch)\s+\S*answer)",
-    re.IGNORECASE,
-)
-ANSWER_EXPOSURE_WARN = re.compile(
-    r"(\banswer\b|정답\s*코드|@RestController|@Service|@Transactional)",
     re.IGNORECASE,
 )
 
@@ -58,6 +63,7 @@ class RepoResult:
     name: str
     path: Path
     statuses: set[str] = field(default_factory=set)
+    sequences: list[dict[str, str]] = field(default_factory=list)
     issues: list[Issue] = field(default_factory=list)
 
     @property
@@ -74,7 +80,6 @@ class AssetParser(html.parser.HTMLParser):
         super().__init__()
         self.scripts: list[str] = []
         self.links: list[str] = []
-        self.buttons: list[dict[str, str]] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         attr = {name.lower(): value or "" for name, value in attrs}
@@ -82,14 +87,12 @@ class AssetParser(html.parser.HTMLParser):
             self.scripts.append(attr["src"])
         elif tag == "link" and "href" in attr:
             self.links.append(attr["href"])
-        elif tag == "button":
-            self.buttons.append(attr)
 
 
 def strip_yaml_value(raw: str) -> str:
     value = raw.strip()
     if value == "null":
-      return ""
+        return ""
     if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
         return value[1:-1]
     return value
@@ -151,13 +154,28 @@ def add_issue(result: RepoResult, level: str, path: Path, reason: str, hint: str
     result.issues.append(Issue(level, relative_display(path), reason, hint))
 
 
-def missing_visual_lab_level(result: RepoResult) -> str:
-    return "WARN" if result.statuses and result.statuses <= {"planned"} else "FAIL"
-
-
 def is_relative_asset(value: str) -> bool:
     value = value.strip()
     return bool(value) and not value.startswith(EXTERNAL_PREFIXES) and not value.startswith("/")
+
+
+def data_file_to_json(path: Path) -> dict[str, Any] | None:
+    if not path.exists():
+        return None
+
+    content = path.read_text(encoding="utf-8")
+    match = re.search(r"window\.visualLabData\s*=\s*(\{.*\})\s*;\s*$", content, re.DOTALL)
+    if not match:
+        return None
+
+    try:
+        return json.loads(match.group(1))
+    except json.JSONDecodeError:
+        return None
+
+
+def has_field(content: str, field_name: str) -> bool:
+    return bool(re.search(rf"['\"]?{re.escape(field_name)}['\"]?\s*:", content))
 
 
 def validate_root(result: RepoResult) -> None:
@@ -171,16 +189,25 @@ def validate_root(result: RepoResult) -> None:
             "Visual Lab 구현물은 각 서브레포의 docs/visual-lab 아래에 둡니다.",
         )
 
+    root_visualizer = ROOT / "docs" / "visualizer"
+    if root_visualizer.exists():
+        add_issue(
+            result,
+            "FAIL",
+            root_visualizer,
+            "central docs/visualizer exists",
+            "루트 레포에는 Visual Lab 구현 디렉터리를 만들지 않습니다.",
+        )
 
-def validate_required_files(result: RepoResult) -> bool:
+
+def validate_required_hub_files(result: RepoResult) -> bool:
     repo_root = ROOT / result.path
     lab_dir = repo_root / VISUAL_LAB_DIR
-    level = missing_visual_lab_level(result)
 
     if not repo_root.exists():
         add_issue(
             result,
-            level,
+            "FAIL",
             repo_root,
             "subrepository path is missing locally",
             "서브모듈을 초기화하거나 manifest의 repoPath를 확인합니다.",
@@ -188,97 +215,109 @@ def validate_required_files(result: RepoResult) -> bool:
         return False
 
     all_present = True
-    for filename in REQUIRED_FILES:
+    for filename in REQUIRED_HUB_FILES:
         path = lab_dir / filename
         if not path.exists():
             all_present = False
             add_issue(
                 result,
-                level,
+                "FAIL",
                 path,
-                f"missing required Visual Lab file: {filename}",
-                "공통 구조는 index.html, styles.css, visual-lab.js, visual-lab-data.js입니다.",
+                f"missing required Visual Lab hub file: {filename}",
+                "허브 구조는 index.html, styles.css, visual-lab.js, visual-lab-data.js를 유지합니다.",
             )
 
     return all_present
 
 
-def validate_index_html(result: RepoResult) -> None:
-    index_path = ROOT / result.path / VISUAL_LAB_DIR / "index.html"
-    if not index_path.exists():
+def validate_html_assets(result: RepoResult, path: Path, expected_scripts: set[str], expected_links: set[str]) -> None:
+    if not path.exists():
         return
 
-    content = index_path.read_text(encoding="utf-8")
+    content = path.read_text(encoding="utf-8")
     parser = AssetParser()
     parser.feed(content)
-
-    if CDN_PATTERNS.search(content) and re.search(r"https?:|//", content):
-        add_issue(
-            result,
-            "FAIL",
-            index_path,
-            "external CDN or library URL appears in index.html",
-            "외부 CDN 대신 같은 docs/visual-lab 폴더의 상대 경로 파일만 사용합니다.",
-        )
 
     for src in parser.scripts:
         if not is_relative_asset(src):
             add_issue(
                 result,
                 "FAIL",
-                index_path,
+                path,
                 f"script src is not relative: {src}",
-                "script src는 ./visual-lab-data.js처럼 상대 경로로 작성합니다.",
+                "script src는 같은 Visual Lab 폴더 안의 상대 경로만 사용합니다.",
             )
+        if CDN_URL_PATTERN.search(src):
+            add_issue(
+                result,
+                "FAIL",
+                path,
+                f"script src appears to use a CDN/library: {src}",
+                "외부 JS 라이브러리와 CDN을 사용하지 않습니다.",
+            )
+
     for href in parser.links:
         if not is_relative_asset(href):
             add_issue(
                 result,
                 "FAIL",
-                index_path,
+                path,
                 f"link href is not relative: {href}",
-                "link href는 ./styles.css처럼 상대 경로로 작성합니다.",
+                "link href는 ./styles.css 또는 ../../styles.css처럼 상대 경로로 작성합니다.",
             )
-
-    script_set = set(parser.scripts)
-    link_set = set(parser.links)
-    if not EXPECTED_LOCAL_ASSETS["link"].intersection(link_set):
-        add_issue(
-            result,
-            "FAIL",
-            index_path,
-            "styles.css is not linked from index.html",
-            "index.html에서 ./styles.css를 link로 불러옵니다.",
-        )
-    if "./visual-lab-data.js" not in script_set and "visual-lab-data.js" not in script_set:
-        add_issue(
-            result,
-            "FAIL",
-            index_path,
-            "visual-lab-data.js is not loaded from index.html",
-            "데이터 파일을 visual-lab.js보다 먼저 script로 불러옵니다.",
-        )
-    if "./visual-lab.js" not in script_set and "visual-lab.js" not in script_set:
-        add_issue(
-            result,
-            "FAIL",
-            index_path,
-            "visual-lab.js is not loaded from index.html",
-            "공통 렌더러인 ./visual-lab.js를 script로 불러옵니다.",
-        )
-
-    for button in parser.buttons:
-        if button.get("disabled") or button.get("tabindex") == "-1" or button.get("aria-hidden") == "true":
+        if CDN_URL_PATTERN.search(href):
             add_issue(
                 result,
-                "WARN",
-                index_path,
-                "button may not be focusable",
-                "버튼은 기본 focus 흐름을 유지하고, 비활성 상태는 JS 상태로 최소화합니다.",
+                "FAIL",
+                path,
+                f"link href appears to use a CDN/library: {href}",
+                "외부 CSS CDN을 사용하지 않습니다.",
             )
 
+    if expected_links and not expected_links.intersection(set(parser.links)):
+        add_issue(
+            result,
+            "FAIL",
+            path,
+            "styles.css is not linked with the expected relative path",
+            f"허용 경로: {', '.join(sorted(expected_links))}",
+        )
 
-def validate_data_js(result: RepoResult) -> None:
+    missing_scripts = sorted(expected_scripts.difference(set(parser.scripts)))
+    if missing_scripts:
+        add_issue(
+            result,
+            "FAIL",
+            path,
+            f"expected script(s) are missing: {', '.join(missing_scripts)}",
+            "데이터 파일을 visual-lab.js보다 먼저 불러옵니다.",
+        )
+
+
+def validate_css_assets(result: RepoResult, path: Path) -> None:
+    if not path.exists():
+        return
+
+    content = path.read_text(encoding="utf-8")
+    if REMOTE_CSS_PATTERN.search(content):
+        add_issue(
+            result,
+            "FAIL",
+            path,
+            "remote CSS import appears in styles.css",
+            "외부 폰트나 CSS CDN import를 사용하지 않습니다.",
+        )
+    if CDN_URL_PATTERN.search(content) and re.search(r"https?:|//", content):
+        add_issue(
+            result,
+            "FAIL",
+            path,
+            "external CDN/library URL appears in styles.css",
+            "CSS는 로컬 파일과 CSS 기본 기능만 사용합니다.",
+        )
+
+
+def validate_hub_data(result: RepoResult) -> None:
     data_path = ROOT / result.path / VISUAL_LAB_DIR / "visual-lab-data.js"
     if not data_path.exists():
         return
@@ -292,25 +331,123 @@ def validate_data_js(result: RepoResult) -> None:
             "window.visualLabData assignment is missing",
             "visual-lab-data.js는 window.visualLabData = { ... } 형태로 작성합니다.",
         )
+        return
 
-    for field_name in DATA_FIELDS:
-        if not re.search(rf"\b{re.escape(field_name)}\s*:", content):
+    for field_name in HUB_DATA_FIELDS:
+        if not has_field(content, field_name):
             add_issue(
                 result,
                 "FAIL",
                 data_path,
-                f"required data field is missing: {field_name}",
-                "sequence, title, goal, flow는 최소 필드로 유지합니다.",
+                f"required hub data field is missing: {field_name}",
+                "허브 데이터에는 kind, title, sequences를 포함합니다.",
             )
 
-    if re.search(r"\bflow\s*:\s*\[\s*\]", content, re.DOTALL):
+    parsed = data_file_to_json(data_path)
+    if parsed:
+        if parsed.get("kind") != "hub":
+            add_issue(
+                result,
+                "FAIL",
+                data_path,
+                "hub data kind is not 'hub'",
+                "토픽 레포 main Visual Lab 데이터는 kind: 'hub'로 둡니다.",
+            )
+        if not parsed.get("sequences"):
+            add_issue(
+                result,
+                "FAIL",
+                data_path,
+                "hub data has no sequence links",
+                "허브에는 이 레포가 담는 시퀀스 목록과 상세 href를 넣습니다.",
+            )
+
+
+def validate_sequence_data(result: RepoResult, sequence: dict[str, str], data_path: Path) -> None:
+    if not data_path.exists():
         add_issue(
             result,
-            "WARN",
+            "FAIL",
             data_path,
-            "flow is present but empty",
-            "최소 1개 이상의 흐름 단계를 넣어 학생이 따라갈 수 있게 합니다.",
+            "missing sequence Visual Lab data file",
+            "각 시퀀스 상세 페이지는 자기 visual-lab-data.js를 가져야 합니다.",
         )
+        return
+
+    content = data_path.read_text(encoding="utf-8")
+    if not re.search(r"window\.visualLabData\s*=", content):
+        add_issue(
+            result,
+            "FAIL",
+            data_path,
+            "window.visualLabData assignment is missing",
+            "시퀀스 상세 데이터는 window.visualLabData = { ... } 형태로 작성합니다.",
+        )
+
+    for field_name in SEQUENCE_DATA_FIELDS:
+        if not has_field(content, field_name):
+            add_issue(
+                result,
+                "FAIL",
+                data_path,
+                f"required sequence data field is missing: {field_name}",
+                "상세 데이터에는 kind, sequence, title, goal, problem, actors, flows, codePoints를 포함합니다.",
+            )
+
+    parsed = data_file_to_json(data_path)
+    if not parsed:
+        return
+
+    sequence_id = sequence["id"]
+    if parsed.get("kind") != "sequence":
+        add_issue(
+            result,
+            "FAIL",
+            data_path,
+            "sequence data kind is not 'sequence'",
+            "시퀀스 상세 데이터는 kind: 'sequence'로 둡니다.",
+        )
+    if parsed.get("sequence") != sequence_id:
+        add_issue(
+            result,
+            "FAIL",
+            data_path,
+            f"sequence id mismatch: expected {sequence_id}, got {parsed.get('sequence')!r}",
+            "manifest 시퀀스 번호와 상세 데이터 sequence 값을 맞춥니다.",
+        )
+
+    actors = parsed.get("actors") or []
+    flows = parsed.get("flows") or []
+    code_points = parsed.get("codePoints") or []
+    if not isinstance(actors, list) or not actors:
+        add_issue(result, "FAIL", data_path, "actors must be a non-empty list", "actor kind 기반 다이어그램을 위해 actors를 선언합니다.")
+    if not isinstance(flows, list) or not flows:
+        add_issue(result, "FAIL", data_path, "flows must be a non-empty list", "시퀀스 상세는 최소 1개 이상의 flow를 가져야 합니다.")
+    if not isinstance(code_points, list) or len(code_points) < 2:
+        add_issue(result, "FAIL", data_path, "codePoints must contain at least 2 items", "각 시퀀스에는 최소 2개 이상의 주요 코드 포인트를 넣습니다.")
+
+    for flow in flows if isinstance(flows, list) else []:
+        steps = flow.get("steps") if isinstance(flow, dict) else None
+        if not isinstance(steps, list) or not (4 <= len(steps) <= 6):
+            add_issue(
+                result,
+                "FAIL",
+                data_path,
+                f"flow {flow.get('id', '<unknown>') if isinstance(flow, dict) else '<unknown>'} must have 4-6 steps",
+                "각 상세 flow는 4-6단계로 제한합니다.",
+            )
+
+    for point in code_points if isinstance(code_points, list) else []:
+        snippet = point.get("snippet", "") if isinstance(point, dict) else ""
+        line_count = len(str(snippet).splitlines())
+        if line_count > 20:
+            add_issue(
+                result,
+                "FAIL",
+                data_path,
+                f"codePoint {point.get('id', '<unknown>')} snippet is too long: {line_count} lines",
+                "코드 포인트는 핵심 5-20줄 정도로 제한합니다.",
+            )
 
 
 def validate_answer_exposure(result: RepoResult) -> None:
@@ -318,7 +455,7 @@ def validate_answer_exposure(result: RepoResult) -> None:
     if not lab_dir.exists():
         return
 
-    for file_path in sorted(lab_dir.glob("*")):
+    for file_path in sorted(lab_dir.rglob("*")):
         if not file_path.is_file() or file_path.suffix not in {".html", ".css", ".js"}:
             continue
         content = file_path.read_text(encoding="utf-8")
@@ -327,17 +464,49 @@ def validate_answer_exposure(result: RepoResult) -> None:
                 result,
                 "FAIL",
                 file_path,
-                "answer branch or answer-oriented implementation detail appears in Visual Lab",
-                "학생용 Visual Lab에는 정답 브랜치와 구현 상세를 앞세우지 않습니다.",
+                "answer branch string or answer-oriented metadata appears in Visual Lab",
+                "학생용 Visual Lab 화면/데이터에는 정답 브랜치명과 answerBranch류 필드를 넣지 않습니다.",
             )
-        elif ANSWER_EXPOSURE_WARN.search(content):
+
+
+def validate_repo(result: RepoResult) -> None:
+    if not validate_required_hub_files(result):
+        return
+
+    lab_dir = ROOT / result.path / VISUAL_LAB_DIR
+    validate_html_assets(
+        result,
+        lab_dir / "index.html",
+        expected_scripts={"./visual-lab-data.js", "./visual-lab.js"},
+        expected_links={"./styles.css"},
+    )
+    validate_css_assets(result, lab_dir / "styles.css")
+    validate_hub_data(result)
+
+    for sequence in result.sequences:
+        sequence_id = sequence["id"]
+        sequence_path = sequence.get("visualLabSequencePath") or f"docs/visual-lab/sequences/{sequence_id}/index.html"
+        sequence_index = ROOT / result.path / sequence_path
+        sequence_data = sequence_index.with_name("visual-lab-data.js")
+
+        if not sequence_index.exists():
             add_issue(
                 result,
-                "WARN",
-                file_path,
-                "possible answer/code detail string appears in Visual Lab",
-                "긴 코드 또는 정답 비교 안내는 강사용 문서로 옮기는 것이 안전합니다.",
+                "FAIL",
+                sequence_index,
+                "missing sequence Visual Lab page",
+                "manifest의 각 시퀀스는 docs/visual-lab/sequences/NN/index.html을 가져야 합니다.",
             )
+        else:
+            validate_html_assets(
+                result,
+                sequence_index,
+                expected_scripts={"./visual-lab-data.js", "../../visual-lab.js"},
+                expected_links={"../../styles.css"},
+            )
+        validate_sequence_data(result, sequence, sequence_data)
+
+    validate_answer_exposure(result)
 
 
 def build_repo_results() -> list[RepoResult]:
@@ -359,6 +528,7 @@ def build_repo_results() -> list[RepoResult]:
         status = sequence.get("status")
         if status:
             result.statuses.add(status)
+        result.sequences.append(sequence)
 
     return [repo_map[key] for key in sorted(repo_map)]
 
@@ -369,10 +539,7 @@ def validate() -> list[RepoResult]:
     validate_root(root_result)
 
     for result in results:
-        validate_required_files(result)
-        validate_index_html(result)
-        validate_data_js(result)
-        validate_answer_exposure(result)
+        validate_repo(result)
 
     if root_result.issues:
         return [root_result, *results]
@@ -391,7 +558,8 @@ def print_results(results: list[RepoResult]) -> int:
     for result in results:
         repo_status = "FAIL" if result.has_failures else "WARN" if result.has_warnings else "PASS"
         status_text = ", ".join(sorted(result.statuses)) if result.statuses else "no manifest status"
-        print(f"[{repo_status}] {result.name} ({result.path}) - {status_text}")
+        sequence_text = ", ".join(sequence["id"] for sequence in result.sequences) or "-"
+        print(f"[{repo_status}] {result.name} ({result.path}) - {status_text} - sequences: {sequence_text}")
         if not result.issues:
             print("  - OK")
         for issue in result.issues:

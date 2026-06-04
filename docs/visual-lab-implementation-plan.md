@@ -11,13 +11,15 @@ A&I Backend Visual Lab은 각 시퀀스 서브모듈 안에서 정적 HTML, CSS,
 
 ## 2. 구현 범위
 
-각 시퀀스 서브모듈 안에서 생성할 파일:
+각 토픽 레포 안에서 생성할 파일:
 
 ```text
-<sequence-submodule>/docs/visual-lab/index.html
-<sequence-submodule>/docs/visual-lab/styles.css
-<sequence-submodule>/docs/visual-lab/visual-lab-data.js
-<sequence-submodule>/docs/visual-lab/visual-lab.js
+<topic-repo>/docs/visual-lab/index.html
+<topic-repo>/docs/visual-lab/styles.css
+<topic-repo>/docs/visual-lab/visual-lab-data.js
+<topic-repo>/docs/visual-lab/visual-lab.js
+<topic-repo>/docs/visual-lab/sequences/NN/index.html
+<topic-repo>/docs/visual-lab/sequences/NN/visual-lab-data.js
 ```
 
 루트 레포에는 위 구현 파일을 만들지 않는다.
@@ -111,13 +113,9 @@ NN-answer
 
 역할:
 
-- Visual Lab의 메인 진입점
-- Hero 영역
-- Topic Cards 영역
-- Detail 영역
-- Step Explorer 영역
-- Related Docs 영역
-- Footer 영역
+- 토픽 레포 단위 Visual Lab 허브
+- 레포가 담는 시퀀스 목록과 상세 페이지 링크
+- 기존 진입점 호환 유지
 
 필수 연결:
 
@@ -276,18 +274,28 @@ summary-box
 
 역할:
 
-- Visual Lab 학습 주제 데이터 정의
+- 토픽 레포 허브 데이터 정의
+- `kind: "hub"`와 시퀀스 목록 제공
 
 전역 변수:
 
 ```js
 window.visualLabData = {
-  sequence: "NN",
+  kind: "hub",
   title: "...",
-  goal: "...",
-  flow: []
+  sequences: [
+    { sequence: "NN", title: "...", href: "./sequences/NN/index.html" }
+  ]
 };
 ```
+
+### 7.4-1 docs/visual-lab/sequences/NN/visual-lab-data.js
+
+역할:
+
+- 시퀀스 상세 학습 데이터 정의
+- `kind: "sequence"`, `actors`, `flows`, `codePoints` 제공
+- 기존 소비자 호환이 필요하면 `flow`도 함께 유지
 
 최소 포함 주제:
 
@@ -327,20 +335,31 @@ Visual Lab 데이터에는 answer 브랜치명과 완성 구현 코드를 넣지
 
 ```js
 window.visualLabData = {
+  kind: "sequence",
   sequence: "NN",
   title: "한국어 주제명",
   goal: "한 줄 목표",
   problem: "이 시퀀스가 해결하는 문제",
-  flow: [
+  actors: [],
+  flows: [
     {
-      id: "step-1",
-      label: "단계 이름",
-      problem: "왜 이 단계가 필요한가",
-      concept: "어떤 개념을 보는가",
-      action: "무엇을 구현하거나 확인하는가",
-      check: "무엇으로 확인하는가"
+      id: "main-flow",
+      steps: [
+        {
+          id: "step-1",
+          from: "client",
+          to: "server",
+          messageKind: "request",
+          problem: "왜 이 단계가 필요한가",
+          concept: "어떤 개념을 보는가",
+          action: "무엇을 구현하거나 확인하는가",
+          check: "무엇으로 확인하는가",
+          codePointIds: ["controller-create"]
+        }
+      ]
     }
-  ]
+  ],
+  codePoints: []
 };
 ```
 
@@ -351,9 +370,10 @@ window.visualLabData = {
 
 역할:
 
-- `window.visualLabData` 데이터를 렌더링한다.
+- `kind: "hub"`와 `kind: "sequence"` 데이터를 렌더링한다.
 - 카드 클릭 이벤트를 처리한다.
 - Hero, Problem, Flow, Concepts, Practice Check, Mentor Hint를 표시한다.
+- actor kind 기반 시퀀스 다이어그램과 step별 codePoint를 표시한다.
 
 Step Explorer 기준:
 

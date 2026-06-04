@@ -6,6 +6,7 @@
 - [ ] [manifest](../manifest/sequences.yml)의 repo, branch, run/test command를 확인했습니다.
 - [ ] 학생 시작 브랜치가 `NN-implementation`인지 확인했습니다.
 - [ ] default branch가 `main`인지 확인했습니다.
+- [ ] 토픽 레포 `docs/visual-lab/index.html` 허브와 `docs/visual-lab/sequences/NN/index.html` 상세 페이지가 열리는지 확인했습니다.
 - [ ] 필요한 Docker 서비스가 무엇인지 확인했습니다.
 
 ## 수업 중

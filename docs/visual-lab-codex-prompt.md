@@ -89,7 +89,12 @@ docs/visual-lab/index.html
 docs/visual-lab/styles.css
 docs/visual-lab/visual-lab-data.js
 docs/visual-lab/visual-lab.js
+docs/visual-lab/sequences/NN/index.html
+docs/visual-lab/sequences/NN/visual-lab-data.js
 ```
+
+`docs/visual-lab/index.html`은 토픽 레포 단위 허브다.
+시퀀스 상세 Visual Lab은 `docs/visual-lab/sequences/NN/index.html`에 둔다.
 
 루트 레포에는 `docs/index.html` 또는 `docs/visualizer/*` 구현 파일을 만들지 않는다.
 
@@ -219,7 +224,8 @@ window.visualLabData = {
 ````md
 ## A&I Backend Visual Lab
 
-각 시퀀스 서브모듈의 `docs/visual-lab/index.html`에서 확인할 수 있는 정적 학습 시각화 페이지입니다.
+각 토픽 레포의 `docs/visual-lab/index.html`에서 시작하는 정적 학습 시각화 페이지입니다.
+이 페이지는 레포 단위 허브이며, 시퀀스 상세는 `docs/visual-lab/sequences/NN/index.html`에서 확인합니다.
 
 이 페이지는 A&I 백엔드 커리큘럼의 상세 이론을 대체하지 않고,
 각 시퀀스와 토픽 레포로 이동하기 위한 시각화 진입점입니다.
