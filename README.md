@@ -3,6 +3,30 @@
 이 저장소는 A&I 백엔드 커리큘럼 전체를 운영하기 위한 중앙 허브입니다.
 실제 실습 산출물을 한 저장소에 계속 누적하는 본체가 아니라, 시퀀스 순서와 생성 기준을 고정하는 통제 레포로 사용합니다.
 
+## 포트폴리오 관점 요약
+
+본 프로젝트는 4기 백엔드 코드랩을 시퀀스, 브랜치, 문서 산출물 기준으로 운영할 수 있게 정리한 교육 시스템입니다.
+학생은 각 토픽 레포의 `NN-implementation` 브랜치에서 실습을 시작하고,
+실습 후 `NN-answer` 브랜치와 `git diff`로 비교하며 학습합니다.
+
+운영자는 중앙 manifest와 시퀀스 문서로 수업 순서, 토픽 레포, 실행 명령, 테스트 명령, Visual Lab 위치를 확인합니다.
+각 시퀀스는 `README.md`, `docs/theory.md`, `docs/implementation.md`, `docs/checklist.md`, `docs/visual-lab/*`를 기준 산출물로 유지해 다음 기수도 같은 구조로 재사용할 수 있게 합니다.
+
+포트폴리오 증빙 문서는 아래에서 확인합니다.
+
+- [상세 문서 목차](./docs/README.md)
+- [커리큘럼 요약](./docs/curriculum.md)
+- [브랜치 전략](./docs/branch-strategy.md)
+- [문서 산출물 구조](./docs/documentation-structure.md)
+- [이력서 근거 연결](./docs/resume-evidence.md)
+
+동작 흐름은 별도 서비스 UI보다 운영 구조 다이어그램으로 증빙합니다.
+
+- [브랜치 전략 이미지](./docs/assets/images/branch-strategy.png): `main` 안내 브랜치, `NN-implementation`, `NN-answer` 비교 흐름
+- [문서 산출물 구조 이미지](./docs/assets/images/documentation-structure.png): `README`, `theory`, `implementation`, `checklist`, `visual-lab` 연결
+- [세션 운영 흐름 이미지](./docs/assets/images/session-flow.png): 실습, 질문, 검증, diff 비교, 회고 흐름
+- [데모 캡처 기준](./docs/demo-capture.md): GIF 미생성 사유와 수동 촬영 기준
+
 ## 이 레포의 목적
 
 - 커리큘럼 전체 방향을 흔들리지 않게 유지합니다.
@@ -31,6 +55,9 @@
 - [학생 Troubleshooting](./docs/student/troubleshooting.md)
 - [강사용 브랜치 정책](./docs/instructor/branch-policy.md)
 - [강사용 정답 브랜치 정책](./docs/instructor/answer-branch-policy.md)
+- [운영 세션 흐름](./docs/session-operation.md)
+- [리뷰 기준](./docs/review-guide.md)
+- [멘토 운영 요약](./docs/mentor-guide.md)
 - [에이전트 Repository Rules](./docs/agent/repository-rules.md)
 - [에이전트 Visual Lab Rules](./docs/agent/visual-lab-rules.md)
 
