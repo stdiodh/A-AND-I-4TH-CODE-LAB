@@ -1,0 +1,58 @@
+<mxfile host="app.diagrams.net" modified="2026-06-04T00:00:00.000Z" agent="Codex" version="24.7.17">
+  <diagram id="document-structure" name="Document Structure">
+    <mxGraphModel dx="1200" dy="540" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="540" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="토픽 레포 문서 산출물 구조" style="text;html=1;strokeColor=none;fillColor=none;fontColor=#1F3A5F;fontSize=26;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="300" y="30" width="600" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="repo" value="Topic Repository&#xa;시퀀스별 실습 레포" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#1F3A5F;strokeColor=#1F3A5F;fontColor=#FFFFFF;fontSize=17;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="100" width="280" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="readme" value="README.md&#xa;실습 입구" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#EAF3FF;strokeColor=#2F80ED;fontColor=#1F3A5F;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="245" width="150" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="theory" value="docs/theory.md&#xa;개념 기준" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#EAF3FF;strokeColor=#2F80ED;fontColor=#1F3A5F;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="270" y="245" width="160" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="implementation" value="docs/implementation.md&#xa;구현 절차" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#EAF3FF;strokeColor=#2F80ED;fontColor=#1F3A5F;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="470" y="245" width="180" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="checklist" value="docs/checklist.md&#xa;완료 점검" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#EAF3FF;strokeColor=#2F80ED;fontColor=#1F3A5F;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="690" y="245" width="160" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="visual" value="docs/visual-lab&#xa;정적 시각화" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#EAF8EF;strokeColor=#2E7D32;fontColor=#1F3A5F;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="890" y="245" width="170" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="instructor" value="instructor checklist&#xa;멘토 운영 점검" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#F3F6FA;strokeColor=#6B7280;fontColor=#1F3A5F;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="395" width="220" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="codex" value="codex behavior guide&#xa;에이전트 수정 규칙" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#F3F6FA;strokeColor=#6B7280;fontColor=#1F3A5F;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="650" y="395" width="220" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" style="endArrow=block;html=1;rounded=0;strokeColor=#6B7280;strokeWidth=2;" edge="1" parent="1" source="repo" target="readme">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" style="endArrow=block;html=1;rounded=0;strokeColor=#6B7280;strokeWidth=2;" edge="1" parent="1" source="repo" target="theory">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" style="endArrow=block;html=1;rounded=0;strokeColor=#6B7280;strokeWidth=2;" edge="1" parent="1" source="repo" target="implementation">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" style="endArrow=block;html=1;rounded=0;strokeColor=#6B7280;strokeWidth=2;" edge="1" parent="1" source="repo" target="checklist">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" style="endArrow=block;html=1;rounded=0;strokeColor=#6B7280;strokeWidth=2;" edge="1" parent="1" source="repo" target="visual">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" style="endArrow=block;html=1;rounded=0;strokeColor=#6B7280;strokeWidth=2;" edge="1" parent="1" source="repo" target="instructor">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" style="endArrow=block;html=1;rounded=0;strokeColor=#6B7280;strokeWidth=2;" edge="1" parent="1" source="repo" target="codex">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

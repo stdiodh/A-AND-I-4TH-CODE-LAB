@@ -1,0 +1,49 @@
+<mxfile host="app.diagrams.net" modified="2026-06-04T00:00:00.000Z" agent="Codex" version="24.7.17">
+  <diagram id="branch-strategy" name="Branch Strategy">
+    <mxGraphModel dx="1200" dy="430" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="430" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="NN-implementation에서 시작해 NN-answer와 비교하는 학습 흐름" style="text;html=1;strokeColor=none;fillColor=none;fontColor=#1F3A5F;fontSize=24;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="180" y="35" width="840" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="student" value="학생" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#1F3A5F;strokeColor=#1F3A5F;fontColor=#FFFFFF;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="160" width="130" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="checkout" value="NN-implementation&#xa;checkout" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#EAF3FF;strokeColor=#2F80ED;fontColor=#1F3A5F;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="240" y="160" width="160" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="practice" value="실습&#xa;문서 순서대로 구현" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#F3F6FA;strokeColor=#6B7280;fontColor=#1F3A5F;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="450" y="160" width="160" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="test" value="테스트 / 실행&#xa;결과 확인" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#F3F6FA;strokeColor=#6B7280;fontColor=#1F3A5F;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="660" y="160" width="160" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="diff" value="NN-answer와&#xa;diff 비교" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#EAF8EF;strokeColor=#2E7D32;fontColor=#1F3A5F;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="870" y="160" width="160" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="retro" value="회고&#xa;차이와 의도 정리" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#1F3A5F;strokeColor=#1F3A5F;fontColor=#FFFFFF;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="160" width="160" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="note" value="정답 브랜치는 첫 진입점이 아니라 실습 후 비교 기준입니다." style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#FFFFFF;strokeColor=#D1D5DB;fontColor=#374151;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="355" y="295" width="490" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" style="endArrow=block;html=1;rounded=0;strokeColor=#6B7280;strokeWidth=2;" edge="1" parent="1" source="student" target="checkout">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" style="endArrow=block;html=1;rounded=0;strokeColor=#6B7280;strokeWidth=2;" edge="1" parent="1" source="checkout" target="practice">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" style="endArrow=block;html=1;rounded=0;strokeColor=#6B7280;strokeWidth=2;" edge="1" parent="1" source="practice" target="test">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" style="endArrow=block;html=1;rounded=0;strokeColor=#6B7280;strokeWidth=2;" edge="1" parent="1" source="test" target="diff">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" style="endArrow=block;html=1;rounded=0;strokeColor=#6B7280;strokeWidth=2;" edge="1" parent="1" source="diff" target="retro">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
