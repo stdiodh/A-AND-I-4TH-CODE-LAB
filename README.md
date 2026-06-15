@@ -14,8 +14,25 @@
 
 ## 2. 한눈에 보는 커리큘럼
 
-커리큘럼은 prerequisite bootcamp에서 시작해 REST CRUD, DB 접근, Redis/Cache, 이벤트 기반 처리, 실시간 통신, 배포 런타임, 리팩터링 기초로 이어집니다.
+커리큘럼 순서는 [manifest](./docs/manifest/sequences.yml)를 기준으로 관리합니다.
 README에는 전체 흐름만 남기고, 세부 범위는 [docs/sequences](./docs/sequences)와 각 토픽 레포의 문서에서 관리합니다.
+
+1. 00 Prerequisite
+2. 01 REST CRUD
+3. 02 DB Access
+4. 03 Validation
+5. 04 JWT
+6. 05 OAuth2 + SMTP
+7. 06 Testing
+8. 07 Redis Cache
+9. 08 Realtime WebSocket
+10. 09 Docker/Runtime
+11. 10 CI/CD Deployment
+12. 11 Refactoring Foundation
+13. 12 Event Driven
+
+운영자는 01 REST CRUD와 12 Event Driven의 GitHub 원격 default branch가 `main`인지 수동으로 확인해야 합니다.
+Codex는 GitHub 원격 default branch를 직접 바꾸지 못합니다.
 
 ![커리큘럼 맵](./docs/assets/diagrams/curriculum-map.png)
 

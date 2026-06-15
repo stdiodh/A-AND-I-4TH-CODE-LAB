@@ -20,6 +20,7 @@
 ## 실습 시작
 
 항상 `NN-implementation` 브랜치에서 시작합니다.
+GitHub 원격 default branch 상태가 실습 시작 기준과 다를 수 있으므로 clone 뒤에는 시퀀스 번호가 붙은 implementation 브랜치를 명시적으로 checkout합니다.
 
 ```bash
 git clone <repo-url>

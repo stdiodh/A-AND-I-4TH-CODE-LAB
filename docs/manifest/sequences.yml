@@ -48,9 +48,11 @@ sequences:
       - "메모리 기반 CRUD API를 구현한다."
     status: "needs-branch-cleanup"
     notes:
-      - "정식 수업 브랜치는 01-implementation / 01-answer입니다."
-      - "원격 default branch가 legacy implementation을 가리키는지 GitHub UI에서 확인하고 main으로 변경해야 합니다."
-      - "legacy implementation / answer 브랜치가 남아 있으면 deprecated 처리 후 삭제 여부를 결정합니다."
+      - "정식 수업 브랜치는 01-implementation과 01-answer입니다."
+      - "원격 default branch가 legacy implementation을 가리키므로 GitHub UI에서 main으로 수동 변경해야 합니다."
+      - "Codex는 GitHub 원격 default branch를 직접 바꾸지 못합니다."
+      - "legacy implementation, answer 브랜치가 남아 있으면 사용 중단 표시 후 삭제 여부를 결정합니다."
+      - "main 브랜치의 Visual Lab 진입점은 docs/visual-lab/index.html입니다."
 
   - id: "02"
     title: "DB Access"
@@ -204,9 +206,9 @@ sequences:
       - "DB와 캐시의 역할 차이를 설명한다."
       - "cache-aside 조회 흐름을 구현한다."
       - "TTL과 캐시 무효화가 필요한 이유를 이해한다."
-    status: "needs-visual-lab"
+    status: "ready"
     notes:
-      - "main 브랜치에 docs/visual-lab/index.html이 아직 확인되지 않았습니다."
+      - "Redis Cache 레포의 Visual Lab은 main 브랜치의 docs/visual-lab/index.html에 있습니다."
 
   - id: "08"
     title: "Realtime WebSocket"
@@ -230,10 +232,10 @@ sequences:
       - "HTTP와 WebSocket의 차이를 설명한다."
       - "STOMP 메시지 수신과 topic broadcast 흐름을 이해한다."
       - "테스트 페이지에서 실시간 송수신을 확인한다."
-    status: "needs-visual-lab"
+    status: "ready"
     notes:
       - "테스트 페이지 경로는 /realtime-demo.html입니다."
-      - "main 브랜치에 docs/visual-lab/index.html이 아직 확인되지 않았습니다."
+      - "Realtime WebSocket 레포의 Visual Lab은 main 브랜치의 docs/visual-lab/index.html에 있습니다."
 
   - id: "09"
     title: "Docker/Runtime"
@@ -257,10 +259,10 @@ sequences:
       - "Spring Boot jar를 Docker 실행 단위로 묶는다."
       - "운영 profile과 환경변수 주입 흐름을 이해한다."
       - "GitHub Actions와 Secrets 기반 배포 흐름을 설명한다."
-    status: "needs-visual-lab"
+    status: "ready"
     notes:
       - "운영 배포 검증은 GitHub Actions와 EC2 환경이 필요합니다."
-      - "main 브랜치에 docs/visual-lab/index.html이 아직 확인되지 않았습니다."
+      - "Docker/Runtime Visual Lab은 main 브랜치의 docs/visual-lab/index.html에 있습니다."
 
   - id: "10"
     title: "CI/CD Deployment"
@@ -284,10 +286,10 @@ sequences:
       - "build, test, deploy, verify 자동화 순서를 이해한다."
       - "workflow와 shell script의 책임을 분리한다."
       - "배포 성공 판정에 verify 단계가 필요한 이유를 설명한다."
-    status: "needs-visual-lab"
+    status: "ready"
     notes:
       - "운영 자동화 검증은 GitHub Actions와 EC2 환경이 필요합니다."
-      - "main 브랜치에 docs/visual-lab/index.html이 아직 확인되지 않았습니다."
+      - "CI/CD Deployment Visual Lab은 main 브랜치의 docs/visual-lab/index.html에 있습니다."
 
   - id: "11"
     title: "Refactoring Foundation"
@@ -311,10 +313,9 @@ sequences:
       - "Service 책임이 섞인 지점을 찾는다."
       - "Validation, Exception Handling, 테스트를 함께 보강한다."
       - "리팩토링 전후 기능 유지 여부를 테스트로 확인한다."
-    status: "needs-review"
+    status: "ready"
     notes:
-      - "main 브랜치에 docs/visual-lab/index.html이 아직 확인되지 않았습니다."
-      - "이전 감사에서 main 문서 일부가 10 CI/CD 내용과 섞인 흔적이 있어 추가 검토가 필요합니다."
+      - "Refactoring Foundation 레포의 Visual Lab은 main 브랜치의 docs/visual-lab/index.html에 있습니다."
 
   - id: "12"
     title: "Event Driven"
@@ -341,4 +342,5 @@ sequences:
     status: "needs-branch-cleanup"
     notes:
       - "원격 default branch가 12-answer를 가리키는지 GitHub UI에서 확인하고 main으로 변경해야 합니다."
-      - "main 브랜치에 docs/visual-lab/index.html이 아직 확인되지 않았습니다."
+      - "Codex는 GitHub 원격 default branch를 직접 바꾸지 못합니다."
+      - "Event Driven 레포의 Visual Lab은 main 브랜치의 docs/visual-lab/index.html에 있습니다."

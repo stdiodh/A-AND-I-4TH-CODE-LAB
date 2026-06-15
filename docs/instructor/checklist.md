@@ -4,8 +4,13 @@
 
 - [ ] 오늘 시퀀스 번호를 확인했습니다.
 - [ ] [manifest](../manifest/sequences.yml)의 repo, branch, run/test command를 확인했습니다.
+- [ ] 중앙 레포에서 `python3 scripts/verify-sequences.py`를 실행했습니다.
+- [ ] 테스트까지 확인해야 하는 날에는 `python3 scripts/verify-sequences.py --run-tests`를 실행했습니다.
 - [ ] 학생 시작 브랜치가 `NN-implementation`인지 확인했습니다.
 - [ ] default branch가 `main`인지 확인했습니다.
+- [ ] 01 REST CRUD 원격 default branch가 `main`인지 GitHub UI에서 확인했습니다.
+- [ ] 12 Event Driven 원격 default branch가 `main`인지 GitHub UI에서 확인했습니다.
+- [ ] Codex는 GitHub 원격 default branch를 직접 바꾸지 못합니다.
 - [ ] 토픽 레포 `docs/visual-lab/index.html` 허브와 `docs/visual-lab/sequences/NN/index.html` 상세 페이지가 열리는지 확인했습니다.
 - [ ] 필요한 Docker 서비스가 무엇인지 확인했습니다.
 
