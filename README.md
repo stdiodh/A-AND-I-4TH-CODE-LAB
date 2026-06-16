@@ -176,10 +176,3 @@ git submodule update --remote --merge
 | [Codex 작업 규칙](./docs/agent/codex-behavior-guide.md) | 자동화 에이전트가 문서와 레거시 파일을 수정할 때 지켜야 할 기준을 정리합니다. |
 | [시퀀스별 문서](./docs/sequences) | 각 수업의 상세 범위와 연결 문서를 관리합니다. |
 | [다이어그램 원본](./docs/assets/diagrams) | 커리큘럼 맵, 브랜치 전략, 문서 산출물 구조의 drawio 원본과 PNG를 관리합니다. |
-
-## 13. 이력서에 연결할 문장
-
-- A&I 4기 백엔드 코드랩 중앙 허브를 설계해 13개 학습 시퀀스, 토픽 레포 연결, 브랜치 기반 실습 흐름을 관리했습니다.
-- 학생이 `NN-implementation`에서 구현을 시작하고 `NN-answer`와 diff로 회고하는 학습 구조를 만들어 수업 운영 기준을 통일했습니다.
-- `theory`, `implementation`, `checklist`, `visual-lab` 문서 산출물 기준을 정리해 다음 기수에서도 재사용 가능한 백엔드 교육 자료 체계를 구성했습니다.
-- 멘토 체크리스트와 Codex 작업 규칙을 분리해 수업 전 검증, 레거시 정리, 문서 개선 작업의 기준을 명확히 했습니다.
