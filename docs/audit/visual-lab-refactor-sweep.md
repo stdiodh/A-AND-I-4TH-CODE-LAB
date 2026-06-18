@@ -77,6 +77,33 @@ git diff --check
 - `http://localhost:8080/#seq-05`에서 OAuth2 + SMTP 시퀀스로 hash 진입이 정상 동작하는 것을 확인했습니다.
 - 브라우저 콘솔 error log는 0건이었습니다.
 
+추가 보강 및 재검증: 2026-06-04
+
+- 공통 `visual-lab.js`에 Step Explorer 자동 재생, 일시정지, 속도 변경, 진행률 바를 추가했습니다.
+- 공통 `styles.css`에 Visual Lab 디자인 가이드의 필수 색상 토큰을 추가하고 기존 스타일 변수를 해당 토큰에 맞춰 연결했습니다.
+- 모바일 폭에서 sticky section nav와 문서 섹션이 가로 overflow를 만들지 않도록 공통 `styles.css`의 grid item 수축 규칙을 보강했습니다.
+- 카드 radius 토큰을 디자인 가이드의 둥근 교육용 카드 톤에 맞춰 `24px`로 조정했습니다.
+- 8개 repoPath 모두 동일한 공통 JS/CSS 엔진을 사용하도록 동기화했습니다.
+- 첨부된 5시간 고도화 프롬프트 기준에 맞춰 `docs/audit/visual-lab-deep-refactor-sweep.md`를 추가했습니다.
+- 공통 렌더러에 Before / After, Actor 기반 Diagram View, Step View, 접힘 Source View, Object / Layer Movement, Official References 섹션을 추가했습니다.
+- Actor 카드형 Diagram View를 participant lane, lifeline, message arrow가 보이는 `Sequence Diagram` UI로 교체했습니다.
+- 공식 문서 레퍼런스는 각 시퀀스 ID별 공통 맵에서 제공하며, 외부 링크는 콘텐츠 링크로만 사용합니다.
+- 13개 시퀀스 데이터가 모두 PAAR 유사 흐름을 갖는지 확인했습니다.
+  - `why.problem`: Problem
+  - `why.limits`: Analyze
+  - `flows[].steps[].action`: Action
+  - `checks`: Result
+- 13개 시퀀스 모두 하나 이상의 `flows[].mermaid`, 용어 4개 이상, 실무 포인트 3개 이상, 확인 질문 4개 이상을 보유함을 확인했습니다.
+- Chrome headless로 아래 경로를 열어 렌더링 후 DOM에 `Visual Lab content`, `핵심 흐름과 시퀀스 다이어그램`, `용어 정리`, `실무 포인트`, `재생`, `속도 1x`가 생기는 것을 확인했습니다.
+  - `aandi-prerequisite-bootcamp/docs/visual-lab/index.html#seq-00`
+  - `spring-boot-rest-crud-lab/docs/visual-lab/index.html#seq-01`
+  - `spring-boot-db-access-lab/docs/visual-lab/index.html#seq-02`
+  - `spring-boot-db-access-lab/docs/visual-lab/index.html#seq-05`
+  - `spring-boot-deployment-runtime-lab/docs/visual-lab/index.html#seq-10`
+  - `spring-boot-event-driven-lab/docs/visual-lab/index.html#seq-12`
+- 좁은 브라우저 폭에서 위 대표 경로들의 `documentElement.scrollWidth <= clientWidth`를 확인했습니다.
+- 00~12 전체 시퀀스를 모바일 523px, 데스크톱 1280px viewport로 확인했고, 모든 경로에서 sequence participant/message 렌더링, page overflow 0건, clipped 후보 0건, console error 0건을 확인했습니다.
+
 ## 6. 남은 이슈
 
 - 사용자 프롬프트가 언급한 `DESIGN.md`, `기술_블로그_작성_마스터_가이드.md`, `stitch_ai_datastructure_image_style_guide.md`는 현재 접근 가능한 경로에서 찾지 못했습니다.
