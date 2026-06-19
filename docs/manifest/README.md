@@ -41,4 +41,4 @@
 3. 확실하지 않은 값은 `null`로 두고 `notes`에 이유를 적습니다.
 4. 중앙 `docs/sequences/*`는 상세 이론 저장소가 아니므로 manifest 수정 때문에 대규모로 갈아엎지 않습니다.
 5. Visual Lab 구현 파일은 중앙 레포가 아니라 각 토픽 레포의 `docs/visual-lab` 아래에 둡니다.
-6. GitHub default branch 변경과 remote branch 삭제는 manifest에 기록만 하고 수동 조치로 처리합니다.
+6. GitHub default branch 변경은 사용자가 명시적으로 요청한 경우에만 처리하고 결과를 manifest에 반영합니다. remote branch 삭제는 별도 수동 조치로 처리합니다.

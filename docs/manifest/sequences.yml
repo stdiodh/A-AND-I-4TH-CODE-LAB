@@ -338,8 +338,7 @@ sequences:
       - "동기 호출과 이벤트 전달의 차이를 설명한다."
       - "이벤트 DTO, 발행, 소비 흐름을 구현한다."
       - "메시지 큐가 발행자와 소비자를 덜 묶어주는 방식을 이해한다."
-    status: "needs-branch-cleanup"
+    status: "ready"
     notes:
-      - "원격 default branch가 12-answer를 가리키는지 GitHub UI에서 확인하고 main으로 변경해야 합니다."
-      - "Codex는 GitHub 원격 default branch를 직접 바꾸지 못합니다."
+      - "원격 default branch는 main으로 확인되었습니다."
       - "Event Driven 레포의 Visual Lab은 main 브랜치의 docs/visual-lab/index.html에 있습니다."

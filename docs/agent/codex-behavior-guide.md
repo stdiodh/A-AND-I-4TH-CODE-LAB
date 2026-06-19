@@ -20,8 +20,8 @@
 - 새 블로그 산출물이나 새 멘토 문서를 만들지 않습니다.
 - 멘토용 진행 포인트는 기존 문서 안의 `<details>` 영역에 둡니다.
 - 기존 문서는 Problem -> Analyze -> Action -> Result 흐름으로 다듬되, 문서 수를 늘리지 않습니다.
-- Codex는 GitHub 원격 default branch를 직접 바꾸지 못합니다.
-- 원격 default branch 변경이 필요하면 manifest와 강사용 checklist에 수동 조치로 남깁니다.
+- 사용자 요청 없이 GitHub 원격 default branch를 직접 바꾸지 않습니다.
+- 원격 default branch 변경이 필요하면 manifest와 강사용 checklist에 기록하고, 사용자가 명시적으로 요청한 경우에만 변경 후 결과를 검증합니다.
 
 ## 코드 변경 시
 

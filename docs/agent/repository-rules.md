@@ -15,7 +15,7 @@
 - 사용자 요청 없는 다음 시퀀스
 - 중앙 `docs` 안의 상세 이론 복붙
 - 학생용 문서에 정답 코드 전체 노출
-- 원격 default branch 직접 변경
+- 사용자 요청 없는 원격 default branch 직접 변경
 - remote branch 직접 삭제
 
 ## 브랜치 규칙

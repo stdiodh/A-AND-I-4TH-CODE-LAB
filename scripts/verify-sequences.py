@@ -25,7 +25,7 @@ REQUIRED_DOCS = [
     "docs/checklist.md",
 ]
 BRANCH_FIELDS = ["guideBranch", "implementationBranch", "answerBranch"]
-MANUAL_DEFAULT_BRANCH_IDS = {"01", "12"}
+MANUAL_DEFAULT_BRANCH_IDS: set[str] = set()
 
 
 @dataclass
@@ -225,7 +225,7 @@ def print_results(results: list[SequenceResult]) -> None:
     print(f"- sequences checked: {len(results)}")
     print(f"- sequences with failures: {failures}")
     print(f"- sequences with warnings: {warnings}")
-    print("- manual default branch checks: 01 REST CRUD, 12 Event Driven")
+    print("- manual default branch checks: none")
 
 
 def main() -> int:
