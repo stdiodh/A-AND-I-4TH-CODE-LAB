@@ -49,9 +49,8 @@ sequences:
     status: "needs-branch-cleanup"
     notes:
       - "정식 수업 브랜치는 01-implementation과 01-answer입니다."
-      - "원격 default branch가 legacy implementation을 가리키므로 GitHub UI에서 main으로 수동 변경해야 합니다."
-      - "Codex는 GitHub 원격 default branch를 직접 바꾸지 못합니다."
-      - "legacy implementation, answer 브랜치가 남아 있으면 사용 중단 표시 후 삭제 여부를 결정합니다."
+      - "원격 default branch는 main으로 확인되었습니다."
+      - "legacy implementation, answer 브랜치가 남아 있으면 사용 중단 표시 후 삭제 여부를 수동 결정합니다."
       - "main 브랜치의 Visual Lab 진입점은 docs/visual-lab/index.html입니다."
 
   - id: "02"

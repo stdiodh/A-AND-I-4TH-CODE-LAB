@@ -161,7 +161,7 @@ class [Resource]Controller(
 ```
 
 - 이 코드는 요청의 시작점을 보여줍니다.
-- 여기서는 특히 `@[Post/Get/Put/Delete]Mapping`과 `service.[method](...)`를 먼저 보세요.
+- 여기서는 특히 `@[Post/Get/Put/Delete]Mapping`과 Service 메서드 호출을 먼저 보세요.
 - 학생이 기억해야 할 핵심은 “Controller는 요청을 받고, 실제 처리는 Service에 넘긴다”입니다.
 - 파일: `[src/main/kotlin/.../[Resource]Controller.kt]`
 
