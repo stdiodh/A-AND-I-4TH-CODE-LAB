@@ -8,6 +8,7 @@
 - [ ] 테스트까지 확인해야 하는 날에는 `python3 scripts/verify-sequences.py --run-tests`를 실행했습니다.
 - [ ] 학생 시작 브랜치가 `NN-implementation`인지 확인했습니다.
 - [ ] default branch가 `main`인지 확인했습니다.
+- [ ] starter 브랜치에 학생이 직접 작성할 TODO 뼈대가 남아 있고 정답 코드가 노출되지 않았는지 확인했습니다.
 - [ ] 토픽 레포 `docs/visual-lab/index.html` 허브와 `docs/visual-lab/sequences/NN/index.html` 상세 페이지가 열리는지 확인했습니다.
 - [ ] 필요한 Docker 서비스가 무엇인지 확인했습니다.
 

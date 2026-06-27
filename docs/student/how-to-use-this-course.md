@@ -26,7 +26,11 @@ GitHub 원격 default branch 상태가 실습 시작 기준과 다를 수 있으
 git clone <repo-url>
 cd <repo-name>
 git checkout NN-implementation
+git checkout -b <이름>
 ```
+
+실습 시작 브랜치에서 본인 이름의 개인 작업 브랜치를 만들어 진행합니다.
+개인 작업 브랜치 이름에 별도 접두어를 붙이지 않아도 됩니다.
 
 예를 들어 시퀀스 01은 아래처럼 시작합니다.
 
@@ -34,6 +38,7 @@ git checkout NN-implementation
 git clone https://github.com/stdiodh/spring-boot-rest-crud-lab.git
 cd spring-boot-rest-crud-lab
 git checkout 01-implementation
+git checkout -b <이름>
 ```
 
 ## 실행과 테스트

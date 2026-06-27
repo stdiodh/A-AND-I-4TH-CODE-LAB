@@ -16,8 +16,13 @@
 ## 시작 브랜치
 
 ```bash
-git checkout 02-implementation
+git clone -b 02-implementation https://github.com/stdiodh/spring-boot-db-access-lab.git
+cd spring-boot-db-access-lab
+git checkout -b <이름>
 ```
+
+실습 브랜치를 clone한 뒤, 본인 이름으로 개인 작업 브랜치를 만들어 진행합니다.
+브랜치 이름에 `feat/` 접두어를 붙이지 않아도 됩니다.
 
 ## 실습 전 확인
 
@@ -29,13 +34,13 @@ git checkout 02-implementation
 
 ## 구현할 TODO
 
-1. `PostEntity`의 핵심 필드와 JPA 어노테이션을 작성합니다.
-2. `PostRepository`를 선언합니다.
-3. Service 저장 흐름을 DB 저장으로 바꿉니다.
-4. 전체 조회와 단건 조회를 Repository에 연결합니다.
-5. 수정과 삭제 흐름을 연결합니다.
-6. Controller에서 수정/삭제 API를 연결합니다.
-7. MySQL 저장 결과를 확인합니다.
+1. `PostEntity`를 직접 작성합니다.
+2. `PostRepository`를 직접 작성합니다.
+3. `PostCreateRequest`, `PostUpdateRequest` 요청 DTO를 직접 작성합니다.
+4. `PostResponse` 응답 DTO를 직접 작성합니다.
+5. Service에서 Repository 기반 CRUD 흐름을 구현합니다.
+6. Controller에서 HTTP API와 Service를 연결합니다.
+7. Swagger와 MySQL에서 저장 결과를 확인합니다.
 
 ## 실행 방법
 
