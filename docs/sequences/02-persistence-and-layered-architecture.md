@@ -57,9 +57,9 @@ docker compose up -d
 
 테스트가 확인하는 것:
 
-- Repository integration test로 JPA Repository와 테스트 DB 연결을 확인합니다.
-- 게시글 저장, 조회, 수정, 삭제가 DB 기준으로 동작하는지 확인합니다.
-- Entity와 DTO를 섞지 않고 Service가 Repository를 통해 DB에 접근하는지 확인합니다.
+- 애플리케이션 context와 JPA 설정이 테스트용 H2 환경에서 올라오는지 확인합니다.
+- 게시글 저장, 조회, 수정, 삭제는 Swagger와 MySQL 테이블에서 직접 확인합니다.
+- Entity, DTO, Service, Repository의 책임 분리는 코드 흐름을 따라 확인합니다.
 
 실패하면 먼저 볼 것:
 
@@ -69,9 +69,9 @@ docker compose up -d
 
 완료 기준:
 
-- Repository integration test가 통과합니다.
-- DB 저장/조회/수정/삭제 테스트가 통과합니다.
-- 메모리 저장과 DB 저장의 차이를 테스트 결과로 설명할 수 있습니다.
+- context 테스트가 통과합니다.
+- Swagger 요청과 MySQL 조회로 저장/조회/수정/삭제를 확인했습니다.
+- 메모리 저장과 DB 저장의 차이를 실행 결과로 설명할 수 있습니다.
 
 ## 확인할 API 또는 화면
 

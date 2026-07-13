@@ -52,21 +52,21 @@ git checkout 01-implementation
 
 테스트가 확인하는 것:
 
-- Controller smoke test로 Spring MVC 요청 경로가 연결되는지 확인합니다.
-- 게시글 생성, 전체 조회, 단건 조회의 기본 성공 케이스가 통과하는지 확인합니다.
-- 메모리 Repository가 요청 흐름 안에서 값을 저장하고 다시 반환하는지 확인합니다.
+- 애플리케이션 context가 정상적으로 올라오는지 확인합니다.
+- 게시글 생성, 전체 조회, 단건 조회는 Swagger에서 직접 실행해 확인합니다.
+- 메모리 Repository가 값을 저장하고 다시 반환하는 흐름은 실행 결과와 코드로 확인합니다.
 
 실패하면 먼저 볼 것:
 
-- 실패한 테스트 이름에서 어떤 API가 깨졌는지 먼저 읽습니다.
-- Controller mapping 경로, HTTP method, DTO 필드 이름이 테스트 요청과 같은지 확인합니다.
+- context 테스트가 실패하면 먼저 bean 생성과 애플리케이션 시작 로그를 읽습니다.
+- API 실행이 실패하면 Controller mapping, HTTP method, DTO 필드 이름을 요청과 비교합니다.
 - 메모리 저장소는 서버 재시작 후 비어 있는 것이 정상입니다.
 
 완료 기준:
 
-- Controller smoke test가 통과합니다.
-- CRUD API 기본 성공 케이스가 통과합니다.
-- 실패 메시지를 보고 Controller, Service, Repository 중 어디를 볼지 설명할 수 있습니다.
+- context 테스트가 통과합니다.
+- Swagger에서 CRUD API 기본 성공 케이스를 직접 확인했습니다.
+- 실패 로그와 응답을 보고 Controller, Service, Repository 중 어디를 볼지 설명할 수 있습니다.
 
 ## 확인할 API 또는 화면
 

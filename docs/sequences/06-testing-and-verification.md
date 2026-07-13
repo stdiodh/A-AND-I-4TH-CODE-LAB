@@ -32,11 +32,11 @@ git checkout 06-implementation
 
 1. 테스트 대상 Service를 확인합니다.
 2. 테스트 fixture를 준비합니다.
-3. `PostService` 정상 케이스와 작성자 인가 실패 케이스를 테스트합니다.
+3. `PostService` 정상 케이스와 조회 실패 케이스를 테스트합니다.
 4. `PostService` 실패 케이스를 테스트합니다.
 5. `AuthService` 인증 성공 케이스를 테스트합니다.
 6. `AuthService` 인증 실패 케이스를 테스트합니다.
-7. 공개 API, 보호 API, 작성자 전용 API의 HTTP 상태 코드를 테스트합니다.
+7. 각 단위 테스트가 보장하는 범위와 보장하지 않는 HTTP 범위를 구분합니다.
 8. 테스트를 반복 실행하며 결과를 확인합니다.
 
 ## 실행 방법
@@ -57,16 +57,16 @@ docker compose up -d
 테스트가 확인하는 것:
 
 - unit test는 Service의 비즈니스 판단을 빠르게 확인합니다.
-- slice test는 Controller, Repository처럼 한 계층의 Spring 연결을 좁게 확인합니다.
-- integration test는 인증/인가, DB 저장, HTTP 상태 코드처럼 여러 계층이 이어진 흐름을 확인합니다.
-- validation 400, 인증 실패 401, 인가 실패 403을 테스트 이름과 결과로 구분합니다.
+- 이번 답안은 `PostService`와 `AuthService` 단위 테스트를 직접 완성합니다.
+- slice test와 integration test는 다음 확장 단계에서 한 계층의 연결과 HTTP 정책을 확인하는 선택지입니다.
+- validation 400, 인증 실패 401, 인가 실패 403은 현재 단위 테스트가 직접 보장하지 않는 범위로 구분합니다.
 
 권장 실행 순서:
 
 1. 실패하는 단위 테스트 하나를 먼저 읽습니다.
 2. 관련 fixture와 mock 설정을 확인합니다.
 3. 전체 `./gradlew test`를 다시 실행합니다.
-4. 통합 테스트 실패는 요청 body, 인증 헤더, DB 준비 데이터를 함께 확인합니다.
+4. HTTP 통합 테스트를 추가한다면 요청 body, 인증 헤더, DB 준비 데이터를 함께 확인합니다.
 
 실패하면 먼저 볼 것:
 
@@ -76,7 +76,7 @@ docker compose up -d
 
 완료 기준:
 
-- unit, slice, integration test의 차이를 설명할 수 있습니다.
+- 단위 테스트가 보장하는 범위와 slice/integration test가 필요한 범위를 설명할 수 있습니다.
 - 테스트 실행 순서와 실패 메시지 읽는 법을 설명할 수 있습니다.
 - 전체 테스트가 통과하고, 각 테스트가 어떤 동작을 보장하는지 말할 수 있습니다.
 
@@ -85,10 +85,7 @@ docker compose up -d
 - 테스트 실행 결과
 - `PostServiceTest`
 - `AuthServiceTest`
-- `PostAuthorizationIntegrationTest`
-- validation 실패 400
-- 인증 없는 보호 API 접근 401
-- 다른 사용자 수정/삭제 403
+- 향후 통합 테스트 후보: validation 400, 인증 없는 보호 API 401, 다른 사용자 수정/삭제 403
 - 실패 테스트가 실패 이유를 정확히 보여주는지 확인
 
 ## 자주 발생하는 문제
@@ -104,8 +101,7 @@ docker compose up -d
 - Service 정상/실패 테스트가 작성되었습니다.
 - fixture 또는 테스트 helper로 반복 입력이 정리되었습니다.
 - 인증 성공/실패 흐름을 테스트로 확인했습니다.
-- 공개 조회 API는 인증 없이 성공합니다.
-- 보호 쓰기 API는 인증 없이는 401, 작성자가 아니면 403으로 실패합니다.
+- 공개·보호·작성자 전용 API의 HTTP 정책은 현재 단위 테스트 밖의 통합 테스트 후보로 구분했습니다.
 - `./gradlew test`가 통과합니다.
 - 어떤 테스트가 어떤 동작을 보장하는지 설명할 수 있습니다.
 
