@@ -415,6 +415,14 @@ def validate_sequence_data(result: RepoResult, sequence: dict[str, str], data_pa
             f"sequence id mismatch: expected {sequence_id}, got {parsed.get('sequence')!r}",
             "manifest 시퀀스 번호와 상세 데이터 sequence 값을 맞춥니다.",
         )
+    if "sequences" in parsed:
+        add_issue(
+            result,
+            "FAIL",
+            data_path,
+            "sequence data duplicates content inside a sequences array",
+            "kind: 'sequence' 파일은 하나의 canonical 객체만 유지합니다.",
+        )
 
     actors = parsed.get("actors") or []
     flows = parsed.get("flows") or []

@@ -86,6 +86,7 @@ git checkout 10-implementation
 - test 없이 deploy로 바로 넘어갑니다. 배포 전 검증이 먼저 와야 합니다.
 - workflow 안에 모든 배포 명령을 길게 넣습니다. 반복 로직은 script로 분리합니다.
 - deploy가 끝나면 성공이라고 판단합니다. verify 단계에서 컨테이너 상태, 로그, HTTP 응답을 확인합니다.
+- 배포할 때 전체 compose를 먼저 내립니다. DB와 Redis를 유지한 채 image를 빌드하고 `up -d`로 앱을 갱신합니다.
 - GitHub Secrets 값을 workflow 파일에 직접 적습니다. secret 이름만 참조합니다.
 
 ## 완료 기준
@@ -94,6 +95,7 @@ git checkout 10-implementation
 - deploy script와 verify script의 역할이 분리되어 있습니다.
 - workflow 실패 시 다음 단계로 넘어가지 않습니다.
 - verify 단계가 배포 성공 판정에 포함됩니다.
+- 배포 과정에서 DB와 Redis 컨테이너를 불필요하게 내리지 않습니다.
 - `./gradlew test`가 통과합니다.
 
 ## 정답과 비교하는 방법

@@ -70,7 +70,7 @@ window.visualLabData = {
 };
 ```
 
-각 시퀀스 상세 파일은 아래 필드를 가져야 한다.
+각 시퀀스 상세 파일은 아래 필드를 가진 하나의 canonical 객체로 관리합니다. `kind: "sequence"` 데이터 안에 같은 내용을 다시 담은 `sequences` 배열을 만들지 않습니다.
 
 ```js
 window.visualLabData = {

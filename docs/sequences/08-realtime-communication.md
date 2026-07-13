@@ -53,8 +53,9 @@ docker compose up -d
 테스트가 확인하는 것:
 
 - 기존 애플리케이션 context와 Service 단위 테스트가 계속 통과하는지 확인합니다.
+- 실시간 데모 페이지와 SockJS 연결 정보가 인증 없이 열리는지 확인합니다.
 - WebSocket 연결, topic 구독, 발행, broadcast 수신은 테스트 페이지에서 직접 확인합니다.
-- 자동화된 WebSocket 통합 테스트는 현재 답안 범위에 포함되지 않습니다.
+- 실제 STOMP 메시지 왕복 자동화는 현재 답안 범위에 포함되지 않습니다.
 
 실패하면 먼저 볼 것:
 
@@ -80,7 +81,7 @@ docker compose up -d
 - 구독 전에 메시지를 발행합니다. 먼저 connect와 subscribe를 확인합니다.
 - topic 경로와 발행 경로를 혼동합니다. 구독 경로와 전송 경로를 분리해서 봅니다.
 - 브라우저 테스트 페이지에서 연결 상태를 확인하지 않고 메시지만 보냅니다.
-- 실습용 wildcard Origin 설정을 운영에 그대로 사용합니다. 운영에서는 허용 Origin과 인증 정책을 제한합니다.
+- 개발용 localhost Origin 설정을 운영에 그대로 사용합니다. 운영에서는 `APP_WEBSOCKET_ALLOWED_ORIGIN_PATTERNS`를 실제 프런트 Origin으로 제한합니다.
 
 ## 완료 기준
 
