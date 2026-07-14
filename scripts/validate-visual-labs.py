@@ -11,10 +11,12 @@ import configparser
 import html.parser
 import json
 import re
+import subprocess
 import sys
 from dataclasses import dataclass, field
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
+from urllib.parse import unquote, urlsplit
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -38,6 +40,7 @@ SEQUENCE_DATA_FIELDS = [
     "flows",
     "codePoints",
 ]
+BRANCH_FIELDS = ["guideBranch", "implementationBranch", "answerBranch"]
 EXTERNAL_PREFIXES = ("http://", "https://", "//", "data:")
 CDN_URL_PATTERN = re.compile(
     r"(cdn|unpkg|jsdelivr|cdnjs|bootstrap|tailwind|react|vue|nextjs|next\.js)",
@@ -154,9 +157,171 @@ def add_issue(result: RepoResult, level: str, path: Path, reason: str, hint: str
     result.issues.append(Issue(level, relative_display(path), reason, hint))
 
 
+def run_git(repo: Path, args: list[str]) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        ["git", "-C", str(repo), *args],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+
+def resolve_branch_ref(repo: Path, branch: str) -> str | None:
+    refs = [
+        (f"refs/heads/{branch}", branch),
+        (f"refs/remotes/origin/{branch}", f"origin/{branch}"),
+    ]
+    for full_ref, short_ref in refs:
+        completed = run_git(repo, ["show-ref", "--verify", "--quiet", full_ref])
+        if completed.returncode == 0:
+            return short_ref
+    return None
+
+
+def tree_path_exists(repo: Path, ref: str, relative_path: str) -> bool:
+    completed = run_git(repo, ["cat-file", "-e", f"{ref}:{relative_path}"])
+    return completed.returncode == 0
+
+
 def is_relative_asset(value: str) -> bool:
     value = value.strip()
     return bool(value) and not value.startswith(EXTERNAL_PREFIXES) and not value.startswith("/")
+
+
+def validate_data_links(
+    result: RepoResult,
+    repo_root: Path,
+    data_path: Path,
+    items: Any,
+    field_name: str,
+) -> None:
+    if not isinstance(items, list):
+        add_issue(
+            result,
+            "FAIL",
+            data_path,
+            f"{field_name} must be a list",
+            f"{field_name}는 href 객체 배열로 작성합니다.",
+        )
+        return
+
+    resolved_repo = repo_root.resolve()
+    for index, item in enumerate(items):
+        href = item.get("href") if isinstance(item, dict) else None
+        if not isinstance(href, str) or not href.strip():
+            add_issue(
+                result,
+                "FAIL",
+                data_path,
+                f"{field_name}[{index}] has no href",
+                "각 링크 객체에는 비어 있지 않은 상대 href를 넣습니다.",
+            )
+            continue
+
+        href_value = href.strip()
+        parsed = urlsplit(href_value)
+        if parsed.scheme or parsed.netloc or href_value.startswith("/") or not parsed.path:
+            add_issue(
+                result,
+                "FAIL",
+                data_path,
+                f"{field_name}[{index}] href is not a local relative path: {href}",
+                "Visual Lab 데이터 링크는 레포 내부 파일을 가리키는 상대 경로로 작성합니다.",
+            )
+            continue
+
+        target = (data_path.parent / unquote(parsed.path)).resolve()
+        try:
+            target.relative_to(resolved_repo)
+        except ValueError:
+            add_issue(
+                result,
+                "FAIL",
+                data_path,
+                f"{field_name}[{index}] href escapes the repository: {href}",
+                "링크 대상은 현재 토픽 레포 내부에 있어야 합니다.",
+            )
+            continue
+
+        if not target.exists():
+            add_issue(
+                result,
+                "FAIL",
+                data_path,
+                f"{field_name}[{index}] href target is missing: {href}",
+                "상대 경로와 실제 문서 또는 페이지 위치를 일치시킵니다.",
+            )
+
+
+def canonical_branch_refs(repo: Path, sequence: dict[str, str]) -> dict[str, str]:
+    refs: dict[str, str] = {}
+    for field_name in BRANCH_FIELDS:
+        branch = sequence.get(field_name)
+        if branch:
+            ref = resolve_branch_ref(repo, branch)
+            if ref:
+                refs[field_name] = ref
+    return refs
+
+
+def validate_code_point_files(
+    result: RepoResult,
+    repo_root: Path,
+    sequence: dict[str, str],
+    data_path: Path,
+    code_points: Any,
+) -> None:
+    if not isinstance(code_points, list):
+        return
+
+    branch_refs = canonical_branch_refs(repo_root, sequence)
+    if not branch_refs:
+        add_issue(
+            result,
+            "FAIL",
+            data_path,
+            "cannot validate codePoint files because no canonical branch is available",
+            "manifest의 guide, implementation, answer 브랜치를 로컬 또는 origin에서 확인합니다.",
+        )
+        return
+
+    for index, point in enumerate(code_points):
+        file_value = point.get("file") if isinstance(point, dict) else None
+        if not isinstance(file_value, str) or not file_value.strip():
+            add_issue(
+                result,
+                "FAIL",
+                data_path,
+                f"codePoints[{index}] has no file path",
+                "각 코드 포인트에는 canonical 브랜치에서 확인할 수 있는 file 경로를 넣습니다.",
+            )
+            continue
+
+        file_path = file_value.strip()
+        normalized = PurePosixPath(file_path)
+        if file_path.startswith("/") or "\\" in file_path or ".." in normalized.parts:
+            add_issue(
+                result,
+                "FAIL",
+                data_path,
+                f"codePoints[{index}] file is not a repository-relative path: {file_value}",
+                "file은 토픽 레포 루트 기준 POSIX 상대 경로로 작성합니다.",
+            )
+            continue
+
+        relative_path = normalized.as_posix()
+        if relative_path == "." or not any(
+            tree_path_exists(repo_root, ref, relative_path) for ref in branch_refs.values()
+        ):
+            checked = ", ".join(branch_refs.values())
+            add_issue(
+                result,
+                "FAIL",
+                data_path,
+                f"codePoints[{index}] file is missing from canonical branches: {file_value}",
+                f"경로를 수정하거나 canonical 브랜치({checked})의 실제 파일과 맞춥니다.",
+            )
 
 
 def data_file_to_json(path: Path) -> dict[str, Any] | None:
@@ -318,6 +483,7 @@ def validate_css_assets(result: RepoResult, path: Path) -> None:
 
 
 def validate_hub_data(result: RepoResult) -> None:
+    repo_root = ROOT / result.path
     data_path = ROOT / result.path / VISUAL_LAB_DIR / "visual-lab-data.js"
     if not data_path.exists():
         return
@@ -361,6 +527,7 @@ def validate_hub_data(result: RepoResult) -> None:
                 "hub data has no sequence links",
                 "허브에는 이 레포가 담는 시퀀스 목록과 상세 href를 넣습니다.",
             )
+        validate_data_links(result, repo_root, data_path, parsed.get("sequences"), "sequences")
 
 
 def validate_sequence_data(result: RepoResult, sequence: dict[str, str], data_path: Path) -> None:
@@ -433,6 +600,37 @@ def validate_sequence_data(result: RepoResult, sequence: dict[str, str], data_pa
         add_issue(result, "FAIL", data_path, "flows must be a non-empty list", "시퀀스 상세는 최소 1개 이상의 flow를 가져야 합니다.")
     if not isinstance(code_points, list) or len(code_points) < 2:
         add_issue(result, "FAIL", data_path, "codePoints must contain at least 2 items", "각 시퀀스에는 최소 2개 이상의 주요 코드 포인트를 넣습니다.")
+
+    repo_root = ROOT / result.path
+    validate_data_links(result, repo_root, data_path, parsed.get("relatedDocs", []), "relatedDocs")
+    source_docs = parsed.get("sourceDocs", [])
+    validate_data_links(result, repo_root, data_path, source_docs, "sourceDocs")
+
+    source = parsed.get("source")
+    source_items: list[dict[str, Any]] = []
+    if source is not None:
+        if isinstance(source, dict):
+            source_items = [{"href": href} for href in source.values()]
+            validate_data_links(result, repo_root, data_path, source_items, "source")
+        else:
+            add_issue(
+                result,
+                "FAIL",
+                data_path,
+                "source must be an object",
+                "source는 theory, implementation, checklist 상대 경로를 담는 객체로 작성합니다.",
+            )
+
+    if not source_items and not source_docs:
+        add_issue(
+            result,
+            "FAIL",
+            data_path,
+            "sequence data has no source document links",
+            "source 또는 sourceDocs에 표준 문서 상대 경로를 연결합니다.",
+        )
+
+    validate_code_point_files(result, repo_root, sequence, data_path, code_points)
 
     for flow in flows if isinstance(flows, list) else []:
         steps = flow.get("steps") if isinstance(flow, dict) else None

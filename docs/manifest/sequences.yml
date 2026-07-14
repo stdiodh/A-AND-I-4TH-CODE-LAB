@@ -150,7 +150,7 @@ sequences:
     prerequisites:
       - "04"
     learningGoals:
-      - "Google OAuth2 로그인 흐름을 자체 사용자와 연결한다."
+      - "검증된 OAuth2 이메일과 providerId로 외부 사용자를 식별하고 계정 충돌을 처리한다."
       - "외부 로그인 이후 자체 JWT가 필요한 이유를 설명한다."
       - "SMTP 기반 비밀번호 재설정 메일 요청 흐름을 이해한다."
     status: "ready"

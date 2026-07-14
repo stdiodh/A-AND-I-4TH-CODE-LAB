@@ -40,7 +40,7 @@
 - 어떤 문서가 있는지 안내
 - 어떤 시퀀스 브랜치가 있는지 안내
 - 학생이 시작할 브랜치와 정답 비교 브랜치 안내
-- 필요하면 `docs/branch-guide.md` 또는 `docs/sequence-map.md`
+- 표준 문서와 Visual Lab 진입점 안내
 
 즉, 사용자는 서브모듈 레포의 `main`에 들어오면
 "이 레포는 무엇을 다루고, 어디로 가야 하는가"를 바로 이해할 수 있어야 합니다.
@@ -76,7 +76,8 @@
 - `03-implementation`의 `docs/theory.md`가 `02` 설명을 담으면 안 됩니다.
 - `NN-answer`도 `NN-implementation`과 같은 시퀀스 주제를 설명해야 합니다.
 
-즉, 브랜치가 바뀌면 `README.md`, `docs/theory.md`, `docs/implementation.md`, `docs/checklist.md`, `docs/answer-guide.md`, `docs/assets.md`도 함께 바뀌어야 합니다.
+즉, 브랜치가 바뀌면 `README.md`, `docs/theory.md`, `docs/implementation.md`, `docs/checklist.md`도 현재 시퀀스에 맞게 수정되어야 합니다.
+기존 문서를 통째로 재생성하지 않고 필요한 부분만 수정합니다.
 
 ---
 
@@ -126,21 +127,21 @@
 - `README.md`
 - `docs/theory.md`
 - `docs/implementation.md`
-- `docs/answer-guide.md`
 - `docs/checklist.md`
-- `docs/assets.md`
 - starter 코드
 
 starter 코드는 실행 가능해야 하고,
 핵심 코드에는 학생이 따라칠 수 있는 TODO가 있어야 합니다.
+멘토 전용 설명과 정답 비교 포인트는 answer 브랜치의 기존 표준 문서 안에 `<details>`로 둡니다.
 
 ### Step 4-1. `main` 브랜치에 안내 문서를 맞춥니다
 
 각 토픽 레포의 `main` 브랜치에는 아래가 있어야 합니다.
 
 - `README.md`
-- 필요 시 `docs/branch-guide.md`
-- 필요 시 `docs/sequence-map.md`
+- `docs/theory.md`
+- `docs/implementation.md`
+- `docs/checklist.md`
 
 그리고 아래를 반드시 설명해야 합니다.
 
@@ -168,7 +169,7 @@ starter 코드는 실행 가능해야 하고,
 - `docs/theory.md`가 현재 시퀀스 핵심 개념을 설명하는가
 - `docs/implementation.md`가 학생 손의 순서를 보여주는가
 - `docs/checklist.md`가 학생용/강사용으로 분리되어 있는가
-- `docs/answer-guide.md`가 현재 시퀀스 정답만 설명하는가
+- answer 브랜치의 표준 문서가 정답 비교 포인트를 과도한 완성 코드 없이 설명하는가
 - 이전 시퀀스에서 이미 설명한 필수 용어가 이번 문서에서 비워지지 않았는가
 
 ### Step 6-1. 실무 확장 개념 문서도 같이 검증합니다
@@ -181,8 +182,7 @@ starter 코드는 실행 가능해야 하고,
 - 루트 `docs/sequences/0X-...md`
 - 토픽 레포 `docs/theory.md`
 - 토픽 레포 `docs/implementation.md`
-- 토픽 레포 `docs/answer-guide.md`
-- 필요 시 `docs/checklist.md`
+- 토픽 레포 `docs/checklist.md`
 
 그리고 아래 질문에 모두 답해야 합니다.
 
@@ -209,12 +209,12 @@ starter 코드는 실행 가능해야 하고,
 2. 현재 코드 흐름
 3. 실무 확장 개념
 
-### Step 6-2. 구현 문서와 정답 가이드도 실무 확장 개념을 이어줘야 합니다
+### Step 6-2. 구현 문서와 체크리스트도 실무 확장 개념을 이어줘야 합니다
 
 - `docs/theory.md`만 자세하고
-  `docs/implementation.md`, `docs/answer-guide.md`에는 연결 설명이 없으면 안 됩니다.
+  `docs/implementation.md`, `docs/checklist.md`에는 연결 설명이 없으면 안 됩니다.
 - 구현 문서는 “이번 단계의 어느 코드가 나중에 그 실무 문제와 연결되는가”를 짚어줘야 합니다.
-- 정답 가이드는 “정답 흐름을 이해한 뒤 어떤 해결 방향을 볼 수 있는가”를 짚어줘야 합니다.
+- 체크리스트는 “정답 흐름을 이해한 뒤 무엇을 검증하고 어떤 한계를 남기는가”를 짚어줘야 합니다.
 
 즉 학생이 어떤 문서를 먼저 보더라도
 실무 확장 개념이 고립된 설명처럼 보이지 않게 만들어야 합니다.
@@ -226,7 +226,7 @@ starter 코드는 실행 가능해야 하고,
 - 실무 확장 개념만 있고 기본 기술 설명이 없다
 - 현재 코드에서 어떤 클래스가 어떤 역할을 하는지 설명하지 않는다
 - 처음 보는 학생이 읽었을 때 기술의 기본 역할을 이해하기 어렵다
-- `implementation.md`나 `answer-guide.md`가 알아서 설명해줄 것이라고 넘긴다
+- `implementation.md`나 `checklist.md`가 알아서 설명해줄 것이라고 넘긴다
 - 이전 시퀀스에만 용어 설명이 있고 현재 문서에서는 그 용어를 생략한다
 
 즉, `theory.md`는 항상
@@ -237,7 +237,7 @@ starter 코드는 실행 가능해야 하고,
 아래를 확인합니다.
 
 - starter TODO 위치가 문서 설명과 맞는가
-- answer 코드가 answer-guide와 맞는가
+- answer 코드가 answer 브랜치의 이론, 구현 안내, 체크리스트와 맞는가
 - 실행 기준이 문서와 맞는가
 - 테스트나 부팅 확인이 가능한가
 
@@ -320,7 +320,7 @@ starter 코드는 실행 가능해야 하고,
 - `NN-implementation` 브랜치 준비
 - `NN-answer` 브랜치 준비
 - `main` 브랜치의 레포 요약/브랜치 안내 준비
-- 각 브랜치의 `README.md`와 `docs/*`가 현재 시퀀스 내용으로 교체됨
+- 각 브랜치의 네 표준 문서가 현재 시퀀스 내용에 맞게 수정됨
 - starter TODO 준비
 - answer 코드 준비
 - 실행 또는 테스트 검증 완료
@@ -332,4 +332,4 @@ starter 코드는 실행 가능해야 하고,
 ## 최종 기준
 
 시퀀스 작업은 "코드를 만든다"에서 끝나지 않습니다.
-레포 분리, 브랜치 분리, TODO starter, answer, 시퀀스별 docs 교체, 루트 README 기록, 서브모듈 연결까지 모두 포함되어야 완료입니다.
+레포 분리, 브랜치 분리, TODO starter, answer, 시퀀스별 표준 문서 수정, 루트 README 기록, 서브모듈 연결까지 모두 포함되어야 완료입니다.

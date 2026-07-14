@@ -24,6 +24,16 @@ REQUIRED_DOCS = [
     "docs/implementation.md",
     "docs/checklist.md",
 ]
+LEGACY_DOCS = [
+    "docs/answer-guide.md",
+    "docs/assets.md",
+    "docs/branch-guide.md",
+    "docs/repo-guide.md",
+    "docs/sequence-map.md",
+]
+GUIDE_COMPAT_DOC = "docs/answer-guide.md"
+GUIDE_COMPAT_MAX_LINES = 25
+GUIDE_COMPAT_MARKERS = ("deprecated", "호환", "이전", "과거")
 BRANCH_FIELDS = ["guideBranch", "implementationBranch", "answerBranch"]
 MANUAL_DEFAULT_BRANCH_IDS: set[str] = set()
 
@@ -109,24 +119,61 @@ def run_git(repo: Path, args: list[str]) -> subprocess.CompletedProcess[str]:
     )
 
 
-def branch_exists(repo: Path, branch: str) -> bool:
+def resolve_branch_ref(repo: Path, branch: str) -> str | None:
     refs = [
-        f"refs/heads/{branch}",
-        f"refs/remotes/origin/{branch}",
+        (f"refs/heads/{branch}", branch),
+        (f"refs/remotes/origin/{branch}", f"origin/{branch}"),
     ]
-    for ref in refs:
-        result = run_git(repo, ["show-ref", "--verify", "--quiet", ref])
+    for full_ref, short_ref in refs:
+        result = run_git(repo, ["show-ref", "--verify", "--quiet", full_ref])
         if result.returncode == 0:
-            return True
-    return False
+            return short_ref
+    return None
 
 
-def check_file(result: SequenceResult, repo: Path, relative_path: str, label: str) -> None:
-    path = repo / relative_path
-    if path.exists():
-        result.add("OK", f"{label}: {relative_path}")
-    else:
-        result.add("FAIL", f"{label} missing: {path_display(path)}")
+def tree_path_exists(repo: Path, ref: str, relative_path: str) -> bool:
+    result = run_git(repo, ["cat-file", "-e", f"{ref}:{relative_path}"])
+    return result.returncode == 0
+
+
+def read_tree_text(repo: Path, ref: str, relative_path: str) -> str | None:
+    result = run_git(repo, ["show", f"{ref}:{relative_path}"])
+    if result.returncode != 0:
+        return None
+    return result.stdout
+
+
+def check_branch_documents(
+    result: SequenceResult,
+    repo: Path,
+    field_name: str,
+    branch: str,
+    ref: str,
+) -> None:
+    for doc in REQUIRED_DOCS:
+        if tree_path_exists(repo, ref, doc):
+            result.add("OK", f"{field_name} document: {branch}:{doc}")
+        else:
+            result.add("FAIL", f"{field_name} document missing: {branch}:{doc}")
+
+    for legacy_doc in LEGACY_DOCS:
+        if not tree_path_exists(repo, ref, legacy_doc):
+            continue
+
+        if field_name == "guideBranch" and legacy_doc == GUIDE_COMPAT_DOC:
+            content = read_tree_text(repo, ref, legacy_doc) or ""
+            line_count = len(content.splitlines())
+            has_marker = any(marker in content.lower() for marker in GUIDE_COMPAT_MARKERS)
+            if line_count <= GUIDE_COMPAT_MAX_LINES and has_marker:
+                result.add("INFO", f"guide compatibility stub: {branch}:{legacy_doc}")
+            else:
+                result.add(
+                    "FAIL",
+                    f"guide compatibility file is not a short deprecated stub: {branch}:{legacy_doc}",
+                )
+            continue
+
+        result.add("FAIL", f"legacy document must be removed: {branch}:{legacy_doc}")
 
 
 def check_command_field(
@@ -176,22 +223,27 @@ def check_sequence(sequence: dict[str, str | None], run_tests: bool) -> Sequence
     if not (repo / ".git").exists():
         result.add("WARN", f"repoPath is not a git checkout: {repo_path}")
 
+    branch_refs: dict[str, tuple[str, str]] = {}
     for field_name in BRANCH_FIELDS:
         branch = sequence.get(field_name)
         if not branch:
             result.add("FAIL", f"{field_name} field missing or null")
             continue
-        if branch_exists(repo, branch):
+        ref = resolve_branch_ref(repo, branch)
+        if ref:
             result.add("OK", f"{field_name} exists: {branch}")
+            branch_refs[field_name] = (branch, ref)
+            check_branch_documents(result, repo, field_name, branch, ref)
         else:
             result.add("FAIL", f"{field_name} missing locally/remotely: {branch}")
 
-    for doc in REQUIRED_DOCS:
-        check_file(result, repo, doc, "document")
-
     visual_lab_path = sequence.get("visualLabPath")
     if visual_lab_path:
-        check_file(result, repo, visual_lab_path, "visualLabPath")
+        guide = branch_refs.get("guideBranch")
+        if guide and tree_path_exists(repo, guide[1], visual_lab_path):
+            result.add("OK", f"visualLabPath: {guide[0]}:{visual_lab_path}")
+        elif guide:
+            result.add("FAIL", f"visualLabPath missing: {guide[0]}:{visual_lab_path}")
     else:
         result.add("FAIL", "visualLabPath field missing or null")
 

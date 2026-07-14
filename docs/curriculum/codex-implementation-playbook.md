@@ -242,8 +242,7 @@ Codex는 실무 확장 개념이 있는 시퀀스를 작업할 때 아래를 함
 - 루트 `docs/sequences/0X-...md`
 - 토픽 레포 `docs/theory.md`
 - 토픽 레포 `docs/implementation.md`
-- 토픽 레포 `docs/answer-guide.md`
-- 필요 시 `docs/checklist.md`
+- 토픽 레포 `docs/checklist.md`
 
 그리고 이론 문서에는 아래가 모두 있어야 합니다.
 
@@ -254,8 +253,8 @@ Codex는 실무 확장 개념이 있는 시퀀스를 작업할 때 아래를 함
 5. 대표 해결 코드 예시
 6. 이번 시퀀스의 구현 범위
 
-구현 문서와 정답 가이드는
-이 실무 확장 개념이 이번 단계의 어떤 코드와 연결되는지까지 이어줘야 합니다.
+구현 문서와 체크리스트는
+이 실무 확장 개념이 이번 단계의 어떤 코드와 연결되고 어떻게 확인되는지까지 이어줘야 합니다.
 
 즉, `theory.md`에만 깊게 쓰고 끝내지 않고,
 학생이 어느 문서를 보든 흐름이 이어지게 만들어야 합니다.
@@ -314,7 +313,9 @@ Codex는 아래를 반드시 지켜야 합니다.
 - 이전 시퀀스 문서를 복사해두고 제목만 바꾸는 식으로 끝내면 안 됩니다.
 
 즉, 시퀀스 브랜치가 바뀌면
-`README.md`, `docs/theory.md`, `docs/implementation.md`, `docs/answer-guide.md`, `docs/checklist.md`, `docs/assets.md`도 함께 현재 시퀀스에 맞게 교체되어야 합니다.
+`README.md`, `docs/theory.md`, `docs/implementation.md`, `docs/checklist.md`도 함께 현재 시퀀스에 맞게 수정되어야 합니다.
+기존 이론 문서를 재생성하거나 표준 문서를 새 파일로 쪼개지 않습니다.
+멘토 전용 비교 포인트는 answer 브랜치의 기존 문서 안에 `<details>`로 둡니다.
 
 ### 8. `main` 브랜치도 문서 유지 대상입니다
 
@@ -324,11 +325,13 @@ Codex는 시퀀스 브랜치만 보지 않고,
 권장 구성:
 
 - `README.md`
-- `docs/branch-guide.md`
-- `docs/sequence-map.md`
+- `docs/theory.md`
+- `docs/implementation.md`
+- `docs/checklist.md`
 
 이 문서는 시퀀스 문서와 다른 역할을 하며,
 레포 전체를 요약하고 브랜치 진입 경로를 설명해야 합니다.
+브랜치 목록과 문서 진입점은 `README.md`에 통합하고 새 legacy 가이드 파일을 만들지 않습니다.
 
 ---
 

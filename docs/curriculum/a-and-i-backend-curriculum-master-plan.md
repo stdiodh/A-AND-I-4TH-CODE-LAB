@@ -142,12 +142,11 @@ README에 적힌 필독 문서 순서를 먼저 확인해야 합니다.
 - `README.md`
 - `docs/theory.md`
 - `docs/implementation.md`
-- `docs/answer-guide.md`
 - `docs/checklist.md`
-- `docs/assets.md`
 
 즉, `02`의 이론 문서와 `03`의 이론 문서가 같은 내용으로 남아 있으면 안 됩니다.
-문서도 시퀀스 순서에 따라 계속 갱신되어야 합니다.
+문서는 기존 구조를 보존하면서 현재 시퀀스와 어긋난 부분을 수정합니다.
+정답 비교와 멘토 포인트는 answer 브랜치의 표준 문서 안에 `<details>`로 두며, 별도 정답/자산 문서를 추가하지 않습니다.
 
 ### 7. 서브모듈 `main` 브랜치는 대표 안내 브랜치로 둡니다
 

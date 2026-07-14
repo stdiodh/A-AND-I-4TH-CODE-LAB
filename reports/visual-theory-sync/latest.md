@@ -1,5 +1,30 @@
 # Visual Theory Sync Audit Report
 
+최종 동기화일: 2026-07-14
+
+## 2026-07-14 해결 결과
+
+상태: **RESOLVED**
+
+- 8개 토픽 레포의 `main`과 00~12 canonical implementation/answer 브랜치를 표준 4문서(`README.md`, `docs/theory.md`, `docs/implementation.md`, `docs/checklist.md`) 기준으로 정리했습니다.
+- implementation/answer 브랜치의 `answer-guide.md`, `assets.md`, `branch-guide.md`, `repo-guide.md`, `sequence-map.md`를 제거했습니다. 외부 링크 호환 가능성이 있는 일부 main의 `answer-guide.md`만 25줄 이하 deprecated 안내로 유지했습니다.
+- 02, 03, 05, 06, 07, 08, 09, 10, 11, 12의 문서/Visual Lab/현재 코드 흐름 불일치를 수정했습니다. 05는 verified email과 providerId로 식별하고, 계정 충돌 시 자동 연결하지 않으며 JWT도 발급하지 않는 기준으로 맞췄습니다.
+- 08의 canonical 브랜치에 WebSocket 설정, controller, DTO, 공개 데모가 존재함을 확인했습니다. `main` 가이드/Visual의 native WebSocket 수동 STOMP와 sequence 브랜치의 SockJS 방식을 각각 해당 코드에 맞추고, 공통 destination·Origin·실습용 공개 범위를 일치시켰습니다.
+- 09의 깨진 표준 문서 링크를 수정했습니다. 10의 `scripts/deploy.sh`, `scripts/check-deploy.sh`는 canonical sequence 브랜치에 존재함을 확인하고 Visual Lab의 job/script 책임을 맞췄습니다. main만 보는 누락 판정 대신 canonical 브랜치 트리를 검사하도록 검증 기준도 수정했습니다.
+- 11은 helper 추출, service validation, exception, test 범위로 맞췄고 12는 in-memory `orderId` 중복 억제와 영속 멱등성의 한계를 구분했습니다.
+
+검증 결과:
+
+- `python3 scripts/validate-manifest.py`: PASS
+- `python3 scripts/validate-visual-labs.py`: 8개 레포, 0 issue
+- `python3 scripts/verify-sequences.py`: 13개 시퀀스, 0 failure, 0 warning
+- 실행 가능한 7개 토픽 main의 `./gradlew test`: PASS
+- canonical 브랜치 테스트: 06-implementation의 의도된 TODO 실패를 제외하고 PASS, 06-answer PASS
+
+아래 내용은 2026-06-16 당시 상태와 수정 판단 근거를 보존한 역사적 감사 기록입니다. 현재 상태 판정에는 위 해결 결과와 자동 검증기 출력을 사용합니다.
+
+---
+
 생성일: 2026-06-16
 
 ## 범위
