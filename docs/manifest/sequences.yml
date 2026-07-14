@@ -46,11 +46,10 @@ sequences:
       - "HTTP 요청과 응답 흐름을 이해한다."
       - "Controller, Service, Repository 기본 구조를 이해한다."
       - "메모리 기반 CRUD API를 구현한다."
-    status: "needs-branch-cleanup"
+    status: "ready"
     notes:
       - "정식 수업 브랜치는 01-implementation과 01-answer입니다."
       - "원격 default branch는 main으로 확인되었습니다."
-      - "legacy implementation, answer 브랜치가 남아 있으면 사용 중단 표시 후 삭제 여부를 수동 결정합니다."
       - "main 브랜치의 Visual Lab 진입점은 docs/visual-lab/index.html입니다."
 
   - id: "02"

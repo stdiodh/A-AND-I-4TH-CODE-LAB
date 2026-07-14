@@ -18,6 +18,7 @@
 - `python3 scripts/validate-manifest.py`: PASS
 - `python3 scripts/validate-visual-labs.py`: 8개 레포, 0 issue
 - `python3 scripts/verify-sequences.py`: 13개 시퀀스, 0 failure, 0 warning
+- 8개 토픽 원격 default branch: 모두 `main`, legacy `implementation`/`answer` branch: 0개
 - 실행 가능한 7개 토픽 main의 `./gradlew test`: PASS
 - canonical 브랜치 테스트: 06-implementation의 의도된 TODO 실패를 제외하고 PASS, 06-answer PASS
 
