@@ -140,6 +140,15 @@ For A&I Backend Visual Lab work:
 - After each sequence is complete, commit/push the submodule first, then commit/push the root submodule pointer.
 - Do not start the next sequence until the previous sequence's submodule and root pointer updates are complete or the user explicitly redirects.
 
+### 6-1. Visual Lab Design Skill
+
+- Every task that changes a topic repository's `docs/visual-lab` files or the central `docs/visual-lab-*.md` design rules must use `$aandi-visual-lab-design` from `.agents/skills/aandi-visual-lab-design/SKILL.md`.
+- Before implementation, write a design plan and a genericity critique grounded in the target sequence's actual theory, code flow, and verification points.
+- Preserve one system-wide visual grammar; do not decorate isolated components without checking the full hub and sequence experience.
+- Extend shared semantic tokens and component rules before introducing a new UI component or state.
+- Do not complete design work without inspecting the rendered browser output.
+- Mobile layout, visible keyboard focus, long Korean text and code, console errors, and `prefers-reduced-motion` are required completion checks.
+
 ## 7. Goal-Driven Execution
 
 Convert tasks into verifiable goals.

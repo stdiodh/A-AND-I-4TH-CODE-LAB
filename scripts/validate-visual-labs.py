@@ -39,7 +39,24 @@ SEQUENCE_DATA_FIELDS = [
     "actors",
     "flows",
     "codePoints",
+    "workbench",
 ]
+WORKBENCH_KINDS = {
+    "request",
+    "request-trace",
+    "persistence",
+    "gate",
+    "auth",
+    "trust",
+    "test",
+    "cache",
+    "realtime",
+    "runtime",
+    "pipeline",
+    "refactor",
+    "event",
+}
+WORKBENCH_TONES = {"signal", "blocked", "warning", "recovered"}
 BRANCH_FIELDS = ["guideBranch", "implementationBranch", "answerBranch"]
 EXTERNAL_PREFIXES = ("http://", "https://", "//", "data:")
 CDN_URL_PATTERN = re.compile(
@@ -594,12 +611,94 @@ def validate_sequence_data(result: RepoResult, sequence: dict[str, str], data_pa
     actors = parsed.get("actors") or []
     flows = parsed.get("flows") or []
     code_points = parsed.get("codePoints") or []
+    workbench = parsed.get("workbench") or {}
     if not isinstance(actors, list) or not actors:
         add_issue(result, "FAIL", data_path, "actors must be a non-empty list", "actor kind 기반 다이어그램을 위해 actors를 선언합니다.")
     if not isinstance(flows, list) or not flows:
         add_issue(result, "FAIL", data_path, "flows must be a non-empty list", "시퀀스 상세는 최소 1개 이상의 flow를 가져야 합니다.")
     if not isinstance(code_points, list) or len(code_points) < 2:
         add_issue(result, "FAIL", data_path, "codePoints must contain at least 2 items", "각 시퀀스에는 최소 2개 이상의 주요 코드 포인트를 넣습니다.")
+
+    if not isinstance(workbench, dict):
+        add_issue(
+            result,
+            "FAIL",
+            data_path,
+            "workbench must be an object",
+            "주차별 primary workbench의 kind, title, instruction, scenarios를 객체로 선언합니다.",
+        )
+    else:
+        workbench_kind = workbench.get("kind")
+        if workbench_kind not in WORKBENCH_KINDS:
+            add_issue(
+                result,
+                "FAIL",
+                data_path,
+                f"unsupported workbench kind: {workbench_kind!r}",
+                "중앙 Visual Lab design plan에 정의된 topic-specific workbench kind를 사용합니다.",
+            )
+        for field_name in ("title", "instruction"):
+            if not isinstance(workbench.get(field_name), str) or not workbench[field_name].strip():
+                add_issue(
+                    result,
+                    "FAIL",
+                    data_path,
+                    f"workbench {field_name} must be a non-empty string",
+                    "워크벤치의 학습 목적과 조작 안내를 짧은 문장으로 작성합니다.",
+                )
+
+        scenarios = workbench.get("scenarios")
+        flow_ids = {flow.get("id") for flow in flows if isinstance(flow, dict)}
+        if not isinstance(scenarios, list) or not (3 <= len(scenarios) <= 4):
+            add_issue(
+                result,
+                "FAIL",
+                data_path,
+                "workbench scenarios must contain 3-4 items",
+                "정상, 실패 또는 대안이 드러나는 실제 조건 3-4개를 제공합니다.",
+            )
+        else:
+            scenario_ids: set[str] = set()
+            for index, scenario_item in enumerate(scenarios):
+                if not isinstance(scenario_item, dict):
+                    add_issue(result, "FAIL", data_path, f"workbench scenario {index} must be an object", "각 시나리오를 객체로 작성합니다.")
+                    continue
+                scenario_id = scenario_item.get("id")
+                if not isinstance(scenario_id, str) or not scenario_id.strip() or scenario_id in scenario_ids:
+                    add_issue(result, "FAIL", data_path, f"workbench scenario {index} has an invalid or duplicate id", "시나리오 id를 고유한 문자열로 작성합니다.")
+                else:
+                    scenario_ids.add(scenario_id)
+                for field_name in ("label", "prompt", "evidence", "outcome"):
+                    if not isinstance(scenario_item.get(field_name), str) or not scenario_item[field_name].strip():
+                        add_issue(result, "FAIL", data_path, f"workbench scenario {index} has no {field_name}", "label, prompt, evidence, outcome을 실제 학습 내용으로 작성합니다.")
+                if scenario_item.get("flowId") not in flow_ids:
+                    add_issue(result, "FAIL", data_path, f"workbench scenario {index} references an unknown flowId", "기존 flows[].id 중 하나를 연결합니다.")
+                if scenario_item.get("tone") not in WORKBENCH_TONES:
+                    add_issue(result, "FAIL", data_path, f"workbench scenario {index} has an invalid tone", "signal, blocked, warning, recovered 중 하나를 사용합니다.")
+                route = scenario_item.get("route")
+                if not isinstance(route, list) or len(route) < 2 or any(not isinstance(item, str) or not item.strip() for item in route):
+                    add_issue(result, "FAIL", data_path, f"workbench scenario {index} has an invalid route", "실제 actor와 boundary를 2개 이상의 문자열 경로로 작성합니다.")
+                snapshot = scenario_item.get("snapshot")
+                if not isinstance(snapshot, list) or len(snapshot) < 2:
+                    add_issue(result, "FAIL", data_path, f"workbench scenario {index} has an invalid snapshot", "현재 조건에서 관찰할 상태를 2개 이상 제공합니다.")
+                else:
+                    for snapshot_item in snapshot:
+                        if not isinstance(snapshot_item, dict) or not snapshot_item.get("label") or not snapshot_item.get("value"):
+                            add_issue(result, "FAIL", data_path, f"workbench scenario {index} has an incomplete snapshot item", "snapshot 항목에 label과 value를 작성합니다.")
+                stop_after = scenario_item.get("stopAfter")
+                if stop_after is not None and (
+                    not isinstance(stop_after, int)
+                    or not isinstance(route, list)
+                    or not 0 <= stop_after < len(route)
+                ):
+                    add_issue(result, "FAIL", data_path, f"workbench scenario {index} has an invalid stopAfter", "마지막으로 도달한 route의 0-based index를 사용합니다.")
+                fan_out = scenario_item.get("fanOut")
+                if fan_out is not None and (
+                    not isinstance(fan_out, list)
+                    or not fan_out
+                    or any(not isinstance(item, str) or not item.strip() for item in fan_out)
+                ):
+                    add_issue(result, "FAIL", data_path, f"workbench scenario {index} has an invalid fanOut", "실제로 메시지를 받는 대상 label만 배열로 작성합니다.")
 
     repo_root = ROOT / result.path
     validate_data_links(result, repo_root, data_path, parsed.get("relatedDocs", []), "relatedDocs")

@@ -1,0 +1,4 @@
+interface:
+  display_name: "A&I Visual Lab Design"
+  short_description: "주차별 백엔드 Visual Lab 디자인·접근성 검수"
+  default_prompt: "Use $aandi-visual-lab-design to redesign this sequence Visual Lab with a grounded learning trace and verify it across responsive and accessible states."
