@@ -42,7 +42,7 @@ Current question
 -> next question
 ```
 
-Use `Learning Signal Trace` as the single shared signature: keep the real topology visible, expand one current transition, and update the real request, object, token, cache, artifact, test, or event path after a prediction. Do not unfold every transition, repeat the same actor per row, or add decorative numbered steps, terminal chrome, metrics, or diagrams.
+Use `Diagnostic Lifeline` as the single shared signature. Place participants once, keep time vertical, and show each real message as `source -> target · verb · payload` with the concrete before/after state beside the current step. On mobile, show the same information one message at a time. Do not split participants and transitions into unrelated card grids or add decorative numbered steps, terminal chrome, metrics, or diagrams.
 
 Keep the shell consistent, but choose a topic-specific primary workbench. Examples include request packet trace, persistence boundary, failure gate, authentication boundary, cache state inspector, connection/broadcast console, runtime boundary, pipeline gate, behavior invariant map, and event delivery trace.
 
@@ -60,6 +60,10 @@ Keep the shell consistent, but choose a topic-specific primary workbench. Exampl
 - Use manual previous/next navigation only. Do not add autoplay or speed controls.
 - Connect every structural element to real actors, states, responsibilities, code points, checks, or next questions.
 - Keep copy concise, active, learner-facing, and technically accurate. Never expose answer branch names, secrets, or long completed code.
+- Keep evidence within what was observed: a mock call is not external delivery, a command exit is not application health, and without publisher confirms a send return or exception does not prove broker acceptance or definite non-delivery.
+- Check theory and code evidence against the sequence's actual guide, implementation, and answer branches. If starter code is a TODO or a snippet exists only after completion, label that scope instead of presenting it as current code.
+- Do not begin code evidence with a file path tag. Write a short student-facing explanation or accurate code comment, show the real 3–12 line snippet, then state what value or system state changes. Keep the full path in a collapsed secondary reference only.
+- Do not use template effects such as `호출 전/후 책임`, `반환 대기/보유`, or `판정 입력/결과`. Name the actual value, collection/row, authentication subject, connection/subscription, failed gate, or assertion result.
 - Do not use hover movement that shifts layout, decorative glow, blanket gradients, or scattered animation.
 
 ## Accessibility and responsive completion

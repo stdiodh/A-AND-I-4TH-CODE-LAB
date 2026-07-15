@@ -3,7 +3,7 @@
 ## 목표
 
 HTTP 요청/응답 흐름을 넘어 WebSocket/STOMP로 연결, 구독, 발행 흐름을 구현합니다.
-서버가 연결된 클라이언트에게 다시 메시지를 보내는 구조를 확인합니다.
+서버가 해당 topic을 구독한 session에 메시지를 보내는 구조를 확인합니다.
 
 ## 이 시퀀스에서 배우는 것
 
@@ -53,7 +53,7 @@ docker compose up -d
 테스트가 확인하는 것:
 
 - 기존 애플리케이션 context와 Service 단위 테스트가 계속 통과하는지 확인합니다.
-- 실시간 데모 페이지와 SockJS 연결 정보가 인증 없이 열리는지 확인합니다.
+- 실시간 데모 페이지와 native WebSocket endpoint 정보가 인증 없이 열리는지 확인합니다.
 - WebSocket 연결, topic 구독, 발행, broadcast 수신은 테스트 페이지에서 직접 확인합니다.
 - 실제 STOMP 메시지 왕복 자동화는 현재 답안 범위에 포함되지 않습니다.
 
@@ -87,7 +87,7 @@ docker compose up -d
 
 - 클라이언트가 WebSocket에 연결됩니다.
 - topic을 구독한 뒤 메시지를 받을 수 있습니다.
-- 메시지 발행 후 연결된 클라이언트에 broadcast됩니다.
+- 메시지 발행 후 해당 topic을 구독한 session에 broadcast됩니다.
 - HTTP 요청/응답과 WebSocket 흐름의 차이를 설명할 수 있습니다.
 - `./gradlew test`가 통과합니다.
 

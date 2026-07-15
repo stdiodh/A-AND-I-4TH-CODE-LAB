@@ -122,7 +122,7 @@ Current question
 | 08 | Connection Console | connect, subscribe, send, broadcast와 fan-out을 관찰한다 |
 | 09 | Runtime Boundary | jar, image, container, environment와 health evidence를 구분한다 |
 | 10 | Pipeline Gate | 최초 실패 단계와 이후 blocked 단계를 확인한다 |
-| 11 | Behavior Invariant Map | 구조 변경 전후 API 계약과 테스트 증거를 비교한다 |
+| 11 | Behavior Change Ledger | 유지된 계약과 의도적으로 바뀐 동작을 테스트 증거와 함께 분리한다 |
 | 12 | Event Delivery Trace | direct call, broker path, duplicate delivery와 consumer 상태를 비교한다 |
 
 ## 11. Component Mapping
@@ -242,7 +242,7 @@ Not reached                                 Repository · DB mutation
 
 - 아이콘보다 `동사 · payload`, 책임 경계와 실제 검증 증거를 primary information으로 둔다.
 - DTO, token, artifact와 event를 actor 상자로 만들지 않고 전달 단위로 분리한다.
-- 03/04/10은 실제 차단과 응답 경로, 07은 cache hit/miss branch, 08은 구독자 fan-out, 09는 build/runtime 경계, 11은 invariant comparison, 12는 request/event 두 lane을 사용한다.
+- 03/04/10은 실제 차단과 응답 경로, 07은 cache hit/miss branch, 08은 구독자 fan-out, 09는 build/runtime 경계, 11은 unchanged contract와 intentional change 두 lane, 12는 request/event 두 lane을 사용한다.
 - 실패 시 단순히 이후 node를 회색으로 만들지 않고 무엇이 반환됐고 어떤 mutation이 실행되지 않았는지 설명한다.
 - 번호는 실제 실행 순서에만 사용하고, 장식 badge나 의미 없는 terminal·metric은 추가하지 않는다.
 
@@ -346,7 +346,7 @@ docs/visual-lab/assets/
 | 08 | `08-connection-subscription-fanout.svg` | transport, STOMP session, subscription |
 | 09 | `09-runtime-nesting.svg` | jar, image, container, process 포함 관계 |
 | 10 | `10-pipeline-gates.svg` | build, deploy, verify gate |
-| 11 | `11-behavior-invariant.svg` | 구조 변화와 유지되는 동작 |
+| 11 | `11-behavior-invariant.svg` | 유지되는 계약과 의도적으로 달라지는 동작 |
 | 12 | `12-response-event-fork.svg` | 동기 응답과 비동기 event 분기 |
 
 ### 15.6 Genericity Critique와 보정
@@ -368,3 +368,433 @@ docs/visual-lab/assets/
 - 주제 SVG의 가장 작은 visible text는 390px 화면에서 10.5px 이상으로 계산되고 브라우저에서 읽을 수 있다.
 - 200% zoom, keyboard focus, reduced motion에서도 같은 의미를 읽을 수 있다.
 - 색상이나 icon 하나만으로 상태와 기술 의미를 전달하지 않는다.
+
+## 16. Sequence Diagram과 Theory 동기화 계획
+
+이 절은 2026-07-16 학생 관점 재검수 뒤 추가한 다음 구현 계획이다. 이번 단계에서는 계획만 확정하고 Visual Lab runtime, 시퀀스 데이터와 토픽 저장소의 `docs/theory.md`는 아직 수정하지 않는다.
+
+### 16.1 Goal Result
+
+현재 `Guided System Story`는 actor와 transition을 정확히 나열하지만 실제 sequence diagram처럼 읽히지 않는다. actor는 위쪽 카드 목록, transition은 아래쪽 카드 grid로 분리되어 있고 `Client → Controller`는 화살표가 아니라 카드 안의 글자로만 보인다. viewport가 달라지면 transition grid가 다른 위치에서 줄바꿈되어 시간축도 고정되지 않는다.
+
+다음 구현의 목표는 한 문장으로 정한다.
+
+```text
+학생이 다음 단계를 누를 때마다
+누가 누구에게 무엇을 넘겼고
+그 순간 데이터·상태·보장 범위가 무엇에서 무엇으로 바뀌었는지
+10초 안에 말할 수 있게 한다.
+```
+
+적용 범위는 중앙 manifest의 00~12 전체 Visual Lab과 8개 토픽 저장소의 기존 `docs/theory.md`다. 커리큘럼 범위, 시퀀스 순서, 기술 사실, 구현·정답 브랜치와 답안 코드는 바꾸지 않는다.
+
+### 16.2 Current Audit
+
+- 공통 renderer는 `story-topology` actor strip과 `story-transitions` auto-fit card grid를 따로 만든다. lifeline, source/target column과 수직 시간축이 없다.
+- self-call, 역방향 응답, event 분기와 실행되지 않은 경로는 텍스트를 읽어야만 구분된다.
+- active transition은 step card, `story-current`, evidence section에 반복되어 정보가 많지만 변화의 전후는 한곳에 없다.
+- 모바일에서는 actor card가 먼저 세로로 쌓여 첫 message를 보기 전에 긴 목록을 지나야 한다.
+- topic SVG와 actor strip이 topology를 연달아 설명해 실제 조작 지점이 아래로 밀린다.
+- 13개 Visual Lab은 theory 문서 루트로만 연결되고 anchor가 없다. 8개 `docs/theory.md`에는 Visual Lab으로 돌아오는 링크가 없다.
+- 50개 scenario는 prediction을 가지지만 07·08의 8개를 제외한 42개에는 관찰 후 인과 규칙을 다시 쓰는 `observationTitle`과 `reflection`이 없다.
+- `spring-boot-db-access-lab/docs/theory.md` 85줄이 02~06 다섯 시퀀스를 함께 다루고, deployment theory도 09·10의 서로 다른 실패 경계를 충분히 분리하지 못한다.
+- theory 문서 7개가 `왜 이 코드를 보는지 먼저 정리합니다.`를 같은 문장으로 반복한다. `선택한 방식`, `핵심 코드로 연결하기`, `실행/테스트 결과로 확인할 것`, `한계와 다음 개선 방향`도 주제와 관계없이 같은 리듬으로 반복된다.
+- UI에는 `SYSTEM STORY`, `PREDICT 01`, `PREDICT → OBSERVE`, `Selected evidence`, `Verification`, `Next question`처럼 한국어 학습 흐름과 분리된 meta label이 남아 있다.
+- `docs/sequences/08-realtime-communication.md`의 SockJS 표현은 현재 native WebSocket demo와 맞지 않는다. broadcast 대상도 단순히 연결된 client가 아니라 해당 topic을 구독한 session으로 좁혀야 한다.
+
+### 16.3 `im-not-ai` 적용 범위
+
+참고한 저장소는 [epoko77-ai/im-not-ai](https://github.com/epoko77-ai/im-not-ai)이며 기준 commit은 [`14aeb52d13e737beb4e999cb7cb92275d0969689`](https://github.com/epoko77-ai/im-not-ai/tree/14aeb52d13e737beb4e999cb7cb92275d0969689), license는 [MIT](https://github.com/epoko77-ai/im-not-ai/blob/14aeb52d13e737beb4e999cb7cb92275d0969689/LICENSE)다.
+
+이 저장소는 UI 디자인 시스템이 아니라 한국어 윤문 skill이다. 따라서 palette나 component를 가져오지 않고 [quick rules](https://github.com/epoko77-ai/im-not-ai/blob/14aeb52d13e737beb4e999cb7cb92275d0969689/.claude/skills/humanize-korean/references/quick-rules.md)와 [rewriting playbook](https://github.com/epoko77-ai/im-not-ai/blob/14aeb52d13e737beb4e999cb7cb92275d0969689/.claude/skills/humanize-korean/references/rewriting-playbook.md)의 다음 원칙만 A&I 문서 검수 기준으로 다시 쓴다.
+
+- 기술 사실, 수치, 상태 코드, 파일 경로, 고유명사와 인과관계를 보존한다.
+- 문서 전체를 자동 윤문하지 않고 문제가 확인된 span만 수정한다.
+- theory를 칼럼이나 마케팅 문구로 바꾸지 않고 교육 문서의 register를 유지한다.
+- 추상적인 강조 대신 실제 actor, 입력 조건, 상태 변화, 테스트와 runtime 증거를 쓴다.
+- 과도한 영어 병기, `X: Y` 헤딩 반복, 기계적인 병렬, 같은 종결어미, 불필요한 접속사와 meta 문장을 줄인다.
+- 절차를 나타내는 번호와 checklist는 유지한다. 실제 순서가 아닌 장식 번호와 반복 badge만 제거한다.
+- 자연스러움 검수와 기술 정확성 검수를 분리하고 의미가 달라지면 해당 edit를 롤백한다.
+
+원본 Skill, 표, 스크립트와 긴 설명은 복사하지 않는다. 이후 실질적인 원문을 가져와야 한다면 저작권 문구와 MIT license를 함께 보존한다.
+
+### 16.4 Revised Subject, Audience, Single Job
+
+- Subject: 실제 백엔드 요청이 책임 경계를 통과하며 객체, 상태, 권한, artifact 또는 event로 바뀌는 과정을 추적하는 학습 환경.
+- Audience: 개별 용어는 배웠지만 `PostCreateRequest → PostEntity → row`, `Bearer token → Authentication`, `cache miss → DB read → refill`처럼 시간 순서와 상태 변화를 아직 연결하지 못하는 A&I 백엔드 학습자.
+- Single Job: 현재 message의 출발, 도착, 전달물과 변화 전후를 같은 시야에 두어 다음 단계의 결과를 자기 말로 설명하게 한다.
+
+### 16.5 Palette와 Typography 사용 보정
+
+4절의 core palette와 5절의 system font 원칙은 유지한다. 새 색을 추가하지 않고 사용량만 줄인다.
+
+- A&I Navy는 participant heading과 중요한 책임 경계에만 쓴다.
+- Signal Blue는 현재 message와 현재 `before → after` 한 곳에만 쓴다.
+- Evidence Teal은 실제로 관찰한 code, test, runtime 또는 manual evidence에만 쓴다.
+- Boundary Line은 lifeline과 system boundary를 그리는 구조선이다. 모든 card border로 반복하지 않는다.
+- Display role은 현재 질문 하나에만 사용한다.
+- Body role은 이론과 단계 설명에 사용한다.
+- Utility/Data role은 HTTP, DTO, Entity, status, command, path와 payload에만 사용한다. 한국어 meta label과 버튼을 전부 mono나 uppercase로 만들지 않는다.
+
+### 16.6 Layout Comparison
+
+#### Direction A — Step Card Inspector
+
+```text
+┌──────────────────────────────────────────────────────────┐
+│ [Client] [Controller] [Service] [Repository] [DB]       │
+├──────────────────────────────────────────────────────────┤
+│ [01 A → B] [02 B → C] [03 C → C] [04 C → D] [05 D → E]│
+├──────────────────────────────────────────────────────────┤
+│ Current step card                 Reason card            │
+└──────────────────────────────────────────────────────────┘
+```
+
+현재 구현과 가깝고 구현 비용은 낮다. 그러나 actor와 message가 공간적으로 연결되지 않아 학생은 카드 안의 문자열을 다시 조립해야 한다. viewport에 따라 시간 순서도 줄바꿈된다.
+
+#### Direction B — Lifeline Sequence와 변화 기록
+
+```text
+┌──────────────────────────────────────────────────────────┐
+│ Client       Controller       Service       Repo      DB │
+│   │              │               │             │       │ │
+│ 1 │── POST + JSON ──────────────>│             │       │ │
+│   │   변화: JSON body → PostCreateRequest       │       │ │
+│   │              │               │             │       │ │
+│ 2 │              │── create(req) ─────────────>│       │ │
+│   │              │   책임: HTTP 입구 → 처리 순서       │ │
+│   │              │               │             │       │ │
+│ 3 │              │               └─ self call ┐│       │ │
+│   │              │   변화: Request DTO → Entity│       │ │
+│   │              │               │             │       │ │
+│ 4 │              │               │── save ────>│       │ │
+│ 5 │              │               │             │─INSERT>│ │
+│   │              │               │  상태: row 없음 → id가 있는 row│
+└──────────────────────────────────────────────────────────┘
+```
+
+Direction B를 선택한다. participant는 한 번만 선언하고 시간은 위에서 아래로 흐른다. 현재 message 바로 아래에 `들어온 것`, `이 책임에서 한 일`, `나간 것 또는 남은 상태`, `확인 근거`를 붙인다.
+
+모바일에서는 desktop lifeline을 축소하지 않는다. 한 단계가 하나의 세로 문장이 된다.
+
+```text
+단계 3 / 5
+
+PostService
+  └─ 변환: PostCreateRequest → PostEntity
+     들어온 것  PostCreateRequest
+     바뀐 것    저장 가능한 PostEntity
+     확인       PostService.create(...)
+
+[이전 단계]                         [다음 단계]
+```
+
+### 16.7 Signature Element와 Motion
+
+공통 signature는 `Diagnostic Lifeline` 하나만 사용한다. 이 영문 이름을 화면 badge로 노출하지 않고, 학생이 보는 제목은 `요청이 바뀌는 과정`, `토큰이 인증으로 바뀌는 과정`, `캐시가 다시 채워지는 과정`처럼 해당 주제의 실제 변화로 쓴다.
+
+signature의 물리적 형태는 lifeline 위 현재 message와 그 아래의 `before → after` 변화 기록이다. topic SVG는 선행 관계를 설명하는 보조 자료이고 두 번째 signature가 아니다.
+
+- 핵심 순간: 다음 단계 선택 뒤 현재 message와 변화 기록이 함께 갱신되는 순간.
+- duration: `240ms`.
+- easing: `cubic-bezier(0.2, 0.8, 0.2, 1)`.
+- 반복: 없음.
+- motion 대상: 현재 message 선 한 개와 변화 기록의 배경 전환.
+- reduced motion: animation과 smooth scroll을 제거하고 같은 message, label과 before/after를 즉시 표시.
+
+### 16.8 Sequence Diagram Grammar
+
+- participant header와 lifeline은 `workbench.nodes`의 stable id, label, icon, role과 boundary를 사용한다.
+- 시간은 항상 위에서 아래로 흐른다. CSS auto-fit grid로 순서를 표현하지 않는다.
+- message는 실제 `from`, `to`, `verb`, `payload`, `kind`를 사용한다.
+- request/call은 실선, response는 역방향 화살표, event는 점선, failure는 중단 표식으로 보조 구분한다. 동사와 상태 label은 항상 visible text로 남긴다.
+- self-call은 같은 participant에서 나갔다 돌아오는 loop로 표시한다.
+- 지나간 message는 읽을 수 있는 상태로 남기고, 현재 message만 강조하며, 다음 message는 `다음` label과 점선으로 구분한다.
+- lane이 순차 관계라면 마지막 단계의 다음 버튼은 `다음 경로 · 저장 결과와 응답`처럼 이어진다. 분기 관계라면 `다른 조건 경로`로 명시하고 자동으로 정답 경로를 선택하지 않는다.
+- `notReached`는 회색 장식이 아니라 `왜 실행되지 않았는가`를 해당 중단 message 가까이에 표시한다.
+- actor role을 `title` 속성에만 두지 않는다. touch와 keyboard에서도 보이는 짧은 책임 설명을 제공한다.
+- topic SVG는 예측 뒤 compact premise로 한 번만 표시한다. 같은 topology를 actor card로 다시 반복하지 않는다.
+
+### 16.9 Data Contract Revision
+
+현재 `nodes`, `from`, `to`, `verb`, `payload`, `kind`, `concept`, `check`, `codePointIds`, `notReached`는 유지한다. 좌표나 중복 message 데이터를 추가하지 않는다.
+
+stable participant 순서와 lane 관계를 위해 다음 optional field를 추가한다.
+
+```js
+diagram: {
+  participants: ["client", "postController", "postService", "postRepository", "mysql"],
+  lanes: [
+    {
+      id: "request-persist",
+      nextLaneIds: ["saved-response"],
+      steps: []
+    }
+  ]
+}
+```
+
+학생이 변화 전후를 읽을 수 있도록 모든 semantic step에 `effect`를 작성한다. 이는 message payload를 복제하는 필드가 아니라 그 단계가 시스템에 남긴 차이를 설명한다.
+
+```js
+{
+  from: "postService",
+  to: "postService",
+  verb: "변환",
+  payload: "PostCreateRequest → PostEntity",
+  kind: "transform",
+  effect: {
+    kind: "transform",
+    subject: "게시글 데이터",
+    before: "PostCreateRequest",
+    after: "PostEntity"
+  },
+  evidenceScope: "code",
+  check: "PostService.create(...)에서 Entity 생성 지점을 봅니다."
+}
+```
+
+`effect.kind`는 `transfer`, `transform`, `persist`, `gate`, `return`, `fanout`, `verify`, `preserve`로 제한한다.
+
+- 데이터가 바뀌지 않고 책임만 이동하면 `transfer`로 쓰고 before/after가 같음을 숨기지 않는다.
+- DB, cache, session, artifact가 생기거나 사라지면 `persist`로 상태 전후를 쓴다.
+- 400, 401, 403 또는 pipeline failure에서 멈추면 `gate`로 도달하지 않은 상태를 쓴다.
+- 리팩토링처럼 동작을 지키는 주제는 `preserve`로 같은 입력, 반환, 예외와 협력자 호출을 명시한다.
+- event와 broadcast는 `fanout`으로 한 message가 어떤 queue 또는 subscribed session으로 전달됐는지 쓴다.
+
+`evidenceScope`는 `code`, `test`, `runtime`, `manual`, `concept` 중 하나다. 기존 `check`와 `codePointIds`를 그대로 사용하되 UI에서 보장 범위를 색상이 아닌 text label로 표시한다.
+
+legacy fallback은 renderer가 읽을 수 있게 남기지만, 00~12 전체 적용 완료 시에는 50개 scenario의 모든 visible step이 새 계약을 만족해야 한다. content spec과 validator를 먼저 고친 뒤 데이터를 수정한다.
+
+### 16.10 Theory Document Structure
+
+새 theory 파일은 만들지 않는다. 아래 8개 기존 파일 안에 00~12의 안정적인 anchor를 둔다.
+
+```text
+#seq-00
+#seq-01
+#seq-02
+...
+#seq-12
+```
+
+각 시퀀스 절은 같은 제목을 복사하지 않고 주제에서 나온 질문으로 시작한다. 다만 정보 역할은 다음 순서를 지킨다.
+
+```text
+구체적인 상황
+-> 한 번에 읽는 주 경로
+-> 단계에서 바뀌는 것
+-> 이 책임을 나눈 이유
+-> 코드에서 볼 위치
+-> 실행으로 확인할 증거와 아직 보장하지 않는 것
+-> 결과를 숨긴 Visual Lab 진입 링크
+```
+
+Theory에는 시퀀스별 핵심 path 하나를 Mermaid `sequenceDiagram`으로 넣는다. alternate scenario를 모두 펼치지 않고 기본 인과를 이해하는 데 필요한 3~7개 message만 둔다. diagram 바로 아래에는 다음 text table을 두어 Mermaid를 렌더링하지 못하거나 screen reader를 사용하는 학생도 같은 의미를 읽게 한다.
+
+| 단계 | 들어온 것 | 이 책임에서 한 일 | 나간 것 또는 남은 상태 |
+|---|---|---|---|
+| 실제 순서 | 실제 입력 | 실제 동작 | 실제 출력·상태 |
+
+Theory diagram은 개념 경로를 설명하고 Visual Lab은 조건을 바꿔 실제 분기, 미도달 지점과 evidence를 관찰한다. 두 문서에 50개 scenario를 그대로 복제하지 않는다.
+
+상호 링크는 다음처럼 연결한다.
+
+- theory 절 끝: `Visual Lab에서 입력 조건을 보고 경로 예측하기`.
+- Visual Lab evidence: 현재 sequence의 정확한 theory anchor 한 개.
+- 필요한 경우에만 `scenario.theoryRef`로 더 좁은 절을 가리킨다. 모든 edge에 같은 링크를 반복하지 않는다.
+- link 문구에서 `HIT`, `401`, `성공`, `blocked` 같은 결과를 먼저 말하지 않는다.
+
+DB Access theory는 새 파일로 나누지 않고 02 영속성, 03 검증, 04 인증·인가, 05 외부 신뢰·복구, 06 테스트 범위를 각각 독립 절로 확장한다. Deployment theory도 09 runtime과 10 pipeline을 분리한다.
+
+### 16.11 Korean Copy Rules
+
+화면 안 meta label은 다음 기준으로 정리한다.
+
+| 현재 표현 | 계획 표현 |
+|---|---|
+| `SYSTEM STORY` | 제거. 주제별 `요청이 바뀌는 과정` 계열 제목 사용 |
+| `PREDICT 01` | 제거. 실제 두 번째 단계가 없는 장식 번호를 쓰지 않음 |
+| `PREDICT → OBSERVE` | `내 예상 / 실제 흐름` |
+| `Selected evidence` | `이 단계에서 확인할 근거` |
+| `Verification` | `내 말로 설명해 보기` |
+| `Next question` | `다음에 이어서 볼 것` |
+| 결과 공개 직후 `확인 완료` | `경로 공개됨` 또는 label 제거. checklist 완료와 구분 |
+| 반복되는 `워크벤치` | `요청 왕복`, `영속화 경계`, `인증 경계`, `테스트 범위`처럼 주제 명사 사용 |
+
+버튼은 `확인하기`, `열기`보다 결과를 예측할 수 있는 동사를 쓴다. 예: `실제 전달 순서 보기`, `다음 message 보기`, `다른 조건과 비교하기`.
+
+코드 설명은 파일 경로 badge나 tag로 시작하지 않는다. 학생이 먼저 읽어야 할 것은 경로가 아니라 코드가 맡은 일이다.
+
+```text
+한 문장 주석
+-> 실제 핵심 코드 3~12줄
+-> 이 코드가 바꾸는 상태 또는 다음 책임 한 문장
+```
+
+- Visual Lab의 code evidence는 파일 경로 tag를 숨기고 짧은 한국어 주석을 code block 바로 위에 둔다.
+- theory의 `핵심 코드로 연결하기` 파일 목록은 주제별 핵심 code block으로 바꾼다.
+- code block은 실제 저장소 코드에서 가져오고 긴 완성 답안이나 관계없는 boilerplate를 붙이지 않는다.
+- 주석은 `// 여기서 요청을 Service로 넘깁니다.`처럼 학생이 지금 볼 판단을 말한다. class 이름을 다시 읽어주는 설명은 쓰지 않는다.
+- Kotlin, JavaScript, YAML, shell, Dockerfile 등 언어에 맞는 주석 문법을 code block 안에 쓸 수 있다. 문법을 깨뜨릴 위험이 있으면 code block 바로 위의 짧은 문장으로 대신한다.
+- 전체 파일 경로가 꼭 필요하면 primary label이 아니라 접힌 reference shelf의 `전체 코드 위치` link로만 제공한다.
+
+Theory copy 검수에서는 다음 반복을 우선 찾는다.
+
+- `왜 이 코드를 보는지 먼저 정리합니다.` 같은 meta 문장.
+- 모든 단락의 `이번 시퀀스는`, `확인합니다`, `문제를 해결합니다` 반복.
+- 의미 없는 `배경:`, `선택한 방식:` colon heading.
+- 불필요한 영어 병기와 uppercase label.
+- 같은 길이와 같은 종결어미가 이어지는 문단.
+- 기술 근거 없이 `핵심`, `완벽한`, `강력한`, `중요한`으로만 강조한 문장.
+
+API, JWT, Redis, STOMP, DTO, Entity, class·method 이름, 상태 코드와 파일 경로는 임의로 번역하거나 쉬운 말로 바꾸지 않는다. 첫 등장에만 짧은 한국어 역할을 덧붙인다.
+
+### 16.12 Sequence and Theory Mapping
+
+| Seq | Visual sequence grammar | 단계 변화의 중심 | Theory 보강 |
+|---|---|---|---|
+| 00 | 독립 HTTP·Git·DB lane | request/response, working tree→commit, row→PK 식별 | body만 보던 상태에서 status와 body를 함께 읽는 이유 |
+| 01 | request와 reverse response | Request DTO→Post→memory→Response DTO | 메모리 수명과 DTO 책임 |
+| 02 | persistence와 response 연속 lane | Request DTO→Entity→row/id→Response DTO | memory와 DB 수명, 없는 id에서 save 미도달 |
+| 03 | early-stop gate | invalid input→400, missing entity→404 | Validation과 Service failure 경계 |
+| 04 | token issuance와 다음 request 분리 | credentials→JWT, header→Authentication, author mismatch→403 | 인증 401과 인가 403의 다른 최초 분기 |
+| 05 | callback·collision·recovery branch | verified identity→internal account→JWT, recovery request→mail request | 외부 신뢰, LOCAL 충돌, link 생성과 reset 완료의 차이 |
+| 06 | Given→When→Then과 보장 범위 lane | fixture/mock→service result→assertion | unit test와 HTTP policy evidence 분리 |
+| 07 | cache state sequence | empty→miss→DB→refill, warm→hit, write success→evict | 원본과 복사본, TTL과 invalidation |
+| 08 | transport→session→subscription→fan-out | OPEN→CONNECTED→SUBSCRIBED, message→구독 session | native WebSocket, Origin, 연결과 구독의 차이 |
+| 09 | artifact/runtime sequence | source→jar→build context gate→image→container→process→health evidence | `.dockerignore` blocker, 명령 성공과 실행 정상의 차이 |
+| 10 | gated pipeline | source→artifact→deploy shell→verify, 첫 failure→later blocked | answer-only job 구조와 현재 heredoc blocker를 성공 목표와 분리 |
+| 11 | paired before/after sequence | 유지된 계약과 trim·예외·저장 같은 의도적 변경을 별도 lane으로 분리 | 실제 Before/After, unchanged test subset과 change ledger |
+| 12 | sync response와 async event lane | request→response와 event→broker→consumer 분리 | consumer 완료, 중복, 재시작과 publish failure 한계 |
+
+모든 주제에 Before/After card를 강제하지 않는다. 03·04·05는 조건과 최초 분기, 07·09·10은 상태 전이, 11은 실제 Before/After, 12는 동기·비동기 lane 비교가 주 문법이다.
+
+### 16.13 Component Mapping
+
+#### 변경
+
+- Hero의 구조는 유지하고 meta copy와 높이를 줄여 현재 질문과 첫 조건을 더 가깝게 둔다.
+- prediction gate는 유지하되 장식 영문, quiz praise와 조기 `확인 완료`를 제거한다.
+- actor card strip과 transition card grid를 participant header, lifeline과 message row로 교체한다.
+- `story-current` 중복 panel을 없애고 현재 message 안에 변화 기록과 evidence를 펼친다.
+- lane button은 direct 선택과 함께 순차 `다음 경로` 또는 분기 `다른 조건 경로` 관계를 말한다.
+- scenario-wide snapshot과 outcome은 마지막 message 뒤의 정리 영역으로 옮겨 현재 step 설명과 경쟁하지 않게 한다.
+- Evidence section은 현재 step에서 이미 보인 설명을 반복하지 않고 code/test/runtime detail만 확장한다.
+- theory link는 문서 루트가 아니라 현재 시퀀스 anchor를 가리킨다.
+- 50개 scenario에 observation title과 reflection을 둬 실제 경로를 본 뒤 인과 규칙을 한 문장으로 다시 쓰게 한다.
+- 모바일은 participant card 선행 목록을 제거하고 한 단계씩 `from → message → to → effect`로 읽는다.
+
+#### 유지
+
+- 기존 local SVG icon과 13개 topic SVG는 실제 asset이 보이고 주제별 관계를 설명하므로 유지한다.
+- prediction 전에 결과를 숨기는 계약은 답을 먼저 노출하지 않기 위해 유지한다.
+- native radio, button, progress, checkbox와 focus restoration은 keyboard 접근성을 위해 유지한다.
+- `window.visualLabData`, scenario, flow, node, code point, checklist와 next 계약은 기술 콘텐츠와 기존 경로 호환 때문에 유지한다.
+- hub journey, topbar의 repository/sequence context와 static HTML entry는 독립 GitHub Pages 실행 때문에 유지한다.
+- empty, fatal, image fallback과 `notReached` 데이터는 실패 원인과 확인 파일을 안내하므로 유지하고 새 diagram 문법에 맞춰 표현만 바꾼다.
+
+### 16.14 Implementation Phases
+
+#### Phase 0 — 정확성 및 기준 화면
+
+1. 08의 SockJS와 broadcast 범위를 실제 native WebSocket·topic subscription 기준으로 교정한다.
+2. 00~12 현재 화면을 같은 scenario와 viewport로 다시 저장한다.
+3. 50개 scenario의 lane 관계, self-call, reverse response, branch와 evidence 범위를 표로 확정한다.
+
+#### Phase 1 — Contract and Validator
+
+1. central content spec에 `participants`, `nextLaneIds`, `effect`, `evidenceScope`, `theoryRef`, `reflection`을 정의한다.
+2. validator에 node·lane reference, effect enum, theory anchor와 상대 link 검사를 추가한다.
+3. 공통 renderer가 legacy data도 안전하게 읽는 fallback을 먼저 만든다.
+
+#### Phase 2 — Four-sequence Prototype Gate
+
+다음 네 주제를 먼저 구현해 같은 template을 복제하기 전에 문법을 검증한다.
+
+- 02: self-call, DTO→Entity, persist와 reverse response.
+- 04: token issuance, 다음 request, 401/403 gate.
+- 07: miss/hit/TTL/evict 상태 변화.
+- 12: sync response와 async event branch.
+
+1440×1000과 390×844에서 학생이 현재 actor, 전달물, before/after와 증거를 한 viewport에서 읽을 수 있어야 다음 시퀀스로 확장한다. 이 gate에서 screenshot과 genericity critique를 다시 수행한다.
+
+#### Phase 3 — Theory Rewrite
+
+1. DB Access theory를 02~06 절로, Deployment theory를 09·10 절로 확장한다.
+2. 나머지 theory에 시퀀스 anchor, 핵심 Mermaid sequence, text table과 Visual Lab 링크를 추가한다.
+3. `im-not-ai` 기준으로 탐지된 meta copy만 국소 수정한다.
+4. 각 수정은 기술 사실·코드 경로·테스트 보장 범위 fidelity audit를 별도로 통과한다.
+
+#### Phase 4 — 00~12 Rollout
+
+1. 00·01·03·05·06·08·09·10·11을 주제별 문법으로 구현한다.
+2. shared CSS/JavaScript를 8개 토픽 저장소에 같은 checksum으로 동기화한다.
+3. 50개 scenario의 effect, evidence scope, theory reference와 reflection을 채운다.
+
+#### Phase 5 — Browser and Documentation Review
+
+1. 00~12 모든 scenario, 8개 hub와 theory 왕복 link를 검수한다.
+2. visual design guide, content spec, implementation plan, agent rule과 review 문서를 실제 코드에 맞춘다.
+3. child repository를 먼저 검증·commit·push하고 중앙 submodule pointer는 별도 commit으로 갱신한다.
+
+### 16.15 Genericity Critique와 보정
+
+첫 계획을 단순한 UML sequence diagram으로 끝내면 다른 API 문서에도 그대로 붙일 수 있고 초보자에게는 화살표 수만 늘어난다. 이를 다음처럼 보정한다.
+
+- sequence diagram의 signature는 lifeline 자체가 아니라 현재 message에 붙는 실제 `before → after` 변화 기록이다.
+- actor마다 동일한 card를 반복하지 않고 topic SVG, lifeline, effect가 서로 다른 역할을 맡는다.
+- 03의 중단, 07의 cache 수명, 08의 subscription, 09의 runtime, 11의 contract/change ledger, 12의 async branch를 같은 사각형 template으로 만들지 않는다.
+- 번호는 실제 message 순서에만 사용한다. `PREDICT 01` 같은 장식 번호는 제거한다.
+- 다크 배경, blue accent, icon을 제거해도 `조건 → 예측 → message → 상태 변화 → evidence → 다음 질문`이 남게 한다.
+
+`im-not-ai` 원칙을 과하게 적용해 모든 문장을 구어체로 바꾸거나 목록을 산문으로 합치면 기술 문서가 더 어려워진다. 절차 list, command, API, 전문 용어는 그대로 두고 반복 meta 문장과 번역투만 고친다. 변화율이 큰 절은 자연스러움보다 fidelity를 먼저 재검수한다.
+
+Theory에 13개 Mermaid diagram을 넣는 것 역시 template가 될 수 있다. 각 diagram은 한 개의 실제 인과만 설명하고, heading은 `배경`, `선택한 방식`을 복사하지 않고 `MISS 뒤에 DB를 읽는 이유`, `401과 403이 갈라지는 지점`처럼 주제에서 직접 가져온다.
+
+### 16.16 Completion Gate
+
+- 13개 sequence와 50개 scenario의 모든 visible message에 from, to, verb, payload, kind와 effect가 있다.
+- participant id, next lane, code point와 theory anchor reference가 모두 유효하다.
+- 50개 scenario에 결과를 먼저 노출하지 않는 prediction과 관찰 뒤 reflection이 있다.
+- 8개 theory 문서에서 Visual Lab으로 이동하고 13개 Visual Lab에서 정확한 theory 절로 돌아온다.
+- theory와 code evidence를 각 시퀀스의 guide·implementation·answer branch 실제 코드와 대조하고, TODO와 완성 뒤 코드의 범위를 구분한다.
+- visible effect에는 `호출 전/후 책임`, `반환 대기/보유`, `판정 입력/결과` 같은 자동 생성형 틀 문장이 없고 실제 값 또는 시스템 상태가 적힌다.
+- DB Access 02~06과 Deployment 09·10이 theory 안에서 독립된 인과 흐름을 가진다.
+- 08 문서는 native WebSocket, topic subscribed session과 실제 자동 테스트 범위를 정확히 말한다.
+- desktop에서 participant lifeline과 수직 시간축이 보이며 self-call, response, event, failure가 text와 선 방향으로 구분된다.
+- 390px에서 첫 message가 actor 목록 아래로 밀리지 않고 page-level horizontal overflow가 없다.
+- 현재 message, effect, reason, evidence와 이전/다음 control이 한 viewport에 있다.
+- 200% zoom에서 message label, 긴 한국어, command와 code가 겹치지 않는다.
+- keyboard focus가 visible하고 scenario, lane, message 변경 뒤 복원된다.
+- reduced motion에서 같은 상태가 정적으로 보인다.
+- console error, broken image와 clipped focus outline이 0이다.
+- 학생 관점 smoke에서 현재 단계의 `누가`, `누구에게`, `무엇을`, `무엇으로 바뀌었는지`, `어디서 확인할지` 다섯 질문에 답할 수 있다.
+- theory의 Mermaid가 지원되지 않는 환경에서도 인접 text table로 같은 순서를 읽을 수 있다.
+- `node --check`, manifest, sequence, Visual Lab, color, link/anchor validator와 `git diff --check`가 모두 통과한다.
+
+### 16.17 Planned File Scope
+
+중앙 저장소에서 갱신할 후보는 다음과 같다.
+
+```text
+docs/audit/visual-lab-design-system-audit.md
+docs/audit/visual-lab-design-system-plan.md
+docs/audit/visual-lab-design-system-review.md
+docs/visual-lab-design-guide.md
+docs/visual-lab-content-spec.md
+docs/visual-lab-implementation-plan.md
+docs/agent/visual-lab-rules.md
+scripts/validate-visual-labs.py
+```
+
+각 토픽 저장소에서 갱신할 후보는 다음과 같다.
+
+```text
+docs/theory.md
+docs/visual-lab/styles.css
+docs/visual-lab/visual-lab.js
+docs/visual-lab/sequences/NN/visual-lab-data.js
+```
+
+기존 `index.html`, icon과 topic SVG는 경로 계약 또는 기술 설명이 바뀌지 않는 한 유지한다. 새 framework, package, external font, CDN과 장식 asset은 추가하지 않는다.
