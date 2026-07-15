@@ -70,7 +70,7 @@ window.visualLabData = {
 };
 ```
 
-각 시퀀스 상세 파일은 아래 필드를 가진 하나의 canonical 객체로 관리합니다. `kind: "sequence"` 데이터 안에 같은 내용을 다시 담은 `sequences` 배열을 만들지 않습니다.
+각 시퀀스 상세 파일은 아래 필드를 가진 하나의 canonical 객체로 관리합니다. `kind: "sequence"` 데이터 안에 같은 내용을 다시 담은 `sequences` 배열을 만들지 않습니다. 아래 예시는 기존 canonical 필드를 보이기 위해 scenario 1개만 축약한 것이며 필수 `nodes`와 `diagram` 계약은 3.1.1의 완성 예시를 따릅니다.
 
 ```js
 window.visualLabData = {
@@ -79,6 +79,26 @@ window.visualLabData = {
   title: "한국어 주제명",
   goal: "한 줄 목표",
   problem: "이 시퀀스가 해결하는 문제",
+  workbench: {
+    kind: "persistence",
+    title: "Persistence Boundary",
+    instruction: "저장 조건을 선택하고 객체가 MySQL까지 이동하는 경로와 증거를 확인합니다.",
+    scenarios: [
+      {
+        id: "create-to-mysql",
+        label: "DB 저장 성공",
+        flowId: "main-flow",
+        tone: "recovered",
+        prompt: "POST 요청이 계층을 지나 영속 저장되는 경로를 관찰합니다.",
+        route: ["Client", "Controller", "Service", "Repository", "MySQL"],
+        snapshot: [
+          { label: "저장 위치", value: "MySQL", tone: "recovered" }
+        ],
+        evidence: "저장 후 생성 id와 조회 결과를 확인합니다.",
+        outcome: "서버가 다시 시작되어도 DB row가 남습니다."
+      }
+    ]
+  },
   actors: [
     { id: "client", label: "Client", kind: "client" },
     { id: "server", label: "Server", kind: "server" },
@@ -132,18 +152,247 @@ window.visualLabData = {
 
 필드 작성 규칙:
 
-- 상세 데이터의 `kind`, `sequence`, `title`, `goal`, `problem`, `actors`, `flows`, `codePoints`는 필수 필드다.
+- 상세 데이터의 `kind`, `sequence`, `title`, `goal`, `problem`, `workbench`, `actors`, `flows`, `codePoints`는 필수 필드다.
 - 기존 소비자 호환을 위해 `flow`도 유지할 수 있다.
 - 각 `flows[].steps`는 4~6개 정도의 학습 흐름으로 제한한다.
 - 각 시퀀스는 최소 2개 이상의 `codePoints`를 가진다.
 - Visual Lab 데이터에는 `answerBranch`, `sourceAnswerBranch`, `NN-answer` 문자열을 넣지 않는다.
 - 긴 이론, 정답 코드, 완성 구현 코드는 넣지 않는다.
 
-## 3.1 핵심 흐름 데이터 규칙
+## 3.1 Workbench 데이터 규칙
 
-각 시퀀스의 핵심 흐름은 `window.visualLabData.flow`에 둔다.
+모든 구현 완료 시퀀스는 top-level `workbench`를 가진다. 공통 renderer는 `workbench`를 조건 선택, `Learning Signal Trace`, 상태 snapshot, 관찰 증거와 판단으로 렌더링한다. 아래 축약 예시는 호환용 route와 snapshot을 설명하며 완성된 workbench는 3.1.1의 `nodes`와 `diagram`도 함께 제공한다.
+
+```js
+workbench: {
+  kind: "cache",
+  title: "Cache State Inspector",
+  instruction: "조건을 선택하고 Redis와 DB 경계를 비교합니다.",
+  visual: {
+    src: "../../assets/diagrams/07-cache-state-cycle.svg",
+    alt: "MySQL 원본과 Redis 파생 복사본의 조회·만료·무효화 흐름",
+    caption: "Redis 값은 TTL이 있는 파생 복사본이며 key가 없을 때 MySQL 원본을 다시 읽습니다."
+  },
+  scenarios: [
+    {
+      id: "cache-miss",
+      label: "post:1 key 없음",
+      flowId: "lookup-flow",
+      tone: "signal",
+      prompt: "결과를 열기 전에 DB 조회와 Redis 저장이 일어날지 예측합니다.",
+      route: ["Client", "PostQueryService", "Redis miss", "Repository", "DB"],
+      snapshot: [
+        { label: "Cache lookup", value: "miss", tone: "warning" },
+        { label: "DB lookup", value: "findById(id)", tone: "signal" }
+      ],
+      evidence: "cache miss 뒤 Repository 조회가 이어지는지 확인합니다.",
+      outcome: "DB 원본을 반환하고 다음 조회를 위해 캐시를 채웁니다."
+    }
+  ]
+}
+```
+
+`workbench` 필드:
+
+| 필드 | 필수 | 규칙 |
+|---|---|---|
+| `kind` | 필수 | 아래 13개 시퀀스 kind 중 하나를 사용한다. |
+| `title` | 필수 | 주차별 primary workbench 이름을 짧게 쓴다. |
+| `instruction` | 필수 | 학습자가 무엇을 선택하고 관찰할지 능동형 문장으로 쓴다. |
+| `visual` | 필수 | `{ src, alt, caption }`으로 주제 설명 SVG와 대체 설명을 연결한다. |
+| `terms` | 필수 | 예측 전에 필요한 용어를 `{ term, meaning }` 2개 이상으로 짧게 설명한다. 화면에서는 기본 닫힌 `details`로 제공해 모르는 학생이 먼저 확인하되 첫 행동을 밀어내지 않는다. |
+| `comparison` | 필수 | `{ label, left, right }`로 관찰 뒤 구분할 두 조건의 인과 차이를 설명한다. |
+| `nodes` | 필수 | scenario diagram이 참조할 책임 주체와 관찰 resource를 id로 관리하는 keyed catalog다. |
+| `scenarios` | 필수 | 실제 이론과 흐름에 근거한 조건을 3~4개 둔다. |
+
+`scenarios[]` 필드:
+
+| 필드 | 필수 | 규칙 |
+|---|---|---|
+| `id` | 필수 | 시퀀스 안에서 고유한 kebab-case id다. |
+| `label` | 필수 | 조건 선택 button에 표시할 짧은 이름이다. |
+| `flowId` | 필수 | 같은 객체의 `flows[].id` 중 하나를 참조한다. |
+| `tone` | 필수 | `signal`, `blocked`, `warning`, `recovered` 중 하나다. |
+| `prompt` | 필수 | 현재 조건에서 관찰할 질문 또는 상황이다. |
+| `prediction` | 필수 | `{ prompt, options, answer, explanation }`으로 관찰 전 판단과 관찰 뒤 설명을 연결한다. |
+| `route` | 필수 | 실제 actor, destination, 저장소 또는 책임 경계를 순서대로 쓴 문자열 배열이다. |
+| `snapshot` | 필수 | `{ label, value, tone? }` 항목을 2개 이상 둔 배열이다. `tone`은 scenario와 같은 네 값을 사용한다. |
+| `evidence` | 필수 | 로그, 응답, 테스트, 상태 또는 화면에서 확인할 실제 증거다. |
+| `outcome` | 필수 | 관찰 결과로 학습자가 내려야 할 판단이다. |
+| `diagram` | 필수 | 한 문장 `caption`, 책임별 `lanes`, 동사와 payload를 가진 `steps`, 선택적 `notReached`를 제공한다. |
+| `stopAfter` | 선택 | 마지막으로 도달한 `route`의 0-based index다. 이후 node는 `도달하지 않음`으로 표시한다. |
+| `fanOut` | 선택 | `realtime`에서만 사용하며 실제 메시지를 받는 대상 label 배열이다. |
+
+작성 규칙:
+
+- scenario `label`은 `hit`, `miss`, `blocked`, 성공/실패처럼 관찰 결과를 미리 공개하지 않고 입력 조건만 말한다.
+- route와 snapshot에 임시 actor, 의미 없는 수치나 장식용 metric을 넣지 않는다.
+- `stopAfter`는 실패 또는 차단 조건에서 실제 도달 지점이 확인될 때만 쓴다.
+- `fanOut`에는 연결만 된 대상이 아니라 실제로 해당 topic을 구독해 메시지를 받는 대상만 쓴다.
+- scenario를 바꾸면 `flowId`에 연결된 `flows[].steps`가 Problem, Concept, Action, Check evidence를 제공해야 한다.
+- 공통 renderer는 과거 데이터의 `flows`에서 fallback trace를 만들 수 있지만, 완료된 시퀀스는 fallback을 최종 상태로 사용하지 않는다.
+
+### 3.1.1 Semantic diagram 데이터 계약
+
+`nodes`와 `diagram`은 책임 주체와 이동하는 payload를 분리한다. 아래 예시는 validation 실패 조건을 축약한 것이다.
+
+```js
+workbench: {
+  kind: "gate",
+  title: "Failure Gate",
+  instruction: "잘못된 요청이 어느 책임 경계에서 멈추는지 확인합니다.",
+  nodes: {
+    client: {
+      label: "Client",
+      icon: "client",
+      kind: "actor",
+      role: "HTTP 요청 전송",
+      boundary: "Client"
+    },
+    validation: {
+      label: "Spring MVC · Bean Validation",
+      icon: "gate",
+      kind: "validation gate",
+      role: "argument binding 뒤 Controller method 전에 입력 조건 판단",
+      boundary: "HTTP argument resolution",
+      codePointIds: ["controller-create"]
+    },
+    handler: {
+      label: "GlobalExceptionHandler",
+      icon: "handler",
+      kind: "exception handler",
+      role: "검증 예외를 HTTP 오류 응답으로 변환",
+      boundary: "Error response mapping"
+    },
+    controller: {
+      label: "PostController",
+      icon: "api",
+      kind: "request handler",
+      role: "검증을 통과한 요청만 수신",
+      boundary: "Web"
+    },
+    service: {
+      label: "PostService",
+      icon: "service",
+      kind: "application service",
+      role: "유효한 요청의 처리 흐름 조립",
+      boundary: "Application"
+    }
+  },
+  scenarios: [
+    {
+      id: "invalid-request",
+      label: "입력 검증 실패",
+      flowId: "validation-flow",
+      tone: "blocked",
+      prompt: "잘못된 title이 Service 전에 멈추는지 확인합니다.",
+      route: ["Client", "Spring MVC · Bean Validation", "GlobalExceptionHandler", "Client"],
+      diagram: {
+        caption: "PostCreateRequest가 validation gate에서 거부되어 Service는 호출되지 않습니다.",
+        lanes: [
+          {
+            id: "request-validation",
+            label: "Request → Validation",
+            description: "요청 payload와 실패 증거가 생기는 책임 경계를 봅니다.",
+            steps: [
+              {
+                from: "client",
+                to: "validation",
+                verb: "요청 · 바인딩",
+                payload: "POST /posts · JSON → PostCreateRequest",
+                kind: "request"
+              },
+              {
+                from: "validation",
+                to: "handler",
+                verb: "검증 실패",
+                payload: "MethodArgumentNotValidException",
+                kind: "failure",
+                concept: "Service 이전 validation gate",
+                codePointIds: ["controller-create"]
+              },
+              {
+                from: "handler",
+                to: "client",
+                verb: "오류 응답",
+                payload: "400 ErrorResponse · field errors",
+                kind: "response",
+                check: "실제 error response의 field와 message를 확인합니다."
+              }
+            ]
+          }
+        ],
+        notReached: [
+          {
+            label: "PostController method body · PostService",
+            reason: "argument validation이 실패해 Controller method와 application service를 호출하지 않습니다."
+          }
+        ]
+      },
+      snapshot: [
+        { label: "실패 경계", value: "Bean Validation", tone: "blocked" },
+        { label: "Service 호출", value: "도달하지 않음", tone: "blocked" }
+      ],
+      evidence: "실제 validation error response를 확인합니다.",
+      outcome: "잘못된 입력은 Service 책임으로 넘어가지 않습니다."
+    }
+  ]
+}
+```
+
+`nodes` 작성 규칙:
+
+- key는 scenario 안에서 안정적으로 재사용할 kebab-case 또는 camelCase id다.
+- 각 node는 `label`, `icon`, `kind`, `role`, `boundary`를 모두 가진다. 실제 코드와 연결할 때만 `codePointIds`를 추가한다.
+- node는 actor, service, handler, repository, storage, broker, runtime 또는 상태 자체를 관찰할 artifact/resource다.
+- method, command, HTTP verb, 검증 행위처럼 두 책임 사이에서 일어나는 동작은 node가 아니라 edge `verb`다.
+- request DTO, token, event, query, command와 전달 파일은 기본적으로 edge `payload`다. artifact의 생성·실행 상태를 비교할 때만 별도 node로 둔다.
+- `boundary`는 화면에 표시되는 책임 경계 이름이며 색상이나 위치만으로 대신하지 않는다.
+- `icon`은 `person`, `client`, `tool`, `api`, `service`, `repository`, `database`, `gate`, `security`, `token`, `external`, `mail`, `test`, `fixture`, `cache`, `websocket`, `broker`, `runtime`, `artifact`, `config`, `pipeline`, `host`, `refactor`, `event`, `queue`, `consumer`, `evidence`, `memory`, `handler`, `response` 중 하나다.
+- icon은 각 토픽 레포의 직접 렌더링 가능한 `docs/visual-lab/assets/icons/{icon}.svg`에 연결한다. `system-icons.svg`는 원본 sprite와 호환 자료로만 보존한다.
+- 주제 설명 SVG와 icon은 `docs/visual-lab/assets`를 벗어나지 않으며 `viewBox`를 가지고 외부 URL, script와 font를 포함하지 않는다.
+- `assets/SOURCE.md`와 `assets/LICENSES.md`에 생성·파생 관계와 사용 조건을 기록한다. 외부 CDN, emoji와 network asset을 사용하지 않는다.
+
+`diagram` 작성 규칙:
+
+- `caption`은 선택한 조건의 전체 흐름과 핵심 판단을 한 문장으로 쓴다.
+- `lanes`는 request/response와 event, build와 verify, Before와 After처럼 책임이 다른 흐름을 분리한다.
+- 각 lane은 고유 `id`, 짧은 `label`, 읽는 목적을 설명하는 `description`, 2~7개의 `steps`를 가진다.
+- 각 step의 `from`과 `to`는 `workbench.nodes` key를 참조하고 `verb`, `payload`, `kind`를 반드시 가진다.
+- edge `kind`는 `request`, `call`, `transform`, `persist`, `response`, `failure`, `event`, `config`, `compare` 중 하나다.
+- `concept`, `check`, `codePointIds`는 해당 edge에서 실제 근거가 있을 때만 추가한다.
+- `notReached`는 실행되지 않은 node 또는 책임 label과 그 이유를 함께 제공한다. 단순 opacity나 빈 node로 대신하지 않는다.
+- `route`, `snapshot`, `evidence`, `outcome`, `flowId`는 기존 진행 상태와 evidence 연결을 위해 함께 유지한다.
+- lane은 독립 비교 경로일 수 있으므로 전체 `lanes[].steps`를 하나의 시간축으로 해석하지 않는다. 현재 lane만 단계 진행 상태를 가지며 다른 lane은 선택 가능한 경로다.
+- progress는 현재 lane 범위만 사용한다. 학생이 수동으로 lane을 넘을 때는 `다음 경로`라고 표시한다.
+- semantic edge의 code evidence는 edge의 `codePointIds`, 도착 node, 출발 node 순서의 명시적 연결만 사용한다. legacy flow step의 배열 위치를 상속하지 않는다.
+- 모바일 세로 흐름에서도 `verb`, `payload`, `kind`, boundary와 state label을 생략하지 않는다.
+- edge가 단계 선택 control이면 keyboard focus와 접근 가능한 이름에 `from`, `to`, `verb`, `payload`, state가 모두 포함되어야 한다.
+- reduced motion은 전달 애니메이션만 제거하며 caption, 방향, payload와 notReached 이유는 정적으로 유지한다.
+
+13개 시퀀스의 kind 매핑:
+
+| Sequence | kind | Workbench |
+|---|---|---|
+| 00 | `request` | Request Workbench |
+| 01 | `request-trace` | Request Packet Trace |
+| 02 | `persistence` | Persistence Boundary |
+| 03 | `gate` | Failure Gate |
+| 04 | `auth` | Auth Boundary |
+| 05 | `trust` | Trust & Recovery Map |
+| 06 | `test` | Test Harness |
+| 07 | `cache` | Cache State Inspector |
+| 08 | `realtime` | Connection & Broadcast Console |
+| 09 | `runtime` | Runtime Boundary |
+| 10 | `pipeline` | Pipeline Gate |
+| 11 | `refactor` | Behavior Invariant Map |
+| 12 | `event` | Event Delivery Trace |
+
+## 3.2 핵심 흐름 데이터 규칙
+
+각 시퀀스의 canonical 핵심 흐름은 `window.visualLabData.flows`에 둔다. `flow`는 기존 소비자 호환이 필요할 때만 유지하는 축약 필드다.
 Flow는 정답 비교가 아니라 학생이 따라갈 문제 해결 순서다.
-각 단계는 Problem, Concept, Action, Check를 모두 가져야 한다.
+각 `flows[].steps` 단계는 Problem, Concept, Action, Check를 모두 가져야 한다.
 
 ```js
 {
@@ -157,9 +406,25 @@ Flow는 정답 비교가 아니라 학생이 따라갈 문제 해결 순서다.
 ```
 
 - 한 단계에는 긴 이론이나 정답 코드 전체를 넣지 않는다.
-- Step Explorer 기본 동작은 단계 선택, 이전/다음, 진행률 표시다.
+- Learning Signal Trace 기본 동작은 route/단계 선택, 이전/다음, 진행률 표시다.
 - 버튼은 기본 focus 흐름을 유지하고 키보드 접근성을 해치지 않는다.
 단, 00 시퀀스는 HTTP, JSON, Postman, Git, DB 기초 수준을 넘지 않는다.
+
+## 3.3 증거 표현의 상한
+
+`check`, `evidence`, `outcome`은 실제로 관찰한 범위까지만 주장한다. 실행 경로를 설명하는 diagram과 그 경로가 성공했다는 증거를 구분한다.
+
+| 확인한 증거 | 표현할 수 있는 판단 | 금지하는 과장 |
+|---|---|---|
+| Service 단위 테스트의 반환값과 예외 | 해당 Service 단위 동작 | HTTP path, status, response body 계약 전체 |
+| mock 또는 spy의 메서드 호출 | 발행자나 adapter가 호출됨 | 외부 API, mail server, RabbitMQ가 실제 수신·처리함 |
+| `contextLoads` | Spring context가 로드됨 | endpoint 요청·응답과 전체 기능이 정상임 |
+| `ConcurrentHashMap.putIfAbsent` | 현재 process 안의 중복 기록 방지 | 재시작·다중 instance에서도 유지되는 영속 멱등성 |
+| build/deploy 명령 종료 | 해당 명령 또는 job이 끝남 | container process, application log, HTTP 응답까지 정상임 |
+
+- integration 성공을 말하려면 실제 boundary를 통과한 로그, 응답, 상태 또는 integration test가 필요하다.
+- `notReached` 대상은 실행됐다고 추정하지 않고 확인되지 않은 이유를 그대로 쓴다.
+- outbox, retry, rollback, exactly-once, 영속 저장처럼 현재 범위를 벗어난 보장은 구현된 것처럼 쓰지 않는다.
 
 ## 4. 반드시 참조해야 할 대표 백엔드 문서
 
@@ -430,32 +695,46 @@ PostCreateRequest
 
 ## 7. 주제 데이터 구조 예시
 
-각 시퀀스 서브모듈의 `docs/visual-lab/visual-lab-data.js`에는 아래 구조의 데이터를 사용한다.
+각 시퀀스 서브모듈의 `docs/visual-lab/sequences/NN/visual-lab-data.js`에는 아래 계층의 데이터를 사용한다. 상세 필드 계약은 3절을 따른다.
 
 ```js
 window.visualLabData = {
+  kind: "sequence",
   sequence: "02",
   title: "DB 접근 흐름",
   goal: "메모리 저장 대신 DB에 저장하는 계층 흐름을 이해한다.",
   problem: "서버 재시작 후에도 데이터가 남으려면 메모리 밖의 저장소가 필요합니다.",
-  flow: [
+  workbench: {
+    kind: "persistence",
+    title: "Persistence Boundary",
+    instruction: "저장 조건을 선택하고 실제 영속성 경계를 확인합니다.",
+    scenarios: [
+      /* 실제 theory와 flows에 연결된 scenario 3~4개 */
+    ]
+  },
+  actors: [
+    /* 실제 요청과 저장 경계 actor */
+  ],
+  flows: [
     {
-      id: "step-1",
-      label: "POST 요청",
-      problem: "생성 요청이 어느 계층으로 들어오는지 확인해야 합니다.",
-      concept: "Controller는 HTTP 입구입니다.",
-      action: "`POST /posts` 요청을 Controller에서 받습니다.",
-      check: "요청 method와 path가 의도와 맞는지 확인합니다."
+      id: "create-flow",
+      title: "게시글 저장 흐름",
+      steps: [
+        /* Problem, Concept, Action, Check와 codePointIds */
+      ]
     }
+  ],
+  codePoints: [
+    /* 실제 파일의 핵심 위치와 확인 지점 */
   ],
   concepts: [
     {
-      name: "Repository",
-      description: "저장소 접근 역할을 맡습니다."
+      title: "Repository",
+      body: "저장소 접근 역할을 맡습니다."
     }
   ],
-  practice: [],
-  mentorHints: []
+  checks: [],
+  next: {}
 };
 ```
 
@@ -725,9 +1004,13 @@ findAll()
 
 - 설명은 짧게 쓴다.
 - 상세 이론을 HTML에 길게 복붙하지 않는다.
-- 각 주제는 "개념 -> 흐름 -> 코드 포인트 -> 관련 문서" 순서로 구성한다.
+- 각 주제는 "현재 질문 -> 조건 선택 -> 시스템 경로 -> 관찰 증거 -> 판단 -> 검증 -> 다음 질문" 순서로 구성한다.
 - 코드 원문 전체를 HTML에 길게 넣지 않는다.
 - 중요한 코드 위치와 흐름만 보여준다.
+- route, 상태, 번호와 label은 실제 actor, 경계, 테스트 또는 응답을 표현해야 한다.
+- semantic node와 edge는 책임 주체, 동작, payload와 boundary를 서로 다른 필드로 표현해야 한다.
+- evidence는 단위 테스트, mock, in-memory 상태나 명령 종료가 실제로 보장하는 범위를 넘지 않아야 한다.
+- 버튼은 사용자가 바꾸는 조건이나 실행 결과가 드러나는 동사를 사용한다.
 - 실제 학습은 연결 문서와 연결 레포로 이동하게 한다.
 
 ## 10. HTML에서 보여줘야 하는 정보
@@ -737,17 +1020,17 @@ findAll()
 ```text
 제목
 영문 제목
-카테고리
-짧은 설명
-왜 중요한가
-실행 흐름
-데이터 변환 흐름
-핵심 포인트
-예시 요청
-예시 응답
+현재 학습 질문과 goal
+관찰 조건 selector
+Learning Signal Trace
+현재 route 상태와 snapshot
+관찰 증거와 판단
+현재 단계의 Problem, Concept, Action, Check
+연결된 코드 포인트와 책임 경계
+session-local 검증 질문
+다음 질문
 관련 문서 링크
 관련 코드 링크
-implementation/answer 브랜치 링크
 ```
 
 ## 11. HTML에서 피해야 하는 정보
@@ -756,4 +1039,8 @@ implementation/answer 브랜치 링크
 - 정답 코드 전체 복붙
 - 너무 많은 API 설명
 - 강의 자료 전체 복제
+- 실제 흐름과 연결되지 않은 임시 수치, metric, actor 또는 장식용 terminal
+- 동사와 payload 없이 이어진 장식용 화살표와 의미 없는 icon
+- 테스트 종류나 runtime 경계를 무시한 과장된 성공 증거
+- 정답 브랜치명과 answer 링크
 - 중앙 레포의 역할을 벗어나는 상세 구현 튜토리얼

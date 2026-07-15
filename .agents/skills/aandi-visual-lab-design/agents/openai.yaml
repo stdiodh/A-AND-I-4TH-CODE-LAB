@@ -1,0 +1,4 @@
+interface:
+  display_name: "A&I Visual Lab Design"
+  short_description: "학생 중심 백엔드 Visual Lab 디자인·접근성 검수"
+  default_prompt: "Use $aandi-visual-lab-design to turn this Visual Lab into a student-first predict-observe-explain workspace with visible local SVG assets and responsive accessibility verification."
