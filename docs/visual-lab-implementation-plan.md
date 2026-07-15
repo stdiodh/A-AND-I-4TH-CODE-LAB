@@ -30,6 +30,7 @@ A&I Backend Visual Lab은 각 시퀀스 서브모듈 안에서 정적 HTML, CSS,
 <topic-repo>/docs/visual-lab/styles.css
 <topic-repo>/docs/visual-lab/visual-lab-data.js
 <topic-repo>/docs/visual-lab/visual-lab.js
+<topic-repo>/docs/visual-lab/assets/system-icons.svg
 <topic-repo>/docs/visual-lab/sequences/NN/index.html
 <topic-repo>/docs/visual-lab/sequences/NN/visual-lab-data.js
 ```
@@ -129,7 +130,9 @@ NN-answer
 - 기존 커리큘럼, 시퀀스 순서, 기술 사실과 데이터 스키마를 근거 없이 변경하지 않는다.
 - 외부 font import와 CDN 의존성을 추가하지 않는다.
 - hover 이동, 장식용 glow, 반복 gradient, 흩어진 animation을 사용하지 않는다.
-- 공통 CSS/JS는 외부 공용 경로에 의존하지 않고 8개 토픽 레포에 같은 내용으로 로컬 복제한다.
+- 공통 CSS/JS와 `assets/system-icons.svg`는 외부 공용 경로에 의존하지 않고 8개 토픽 레포에 같은 내용으로 로컬 복제한다.
+- semantic diagram에서 책임 주체 node와 edge의 동작·payload를 분리하고 boundary label을 visible text로 제공한다.
+- 단위 테스트, mock, in-memory 상태와 명령 종료를 실제 통합 성공보다 넓은 evidence로 표현하지 않는다.
 
 ## 7. 파일별 구현 계획
 
@@ -182,6 +185,8 @@ surface-canvas
 surface-primary
 surface-secondary
 surface-evidence
+surface-diagram
+surface-node
 signal-active
 signal-muted
 evidence
@@ -191,6 +196,10 @@ danger
 warning
 recovered
 blocked
+edge-request
+edge-response
+edge-persist
+edge-failure
 focus-ring
 motion-duration
 motion-easing
@@ -204,7 +213,9 @@ hub-intro + journey-list
 sequence-hero + sequence-thesis
 learning-nav
 scenario-selector
-workbench + signal-trace
+workbench + semantic-diagram + signal-trace fallback
+diagram-reading + diagram-lane
+semantic-node + semantic-edge + not-reached
 state-snapshot + outcome-panel
 trace-controls + progress
 evidence-layout + context-drawer + code-evidence
@@ -215,7 +226,19 @@ empty-state / fatal-state
 ```
 
 컴포넌트마다 색상, 간격, radius, motion 값을 다시 하드코딩하지 않는다.
-390px에서는 page-level horizontal overflow가 없어야 하며, signal trace와 긴 code만 해당 영역 안에서 스크롤할 수 있다.
+390px에서는 page-level horizontal overflow가 없어야 한다. semantic diagram은 node -> edge -> node 순서의 세로 흐름으로 바꾸며, legacy signal trace와 긴 code만 해당 영역 안에서 제한적으로 스크롤할 수 있다.
+
+### 7.2.1 docs/visual-lab/assets/system-icons.svg
+
+역할:
+
+- semantic node kind를 구분하는 공통 outline symbol sprite
+- data의 `icon` 값을 `#icon-{icon}` symbol id로 연결
+- 외부 icon library, CDN, emoji와 주차별 임의 SVG 대체
+
+허용 icon id는 `person`, `client`, `tool`, `api`, `service`, `repository`, `database`, `gate`, `security`, `token`, `external`, `mail`, `test`, `fixture`, `cache`, `websocket`, `broker`, `runtime`, `artifact`, `config`, `pipeline`, `host`, `refactor`, `event`, `queue`, `consumer`, `evidence`, `memory`, `handler`, `response`다.
+
+renderer는 상세 페이지에서 `../../assets/system-icons.svg#icon-{icon}`, hub에서 `./assets/system-icons.svg#icon-{icon}` 상대 경로를 사용한다. SVG icon에는 `aria-hidden="true"`와 `focusable="false"`를 적용하고 node label, kind, role, boundary를 text로 함께 렌더링한다.
 
 ### 7.3 docs/visual-lab/visual-lab-data.js
 
@@ -284,6 +307,44 @@ window.visualLabData = {
     kind: "request-trace",
     title: "주제별 워크벤치 이름",
     instruction: "조건을 바꾸며 무엇을 확인할지 안내합니다.",
+    nodes: {
+      client: {
+        label: "Client",
+        icon: "client",
+        kind: "actor",
+        role: "HTTP 요청 전송",
+        boundary: "Client"
+      },
+      controller: {
+        label: "PostController",
+        icon: "api",
+        kind: "request handler",
+        role: "요청 DTO 수신과 Service 호출",
+        boundary: "Web",
+        codePointIds: ["controller-entry"]
+      },
+      service: {
+        label: "PostService",
+        icon: "service",
+        kind: "application service",
+        role: "저장 흐름 조립",
+        boundary: "Application"
+      },
+      repository: {
+        label: "PostRepository",
+        icon: "repository",
+        kind: "persistence port",
+        role: "DB 접근 위임",
+        boundary: "Persistence"
+      },
+      database: {
+        label: "MySQL",
+        icon: "database",
+        kind: "persistent storage",
+        role: "row 영속 저장",
+        boundary: "Database"
+      }
+    },
     scenarios: [
       {
         id: "create-success",
@@ -292,6 +353,47 @@ window.visualLabData = {
         tone: "recovered",
         prompt: "이 조건에서 어디를 관찰해야 할까요?",
         route: ["Client", "Controller", "Service", "Repository", "DB"],
+        diagram: {
+          caption: "PostCreateRequest가 Web과 Application 책임을 지나 MySQL row로 저장됩니다.",
+          lanes: [
+            {
+              id: "create-request",
+              label: "Request → Persistence",
+              description: "요청 payload가 각 책임 경계를 지나는 방향과 동작을 봅니다.",
+              steps: [
+                {
+                  from: "client",
+                  to: "controller",
+                  verb: "생성 요청",
+                  payload: "POST /posts · PostCreateRequest",
+                  kind: "request"
+                },
+                {
+                  from: "controller",
+                  to: "service",
+                  verb: "처리 위임",
+                  payload: "create(request)",
+                  kind: "call"
+                },
+                {
+                  from: "service",
+                  to: "repository",
+                  verb: "저장 요청",
+                  payload: "PostEntity",
+                  kind: "persist"
+                },
+                {
+                  from: "repository",
+                  to: "database",
+                  verb: "row 저장",
+                  payload: "INSERT posts",
+                  kind: "persist",
+                  check: "생성 id와 실제 조회 결과를 확인합니다."
+                }
+              ]
+            }
+          ]
+        },
         snapshot: [
           { label: "요청", value: "POST /posts" },
           { label: "저장", value: "row 확인", tone: "recovered" }
@@ -313,15 +415,21 @@ window.visualLabData = {
 
 - `kind`는 시퀀스 주제에 맞는 request, request-trace, persistence, gate, auth, trust, test, cache, realtime, runtime, pipeline, refactor, event 중 하나를 사용한다.
 - 각 시퀀스는 실제 콘텐츠에 근거한 3~4개 scenario를 둔다.
+- `nodes`는 id로 참조하는 keyed catalog이며 각 항목에 `label`, `icon`, `kind`, `role`, `boundary`, 선택적 `codePointIds`를 둔다.
+- node는 책임 주체나 상태를 관찰할 system resource다. method, command와 전달 DTO/token/event는 edge의 `verb`와 `payload`로 둔다.
 - `flowId`는 같은 객체의 `flows[].id`와 반드시 일치해야 한다.
 - `tone`은 `signal`, `blocked`, `warning`, `recovered` 중 하나다.
 - `route`에는 실제 actor와 책임·신뢰·runtime·pipeline 경계만 순서대로 쓴다.
 - `snapshot`은 label/value를 가진 항목을 2개 이상 두며 필요한 항목에 같은 semantic tone을 넣을 수 있다.
 - `evidence`는 실제 요청, 응답, 상태, 로그, 명령, 테스트 또는 코드 지점을 가리킨다.
 - `outcome`은 학습자가 증거를 보고 내릴 판단을 쓴다.
+- 각 scenario의 `diagram`은 `caption`, 하나 이상의 `lanes`, lane별 2~7개 `steps`를 가진다.
+- diagram step의 `from`과 `to`는 `nodes` key를 참조하고 `verb`, `payload`, `kind`를 가진다. `kind`는 request, call, transform, persist, response, failure, event, config, compare 중 하나다.
+- 실행되지 않은 책임은 `notReached: [{ label, reason }]`로 설명한다.
 - blocked scenario의 `stopAfter`는 마지막으로 도달한 route의 0-based index다.
 - realtime broadcast처럼 실제 수신자 분기가 있을 때만 `fanOut`을 추가한다.
 - `flows[].steps`는 Problem, Concept, Action, Check가 드러나는 4~6단계로 제한한다.
+- `check`, `evidence`, `outcome`은 실제 증거의 범위를 넘지 않는다. mock 호출을 외부 전달 성공으로, Service 단위 테스트를 HTTP 계약으로, in-memory map을 영속 저장으로 표현하지 않는다.
 - `workbench`가 없는 legacy 데이터는 engine이 `flows`에서 trace를 만들 수 있지만 신규·수정 시퀀스는 명시적인 `workbench`를 제공한다.
 
 ### 7.5 docs/visual-lab/visual-lab.js
@@ -356,6 +464,11 @@ compact context bar
 필수 동작:
 
 - scenario 선택 시 `aria-pressed`를 갱신하고 연결된 `flowId`의 첫 단계로 이동한다.
+- `scenario.diagram`이 있으면 semantic diagram을 primary로 렌더링하고 legacy `route`는 호환·fallback 상태로 유지한다.
+- diagram은 `caption`, lane header, node의 icon/kind/role/boundary, edge의 verb/payload/kind/state, `notReached` label과 reason을 모두 표시한다.
+- edge가 단계 선택 control이면 native button과 `from`, `to`, `verb`, `payload`, state를 포함한 접근 가능한 이름을 제공한다.
+- 다른 lane은 직전·다음 단계가 아니라 `선택 가능` 경로로 두고 progress와 자동 재생을 현재 lane 범위로 제한한다. lane 경계의 수동 이동은 `이전 경로` 또는 `다음 경로`로 표시한다.
+- semantic evidence는 edge/node의 명시적 `codePointIds`만 사용하고 legacy flow step 위치를 병합하지 않는다.
 - signal node는 passed, active, pending, blocked 상태를 label과 함께 제공한다.
 - 이전/다음, 재생/일시정지, 속도와 native `<progress>`로 단계 진행을 제공한다.
 - scenario, route, control을 선택해 전체 DOM이 다시 렌더링돼도 `data-focus-key`로 focus를 복원한다.
@@ -365,12 +478,13 @@ compact context bar
 - same-repo 다음 시퀀스가 있으면 상세 페이지로, 없으면 해당 repository journey로 연결한다.
 - data가 없거나 잘못된 경우 원인과 확인 파일을 알려주는 empty/fatal state를 렌더링한다.
 - section observer는 learning nav의 현재 위치를 `aria-current="location"`으로 표현한다.
-- 상태 변경 알림은 workbench의 짧은 `role="status"` 한 곳으로 제한한다.
-- reduced motion에서는 자동 재생과 속도 조절을 비활성화하고 같은 정보를 정적으로 제공한다.
+- 상태 변경 알림은 재렌더링 밖에 유지되는 짧은 `role="status"` 한 곳으로 제한하고 현재 lane, from/to, verb와 payload를 알린다.
+- 720px 이하에서 semantic transition을 node -> edge -> node의 세로 방향으로 바꾸고 arrow label과 payload를 유지한다.
+- reduced motion에서는 자동 재생과 속도 조절을 비활성화하고 active edge의 방향·payload·상태를 정적으로 제공한다.
 
 ### 7.6 Shared Engine 로컬 복제
 
-공통 `visual-lab.js`와 `styles.css`는 다음 8개 토픽 레포에 같은 내용으로 둔다.
+공통 `visual-lab.js`, `styles.css`, `assets/system-icons.svg`는 다음 8개 토픽 레포에 같은 내용으로 둔다.
 
 ```text
 aandi-prerequisite-bootcamp
@@ -386,7 +500,7 @@ spring-boot-event-driven-lab
 한 레포의 파일을 다른 서브모듈에서 runtime import하지 않는다.
 CDN, symlink, 새 package 대신 동일한 engine을 각 레포에 로컬 복제해 GitHub Pages 상대 경로를 유지한다.
 
-공통 engine을 변경하면 8개 사본을 모두 동기화하고 hash가 같은지 확인한다.
+공통 engine이나 icon sprite를 변경하면 8개 사본을 모두 동기화하고 hash가 같은지 확인한다.
 시퀀스 고유 구조는 공통 engine을 fork하지 않고 `workbench.kind`와 canonical 데이터로 표현한다.
 
 ## 8. 구현 단계
@@ -409,12 +523,15 @@ CDN, symlink, 새 package 대신 동일한 engine을 각 레포에 로컬 복제
 
 - 실제 `flows`, actor, code point, check, next question 확인
 - 주제별 `workbench.kind`와 3~4개 scenario 작성
+- 책임 주체 `nodes`와 edge `verb`/`payload`/`kind`, boundary, lane, caption, notReached 작성
+- 각 evidence가 실제 테스트와 runtime 관찰 범위를 넘지 않는지 확인
 - blocked, warning, recovered 상태와 evidence를 색상 외 정보로 작성
 
 ### Step 4. HTML shell과 shared style 동기화
 
 - hub와 sequence의 최소 `#app` shell 확인
 - semantic token, context bar, journey, question header, workbench, evidence, verification, next 레이아웃 반영
+- semantic node/edge와 mobile 세로화, local system icon sprite 연결
 - 8개 토픽 레포의 공통 CSS를 같은 내용으로 동기화
 
 ### Step 5. Shared engine 동기화
@@ -457,6 +574,7 @@ git diff --check
 ```bash
 shasum */docs/visual-lab/visual-lab.js
 shasum */docs/visual-lab/styles.css
+shasum */docs/visual-lab/assets/system-icons.svg
 ```
 
 ### Step 8. 브라우저 검수
@@ -467,7 +585,7 @@ shasum */docs/visual-lab/styles.css
 python3 -m http.server 8080 -d docs/visual-lab
 ```
 
-hub, 모든 상세 시퀀스, 모든 scenario, signal route, controls, evidence, verification, next link를 확인한다.
+hub, 모든 상세 시퀀스, 모든 scenario, semantic diagram의 lane/node/edge/notReached, signal route fallback, controls, evidence, verification, next link를 확인한다.
 
 화면 크기:
 
@@ -492,6 +610,8 @@ hub, 모든 상세 시퀀스, 모든 scenario, signal route, controls, evidence,
 - hub journey가 올바른 상세 페이지로 이동한다.
 - 첫 scenario가 기본 선택되고 `aria-pressed="true"`를 가진다.
 - scenario 변경 시 연결 flow, route, snapshot, evidence, outcome이 함께 바뀐다.
+- scenario 변경 시 caption, lane, node boundary, edge verb/payload/kind와 notReached도 함께 바뀐다.
+- semantic edge를 keyboard로 선택하면 현재 단계와 evidence가 같은 상태를 가리킨다.
 - signal node와 이전/다음 control이 같은 단계 상태를 가리킨다.
 - 재생, 일시정지, 속도 변경과 마지막 단계 정지가 동작한다.
 - native progress가 현재 단계와 verification 완료 수를 정확히 표현한다.
@@ -504,6 +624,8 @@ hub, 모든 상세 시퀀스, 모든 scenario, signal route, controls, evidence,
 - A&I light palette와 Display/Body/Utility 역할이 유지된다.
 - 첫 화면에서 현재 질문과 조작할 조건이 설명 카드보다 먼저 보인다.
 - Learning Signal Trace가 실제 시스템 경로를 표현한다.
+- node는 책임 주체, edge는 동작과 payload, boundary는 visible label로 구분된다.
+- local system icon은 node kind를 보조하며 icon 없이도 label과 role로 의미를 이해할 수 있다.
 - 주차별 workbench가 같은 카드 layout을 이름만 바꾼 결과가 아니다.
 - 상태는 label, route state, snapshot, evidence를 통해 색상 없이도 구분된다.
 - 다크 관리자 dashboard, 장식 terminal, glow, blanket gradient 느낌이 없다.
@@ -513,7 +635,9 @@ hub, 모든 상세 시퀀스, 모든 scenario, signal route, controls, evidence,
 - skip link, semantic heading, nav, fieldset/legend, button, list, progress가 올바르게 동작한다.
 - 모든 interactive element에 visible `:focus-visible`이 있다.
 - scenario와 control 재렌더링 뒤 focus가 선택한 요소로 돌아온다.
+- semantic edge button에 visible focus와 충분한 접근 가능한 이름이 있다.
 - reduced motion에서 smooth scroll, transition, 자동 재생이 제거된다.
+- mobile에서 semantic diagram이 세로화되고 arrow label과 payload가 사라지지 않는다.
 - 390px에서 page-level horizontal overflow, 잘린 focus, 겹친 한국어 문장이 없다.
 - 긴 path와 code는 해당 영역 안에서만 스크롤된다.
 - touch target은 가능한 한 44px 이상이다.
@@ -526,4 +650,5 @@ hub, 모든 상세 시퀀스, 모든 scenario, signal route, controls, evidence,
 - browser console error가 없다.
 - 모든 구현 시퀀스의 실제 기술 내용과 `flowId` 연결이 유지된다.
 - 화면과 데이터에 secret, 정답 브랜치명, 긴 완성 구현 코드가 노출되지 않는다.
+- 테스트·mock·in-memory·명령 evidence가 보장하지 않는 통합 성공을 주장하지 않는다.
 - 공통 CSS/JS를 변경한 경우 00~12 전체를 desktop과 mobile에서 회귀 확인한다.

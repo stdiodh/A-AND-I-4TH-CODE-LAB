@@ -172,3 +172,78 @@ Current question
 9. Static and browser regression across 00~12.
 
 이 critique를 완료했으므로 구현 단계로 이동할 수 있다.
+
+## 14. Semantic Diagram Revision
+
+### 14.1 문제 정의
+
+첫 적용의 `Learning Signal Trace`는 실제 route 순서와 도달 상태를 보여주지만, node가 명사 label만 가지며 connector에 동작과 전달물이 없다. 이론을 읽은 학습자도 `PostCreateRequest`, `PostEntity`, `save(...)`, `201 Created`가 어느 책임 사이에서 어떻게 바뀌는지 도식만으로 설명하기 어렵다.
+
+새 Single Job은 다음처럼 좁힌다.
+
+```text
+학습자가 각 화살표를 “누가 무엇을 어떤 형태로 다음 책임에 넘기는가”라는 한 문장으로 읽게 한다.
+```
+
+### 14.2 Layout Comparison
+
+#### Direction A — Annotated Actor Trace
+
+```text
+┌────────────┐  요청 · POST /posts + JSON  ┌────────────┐
+│ Client     │ ───────────────────────────> │ Controller │
+│ 요청 주체  │                              │ HTTP 입구  │
+└────────────┘                              └────────────┘
+```
+
+장점: actor와 전달 행위를 가장 빠르게 읽을 수 있다. 단점: 인증, 이벤트, 리팩토링처럼 분기나 비교가 있는 주제는 한 줄로 왜곡될 수 있다.
+
+#### Direction B — Semantic Lanes
+
+```text
+Request lane   Client -- 요청 · JSON --> Controller -- 호출 --> Service
+Response lane  Client <-- 응답 · 201 -- Response DTO <-- 변환 -- Service
+Event lane                                  Service -- 발행 · Event --> Broker
+Not reached                                 Repository · DB mutation
+```
+
+장점: 응답, 비동기 분기, side input과 실행되지 않은 경로를 구분할 수 있다. 단점: 단순한 시퀀스에도 lane을 강제하면 화면이 무거워진다.
+
+#### 선택
+
+기본은 Direction A를 사용하고, 실제 이론에 분기·비교·side input이 있을 때만 Direction B를 사용한다. 00은 HTTP/Git/DB 준비를 병렬 lane으로, 11은 Before/After 비교로, 12는 요청 응답과 event delivery를 분리한다. 모바일에서는 모든 lane을 세로 trace로 바꾸되 edge label은 숨기지 않는다.
+
+### 14.3 Diagram Grammar
+
+- node는 사람, client, controller, service, repository, database, provider, broker, consumer처럼 책임을 수행하는 주체만 사용한다.
+- DTO, Entity, token, row, command, status, event payload는 connector 위의 Utility/Data capsule로 표시한다.
+- connector는 `동사 · 전달물` 형식을 사용한다. 예: `변환 · PostCreateRequest → PostEntity`, `저장 · save(entity)`, `응답 · 201 + PostResponse`.
+- node에는 local SVG icon, 종류, 역할, 책임 경계를 visible text로 함께 표시한다. icon은 장식 보조이며 `aria-hidden="true"`로 둔다.
+- connector가 선택 가능한 학습 단계다. 선택하면 해당 동작의 개념, 코드와 확인 증거가 갱신된다.
+- 실패 경로는 실제 exception/handler/response까지 그린다. 정상 downstream은 `실행되지 않음` 영역에 원인과 함께 표시한다.
+- diagram 위에는 현재 scenario를 한 문장으로 읽는 caption을 둔다.
+- line style은 요청/호출, 응답/결과, 실패, event/config를 보조 구분하지만 verb와 상태 label을 항상 함께 쓴다.
+
+### 14.4 Icon Asset System
+
+저장소 로컬 `docs/visual-lab/assets/system-icons.svg` sprite 하나를 사용한다. person, client, tool, api, service, repository, database, gate, security, token, external, mail, test, fixture, cache, websocket, broker, runtime, artifact, config, pipeline, host, refactor, event, queue, consumer, evidence, memory를 같은 stroke 문법으로 제공한다.
+
+외부 icon library, CDN, bitmap illustration은 사용하지 않는다. 아이콘 자체에 기술 의미를 맡기지 않고 label, role, boundary를 항상 함께 표시한다.
+
+### 14.5 Motion
+
+기존 240ms signal transition을 connector active state에만 적용한다. 자동 반복은 없고, reduced motion에서는 connector와 evidence를 즉시 바꾼다. 화살표를 따라 움직이는 particle이나 반복 pulse는 추가하지 않는다.
+
+### 14.6 Genericity Critique
+
+첫 보정안도 아이콘이 붙은 일반 flowchart가 될 위험이 있었다. 아이콘만 바꾸거나 모든 주차를 같은 horizontal pipeline으로 만들면 다른 개발자 문서에도 그대로 붙일 수 있고 백엔드 학습 범위를 다시 왜곡한다.
+
+이를 다음처럼 수정한다.
+
+- 아이콘보다 `동사 · payload`, 책임 경계와 실제 검증 증거를 primary information으로 둔다.
+- DTO, token, artifact와 event를 actor 상자로 만들지 않고 전달 단위로 분리한다.
+- 03/04/10은 실제 차단과 응답 경로, 07은 cache hit/miss branch, 08은 구독자 fan-out, 09는 build/runtime 경계, 11은 invariant comparison, 12는 request/event 두 lane을 사용한다.
+- 실패 시 단순히 이후 node를 회색으로 만들지 않고 무엇이 반환됐고 어떤 mutation이 실행되지 않았는지 설명한다.
+- 번호는 실제 실행 순서에만 사용하고, 장식 badge나 의미 없는 terminal·metric은 추가하지 않는다.
+
+이 revision critique를 완료했으므로 semantic diagram 구현을 시작할 수 있다.

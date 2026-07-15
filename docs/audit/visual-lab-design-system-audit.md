@@ -100,3 +100,24 @@ Overview -> Why -> Before / After -> Flow -> Code Points
 ## 7. 결론
 
 데이터 계약과 실제 콘텐츠는 유지할 가치가 높다. 리디자인의 중심은 카드를 다시 꾸미는 일이 아니라, 공통 shell을 줄이고 각 주차의 실제 시스템 상태를 조작하는 하나의 primary workbench를 만드는 일이다.
+
+## 8. Semantic Diagram Follow-up Audit
+
+첫 디자인 시스템 적용 뒤 실제 00~12 workbench를 다시 읽어 보니 `route`가 순서를 보여주는 데는 성공했지만, 학습자가 화살표의 의미를 이론과 연결하기에는 정보가 부족했다.
+
+- actor, DTO, Entity, token, status, command가 같은 node 모양으로 표시됐다.
+- connector에는 방향만 있고 동작 동사와 전달 payload가 없었다.
+- route node와 legacy flow step 수가 다르면 위치 비례로 evidence가 연결돼 다른 코드 포인트를 보여줄 수 있었다.
+- 실패는 이후 node를 흐리게 만드는 데 그쳐 exception, handler, 실제 응답과 실행되지 않은 mutation을 설명하지 못했다.
+- 서로 독립적인 lane을 전체 step index 하나로 재생하면 00의 Git/DB 준비나 12의 HTTP 응답/event 전달 사이에 가짜 시간 순서가 생길 수 있었다.
+- icon만 추가하는 안은 일반 flowchart와 다르지 않고 같은 모호성을 남겼다.
+
+유지할 요소는 실제 scenario selector, snapshot, evidence, code point, verification과 다음 질문이다. 변경 대상은 diagram 문법과 단계 연결이다.
+
+```text
+책임 주체
+-- 동사 · 전달 payload -->
+다음 책임 주체
+```
+
+새 기준은 node에 icon, 종류, 역할과 visible 책임 경계를 함께 표시하고, edge에 `from`, `to`, `verb`, `payload`, `kind`를 둔다. DTO, Entity, token, status와 event payload는 edge로 이동한다. failure는 실제 handler/응답과 `notReached` 이유를 표현한다. progress와 재생은 현재 lane 안에서만 동작하고 다른 lane은 `선택 가능` 경로로 남긴다.

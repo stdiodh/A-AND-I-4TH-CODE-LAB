@@ -13,6 +13,7 @@ import json
 import re
 import subprocess
 import sys
+import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -28,6 +29,7 @@ REQUIRED_HUB_FILES = [
     "styles.css",
     "visual-lab.js",
     "visual-lab-data.js",
+    "assets/system-icons.svg",
 ]
 HUB_DATA_FIELDS = ["kind", "title", "sequences"]
 SEQUENCE_DATA_FIELDS = [
@@ -57,6 +59,49 @@ WORKBENCH_KINDS = {
     "event",
 }
 WORKBENCH_TONES = {"signal", "blocked", "warning", "recovered"}
+DIAGRAM_EDGE_KINDS = {
+    "request",
+    "call",
+    "transform",
+    "persist",
+    "response",
+    "failure",
+    "event",
+    "config",
+    "compare",
+}
+SYSTEM_ICON_NAMES = {
+    "person",
+    "client",
+    "tool",
+    "api",
+    "service",
+    "repository",
+    "database",
+    "gate",
+    "security",
+    "token",
+    "external",
+    "mail",
+    "test",
+    "fixture",
+    "cache",
+    "websocket",
+    "broker",
+    "runtime",
+    "artifact",
+    "config",
+    "pipeline",
+    "host",
+    "refactor",
+    "event",
+    "queue",
+    "consumer",
+    "evidence",
+    "memory",
+    "handler",
+    "response",
+}
 BRANCH_FIELDS = ["guideBranch", "implementationBranch", "answerBranch"]
 EXTERNAL_PREFIXES = ("http://", "https://", "//", "data:")
 CDN_URL_PATTERN = re.compile(
@@ -68,6 +113,7 @@ ANSWER_EXPOSURE_FAIL = re.compile(
     r"(sourceAnswerBranch|answerBranch|\b\d{2}-answer\b|git\s+(checkout|switch)\s+\S*answer)",
     re.IGNORECASE,
 )
+DIAGRAM_DATA_NODE_KIND = re.compile(r"\b(payload|dto|http result|comparison path)\b", re.IGNORECASE)
 
 
 @dataclass
@@ -406,7 +452,7 @@ def validate_required_hub_files(result: RepoResult) -> bool:
                 "FAIL",
                 path,
                 f"missing required Visual Lab hub file: {filename}",
-                "허브 구조는 index.html, styles.css, visual-lab.js, visual-lab-data.js를 유지합니다.",
+                "허브 구조는 index.html, styles.css, visual-lab.js, visual-lab-data.js와 assets/system-icons.svg를 유지합니다.",
             )
 
     return all_present
@@ -499,6 +545,150 @@ def validate_css_assets(result: RepoResult, path: Path) -> None:
         )
 
 
+def validate_icon_sprite(result: RepoResult, path: Path) -> None:
+    if not path.exists():
+        return
+
+    try:
+        root = ET.parse(path).getroot()
+    except ET.ParseError as error:
+        add_issue(
+            result,
+            "FAIL",
+            path,
+            f"system icon sprite is not valid SVG XML: {error}",
+            "로컬 SVG sprite가 브라우저에서 읽히도록 XML 문법을 수정합니다.",
+        )
+        return
+
+    symbol_ids = {
+        element.get("id", "").removeprefix("icon-")
+        for element in root.iter()
+        if element.tag.endswith("symbol") and element.get("id", "").startswith("icon-")
+    }
+    missing = sorted(SYSTEM_ICON_NAMES - symbol_ids)
+    if missing:
+        add_issue(
+            result,
+            "FAIL",
+            path,
+            f"system icon sprite is missing symbols: {', '.join(missing)}",
+            "semantic diagram이 사용하는 모든 icon-* symbol을 sprite에 포함합니다.",
+        )
+
+
+def validate_semantic_workbench(
+    result: RepoResult,
+    data_path: Path,
+    workbench: dict[str, Any],
+    code_points: list[Any],
+) -> None:
+    nodes = workbench.get("nodes")
+    if not isinstance(nodes, dict) or not nodes:
+        add_issue(
+            result,
+            "FAIL",
+            data_path,
+            "workbench nodes must be a non-empty object",
+            "행동 주체와 책임 경계를 workbench.nodes에 선언합니다.",
+        )
+        return
+
+    code_point_ids = {
+        point.get("id")
+        for point in code_points
+        if isinstance(point, dict) and isinstance(point.get("id"), str)
+    }
+
+    def validate_code_point_ids(value: Any, location: str) -> None:
+        if value is None:
+            return
+        if not isinstance(value, list) or any(not isinstance(item, str) for item in value):
+            add_issue(result, "FAIL", data_path, f"{location} codePointIds must be a string list", "기존 codePoints[].id만 배열로 연결합니다.")
+            return
+        unknown = sorted(set(value) - code_point_ids)
+        if unknown:
+            add_issue(result, "FAIL", data_path, f"{location} references unknown codePointIds: {', '.join(unknown)}", "codePointIds를 현재 시퀀스의 codePoints[].id와 맞춥니다.")
+
+    for node_id, node in nodes.items():
+        if not isinstance(node_id, str) or not node_id.strip() or not isinstance(node, dict):
+            add_issue(result, "FAIL", data_path, "workbench nodes contain an invalid entry", "node key와 값 객체를 유효하게 작성합니다.")
+            continue
+        for field_name in ("label", "icon", "kind", "role", "boundary"):
+            if not isinstance(node.get(field_name), str) or not node[field_name].strip():
+                add_issue(result, "FAIL", data_path, f"workbench node {node_id!r} has no {field_name}", "각 node에 label, icon, kind, role, boundary를 작성합니다.")
+        if node.get("icon") not in SYSTEM_ICON_NAMES:
+            add_issue(result, "FAIL", data_path, f"workbench node {node_id!r} uses an unsupported icon", "assets/system-icons.svg에 정의된 icon 이름을 사용합니다.")
+        if isinstance(node.get("kind"), str) and DIAGRAM_DATA_NODE_KIND.search(node["kind"]):
+            add_issue(
+                result,
+                "FAIL",
+                data_path,
+                f"workbench node {node_id!r} represents transferable data instead of a responsibility",
+                "DTO, event payload, HTTP result와 비교 경로는 node가 아니라 edge verb/payload로 표현합니다.",
+            )
+        validate_code_point_ids(node.get("codePointIds"), f"workbench node {node_id!r}")
+
+    scenarios = workbench.get("scenarios")
+    if not isinstance(scenarios, list):
+        return
+    for scenario_index, scenario in enumerate(scenarios):
+        if not isinstance(scenario, dict):
+            continue
+        diagram = scenario.get("diagram")
+        location = f"workbench scenario {scenario_index} diagram"
+        if not isinstance(diagram, dict):
+            add_issue(result, "FAIL", data_path, f"{location} is missing", "모든 관찰 조건에 caption과 실제 경로 lane을 선언합니다.")
+            continue
+        if not isinstance(diagram.get("caption"), str) or not diagram["caption"].strip():
+            add_issue(result, "FAIL", data_path, f"{location} has no caption", "학습자가 흐름을 한 문장으로 읽을 수 있는 caption을 작성합니다.")
+
+        lanes = diagram.get("lanes")
+        if not isinstance(lanes, list) or not lanes:
+            add_issue(result, "FAIL", data_path, f"{location} has no lanes", "정상, 실패, 비교처럼 의미가 다른 경로를 lane으로 나눕니다.")
+            continue
+        lane_ids: set[str] = set()
+        for lane_index, lane in enumerate(lanes):
+            lane_location = f"{location} lane {lane_index}"
+            if not isinstance(lane, dict):
+                add_issue(result, "FAIL", data_path, f"{lane_location} must be an object", "lane을 id, label, description, steps 객체로 작성합니다.")
+                continue
+            lane_id = lane.get("id")
+            if not isinstance(lane_id, str) or not lane_id.strip() or lane_id in lane_ids:
+                add_issue(result, "FAIL", data_path, f"{lane_location} has an invalid or duplicate id", "시나리오 안에서 고유한 lane id를 사용합니다.")
+            else:
+                lane_ids.add(lane_id)
+            for field_name in ("label", "description"):
+                if not isinstance(lane.get(field_name), str) or not lane[field_name].strip():
+                    add_issue(result, "FAIL", data_path, f"{lane_location} has no {field_name}", "lane의 책임과 관찰 목적을 설명합니다.")
+
+            steps = lane.get("steps")
+            if not isinstance(steps, list) or not (2 <= len(steps) <= 7):
+                add_issue(result, "FAIL", data_path, f"{lane_location} must have 2-7 steps", "한 lane은 읽을 수 있는 전이 2-7개로 제한합니다.")
+                continue
+            for step_index, step in enumerate(steps):
+                step_location = f"{lane_location} step {step_index}"
+                if not isinstance(step, dict):
+                    add_issue(result, "FAIL", data_path, f"{step_location} must be an object", "전이를 from, to, verb, payload, kind로 작성합니다.")
+                    continue
+                for endpoint in ("from", "to"):
+                    if step.get(endpoint) not in nodes:
+                        add_issue(result, "FAIL", data_path, f"{step_location} references unknown {endpoint} node", "from과 to는 workbench.nodes key를 참조합니다.")
+                for field_name in ("verb", "payload"):
+                    if not isinstance(step.get(field_name), str) or not step[field_name].strip():
+                        add_issue(result, "FAIL", data_path, f"{step_location} has no {field_name}", "화살표에 동작 동사와 이동 데이터를 함께 작성합니다.")
+                if step.get("kind") not in DIAGRAM_EDGE_KINDS:
+                    add_issue(result, "FAIL", data_path, f"{step_location} has an unsupported kind", "요청, 호출, 변환, 저장, 응답, 실패, 이벤트, 설정, 비교 kind 중 하나를 사용합니다.")
+                validate_code_point_ids(step.get("codePointIds"), step_location)
+
+        not_reached = diagram.get("notReached")
+        if not_reached is not None:
+            if not isinstance(not_reached, list) or not not_reached:
+                add_issue(result, "FAIL", data_path, f"{location} notReached must be a non-empty list", "실행되지 않은 경로가 있을 때 label과 reason을 함께 작성합니다.")
+            else:
+                for item in not_reached:
+                    if not isinstance(item, dict) or not all(isinstance(item.get(field), str) and item[field].strip() for field in ("label", "reason")):
+                        add_issue(result, "FAIL", data_path, f"{location} has an incomplete notReached item", "notReached 항목에 label과 reason을 작성합니다.")
 def validate_hub_data(result: RepoResult) -> None:
     repo_root = ROOT / result.path
     data_path = ROOT / result.path / VISUAL_LAB_DIR / "visual-lab-data.js"
@@ -700,6 +890,8 @@ def validate_sequence_data(result: RepoResult, sequence: dict[str, str], data_pa
                 ):
                     add_issue(result, "FAIL", data_path, f"workbench scenario {index} has an invalid fanOut", "실제로 메시지를 받는 대상 label만 배열로 작성합니다.")
 
+        validate_semantic_workbench(result, data_path, workbench, code_points)
+
     repo_root = ROOT / result.path
     validate_data_links(result, repo_root, data_path, parsed.get("relatedDocs", []), "relatedDocs")
     source_docs = parsed.get("sourceDocs", [])
@@ -786,6 +978,7 @@ def validate_repo(result: RepoResult) -> None:
         expected_links={"./styles.css"},
     )
     validate_css_assets(result, lab_dir / "styles.css")
+    validate_icon_sprite(result, lab_dir / "assets" / "system-icons.svg")
     validate_hub_data(result)
 
     for sequence in result.sequences:

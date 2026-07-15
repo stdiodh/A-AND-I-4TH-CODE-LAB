@@ -163,3 +163,34 @@ small evidence text contrast: 12.34:1 on white, 11.60:1 on evidence surface
 ## 9. Remaining Issues
 
 구현과 검증 범위에서 남은 기능 오류는 없다. 현재 manifest에 planned 시퀀스가 없으므로 planned 전용 화면은 검수하지 않았으며, 추후 status가 추가되면 같은 design skill과 validator 계약으로 별도 상태를 구현해야 한다.
+
+## 10. Semantic Diagram Follow-up Result
+
+사용자 검토에서 기존 Signal Trace의 각 상자와 연결선이 무엇을 뜻하는지 불명확하다는 문제가 확인됐다. 후속 구현에서는 공통 workbench를 다음 문법으로 보강했다.
+
+- 책임을 수행하는 주체와 lifecycle을 관찰할 resource만 node로 두고 local SVG icon, kind, role, boundary를 visible text로 표시했다.
+- DTO, Entity, token, HTTP status, command와 event payload는 `동사 · 전달물` edge에 배치했다.
+- 요청, 호출, 변환, 저장, 응답, 실패, event, config, 비교를 edge kind와 text label로 함께 구분했다.
+- diagram 위에 scenario 전체를 한 문장으로 읽는 caption과 읽는 법 legend를 추가했다.
+- failure/blocked 경로에는 실제 마지막 책임과 실행되지 않은 downstream의 이유를 `notReached`로 표시했다.
+- edge 선택을 exact evidence step으로 연결하고 legacy flow 배열 위치 상속을 제거했다.
+- 독립 lane은 `선택 가능` 상태로 두고 현재 lane만 `지남/현재/다음`과 progress를 가진다. 자동 재생은 lane 끝에서 멈추며 lane 경계는 `다음 경로`로 명시한다.
+- 자동 재생 중 사용자가 다른 탐색 대상으로 이동하면 재생을 멈춰 keyboard focus를 빼앗지 않는다.
+- 390px에서는 같은 node → edge → node 문법을 세로 화살표로 바꾸고 label과 payload를 유지한다.
+
+대표 결과 이미지는 다음과 같다.
+
+- [02 Persistence · Desktop](./screenshots/visual-lab-redesign/after/seq-02-semantic-1440x1000.png)
+- [02 Persistence · Mobile](./screenshots/visual-lab-redesign/after/seq-02-semantic-390x844.png)
+- [08 WebSocket · Desktop](./screenshots/visual-lab-redesign/after/seq-08-semantic-1440x1000.png)
+- [12 Event · Desktop](./screenshots/visual-lab-redesign/after/seq-12-semantic-1440x1000.png)
+
+최종 브라우저 회귀는 00~12의 13개 페이지, 50개 scenario를 `1440x1000`, `1024x900`, `768x1024`, `390x844`에서 각각 수행했다. 총 200개 scenario 상태에서 semantic diagram 1개, active edge 1개, accessible edge name, 44px target, clipped text 0, page overflow 0, persistent live region 1개와 console error 0을 확인했다.
+
+추가 상호작용 검수 결과:
+
+- edge 선택 뒤 `aria-current="step"`, lane progress와 evidence가 같은 transition을 가리켰다.
+- lane 끝의 `다음 경로` 이동과 다른 lane의 `선택 가능` 상태를 확인했다.
+- 2x 자동 재생이 현재 lane 끝에서 멈추고 다른 navigation focus를 선택하면 진행하지 않았다.
+- `--force-prefers-reduced-motion`에서 재생과 속도 control이 disabled되고 `모션 감소: 수동` 상태가 표시됐다.
+- local `system-icons.svg` symbol이 desktop과 mobile에서 표시됐고 외부 asset 요청은 없었다.

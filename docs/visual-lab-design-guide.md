@@ -116,6 +116,8 @@ A&I Backend Visual Lab은 일반 문서 페이지가 아니다.
   --surface-evidence: var(--color-correct-bg);
   --surface-warning: var(--color-panel-blue-tint);
   --surface-danger: var(--color-incorrect-bg);
+  --surface-diagram: var(--color-bg-base);
+  --surface-node: var(--color-card-white);
 
   --ink-primary: var(--color-body-navy);
   --ink-secondary: var(--color-subtext);
@@ -132,6 +134,10 @@ A&I Backend Visual Lab은 일반 문서 페이지가 아니다.
   --warning: var(--color-subtext);
   --recovered: var(--color-correct);
   --blocked: var(--color-subtext);
+  --edge-request: var(--color-accent-blue);
+  --edge-response: var(--color-accent-teal);
+  --edge-persist: var(--color-title-navy);
+  --edge-failure: var(--color-incorrect);
 
   --border-strong: var(--color-line-blue-light);
   --border-soft: var(--color-outline-soft);
@@ -250,6 +256,11 @@ body::before {
 - `sequence-hero`: 기존 class 이름은 유지하지만, 화면을 채우는 Hero가 아니라 시퀀스 identity와 현재 질문을 담는 compact header다.
 - `scenario-selector`: 학습자가 바꾸는 실제 입력 또는 상태다.
 - `workbench`: 선택한 경로, 상태 snapshot, 관찰 증거와 판단을 묶는 primary surface다.
+- `semantic-diagram`: actor와 책임 주체, 전달 관계와 경계를 함께 읽는 primary system figure다.
+- `diagram-lane`: request/response, producer/broker/consumer, build/runtime처럼 서로 다른 책임 흐름을 분리한다.
+- `semantic-node`: 실제 책임 주체나 관찰할 resource를 icon, kind, role, boundary와 함께 표시한다.
+- `semantic-edge`: 두 node 사이의 방향, 동사, payload와 관계 kind를 표시하는 단계 control이다.
+- `not-reached`: 선택한 조건에서 실행되지 않은 대상과 이유를 별도 목록으로 설명한다.
 - `evidence-layout`: 현재 단계의 Problem, Concept, Action, Check와 책임·개념을 연결한다.
 - `reference-shelf`: 용어, 범위와 문서 링크를 secondary `details`로 둔다.
 - `verification-list`: 현재 session에서만 유지하는 확인 질문이다.
@@ -268,6 +279,34 @@ radius는 small 8px, medium 14px, large 20px 안에서만 사용한다. hover에
 -> 관찰 증거
 -> 판단
 ```
+
+### 9.1 의미 기반 시스템 다이어그램 문법
+
+완성된 workbench는 이름만 나열한 `route` 선으로 끝내지 않고 actor, 책임, 전달 단위와 경계를 분리한 semantic diagram을 우선 표시한다. `route`는 호환용 진행 상태로 유지할 수 있다.
+책임 주체 catalog는 `workbench.nodes`, 관계는 각 scenario의 `diagram.lanes[].steps`로 관리한다.
+
+```text
+[책임 주체 또는 시스템 resource]
+  -- 동사 · payload · 관계 kind -->
+[다음 책임 주체]
+  책임 경계 · Boundary label
+```
+
+- node는 실제로 책임을 수행하는 actor, service, handler, repository, broker, runtime이나 상태와 생명주기를 관찰할 artifact/resource다.
+- HTTP method, 메서드 호출, 검증 행위와 같은 동작은 독립 node로 만들지 않고 edge의 `verb`와 `payload`로 표현한다.
+- request DTO, token, event, command, artifact가 단순히 이동하는 값이면 edge의 `payload`다. image처럼 생성·실행 상태 자체를 비교하는 대상일 때만 node로 승격한다.
+- edge는 방향과 함께 `verb`, `payload`, `kind`를 항상 표시한다. `kind`는 `request`, `call`, `transform`, `persist`, `response`, `failure`, `event`, `config`, `compare` 중 하나다.
+- node의 `boundary`는 `Controller`, `Persistence`, `Trust`, `Build time`, `Runtime`, `Broker`처럼 판단이나 책임이 실제로 바뀌는 위치를 visible text로 표시한다.
+- 서로 다른 lane을 하나의 실행 시간축으로 합치지 않는다. 현재 lane 안에서만 `지남`, `현재 관찰`, `다음`을 사용하고 다른 lane은 `선택 가능`으로 표시한다.
+- progress는 전체 edge 합계가 아니라 현재 lane 이름과 `현재 단계 / lane 단계 수`를 보여준다. lane 끝의 이동은 `다음 경로`로 명시하고 자동 재생은 현재 lane 끝에서 멈춘다.
+- semantic edge와 evidence는 edge/node의 명시적 `codePointIds`로 연결하며 legacy flow step의 위치를 비례 상속하지 않는다.
+- `lane`은 동시에 존재하지만 성격이 다른 흐름을 분리한다. 주문 응답과 비동기 event 전달, build와 verify, Before와 After를 하나의 직선으로 합치지 않는다.
+- `caption`은 선택한 조건의 전체 경로를 한 문장으로 읽어준다.
+- `notReached`는 opacity로 숨기지 않고 실행되지 않은 대상과 이유를 함께 표시한다.
+
+시스템 icon은 각 토픽 레포의 `docs/visual-lab/assets/system-icons.svg`만 사용한다. 데이터의 `icon: "service"`는 sprite의 `#icon-service`를 가리킨다. icon은 장식이 아니라 node kind를 빠르게 구분하는 보조 수단이며 `aria-hidden="true"`로 두고 label, role, boundary를 visible text로 유지한다. 외부 icon CDN, emoji와 시퀀스별 임의 SVG는 추가하지 않는다.
+
+다이어그램의 `check`와 evidence는 실제 증거보다 넓은 보장을 주장하지 않는다. mock 호출은 외부 시스템 통합 성공, `contextLoads`는 HTTP 계약, in-memory map은 영속 멱등성, 배포 명령 종료는 서비스 정상 응답의 증거가 아니다.
 
 trace의 번호는 실제 route 순서를 뜻한다. 각 node는 `지남`, `현재 관찰`, `다음`, `도달하지 않음` 상태를 text와 함께 표시한다. `stopAfter` 이후 node는 blocked로 표시하고 비활성화한다.
 
@@ -337,7 +376,8 @@ Repository context
 - 980px 이하에서는 header, workbench header와 evidence를 1열로 바꾼다.
 - 720px 이하에서는 learning nav를 가로 이동 가능한 대체 nav로 두고 scenario control과 결과를 세로로 재배치한다.
 - 390px에서 page-level horizontal overflow가 없어야 한다.
-- Signal Trace와 긴 code만 해당 영역 안에서 가로 스크롤을 허용한다.
+- semantic diagram의 node -> edge -> node는 720px 이하에서 세로 방향으로 바꾸고 arrow label과 payload를 그대로 유지한다.
+- legacy Signal Trace와 긴 code만 해당 영역 안에서 제한적인 가로 스크롤을 허용하며 semantic diagram 이해를 가로 스크롤에 의존시키지 않는다.
 - 긴 한국어, 파일 경로, 명령과 상태 label은 잘리거나 겹치지 않아야 한다.
 
 ### 11.2 키보드와 상태
@@ -345,6 +385,8 @@ Repository context
 - 본문 건너뛰기 링크를 제공한다.
 - 모든 button, link, input, summary에 3px `:focus-visible` outline과 3px offset을 유지한다.
 - 주요 control은 가능한 한 44px 이상 touch target을 확보한다.
+- `semantic-edge`가 단계 control이면 native `button`을 사용하고 `from`, `to`, `verb`, `payload`, 현재 상태가 접근 가능한 이름에 포함되어야 한다.
+- icon과 화살표 모양은 보조 표현이며 node label, boundary, edge kind와 state를 text로도 유지한다.
 - scenario 변경과 route/step 이동 뒤 `data-focus-key`로 trigger focus를 복원한다.
 - 진행률은 semantic `progress`, 선택은 `aria-pressed`, 현재 위치는 `aria-current`로 표현한다.
 - 넓고 자주 바뀌는 영역 전체에 `aria-live`를 붙이지 않는다. 선택 결과의 짧은 status만 `polite`로 알린다.
@@ -358,6 +400,7 @@ Repository context
 - 자동 반복: 없음
 - 자동 재생: 학습자가 명시적으로 시작했을 때만 사용
 - `prefers-reduced-motion: reduce`: smooth scroll과 transition을 제거하고 재생·속도 control을 비활성화한 뒤 같은 상태를 즉시 표시
+- reduced motion에서도 active edge, 방향, payload와 `도달하지 않음` 이유를 정적인 상태로 모두 읽을 수 있어야 한다.
 
 ## 12. 금지 사항
 
@@ -377,6 +420,10 @@ Repository context
 - 큰 마케팅 Hero와 동일 카드 grid 중심 구성
 - 주차별 시스템 차이를 지우는 범용 dashboard template
 - 실제 actor, 상태, 경계, 확인 증거와 연결되지 않은 번호·badge·metric
+- 책임 주체와 전달 payload를 구분하지 않은 동일한 node 나열
+- 동사와 payload label이 없는 장식용 연결선 또는 화살표
+- icon만으로 actor, 경계나 상태를 전달하는 표현
+- 단위 테스트, mock, in-memory 상태나 명령 종료를 더 넓은 통합 성공으로 과장하는 evidence
 - hover transform으로 발생하는 layout 이동
 - 여러 컴포넌트에 흩어진 반복 animation
 - 빨강/주황/노랑 중심 팔레트
