@@ -73,6 +73,41 @@ DIAGRAM_EDGE_KINDS = {
     "config",
     "compare",
 }
+STEP_EFFECT_KINDS = {
+    "transfer",
+    "transform",
+    "persist",
+    "gate",
+    "return",
+    "fanout",
+    "verify",
+    "preserve",
+}
+EVIDENCE_SCOPES = {"code", "test", "runtime", "manual", "concept"}
+THEORY_CODE_LANGUAGES = {
+    "bash",
+    "dockerfile",
+    "http",
+    "java",
+    "javascript",
+    "json",
+    "jsonc",
+    "kotlin",
+    "properties",
+    "shell",
+    "sql",
+    "yaml",
+    "yml",
+}
+GENERIC_EFFECT_STATE = re.compile(
+    r"(?:"
+    r"변환 전|변환 완료|확인 전|확인 결과가 명확해짐|반환 결과가 없음|조건 판정 전|조건에서 다음 단계가 중단됨|"
+    r"^호출 전 책임:|^호출 후 책임:|^호출자 상태:|^호출자 보유 값:|"
+    r"^판정 입력:|^판정 결과:.*후속 변경 차단$|^입력 상태:|^출력 상태:|"
+    r"evidence가 아직 관찰되지 않음$|상태가 판정됨$|"
+    r"가 돌아와 다음 경로가 이어짐$|입력 재료가 있음$"
+    r")"
+)
 SYSTEM_ICON_NAMES = {
     "person",
     "client",
@@ -118,6 +153,7 @@ ANSWER_EXPOSURE_FAIL = re.compile(
     re.IGNORECASE,
 )
 DIAGRAM_DATA_NODE_KIND = re.compile(r"\b(payload|dto|http result|comparison path)\b", re.IGNORECASE)
+ENGLISH_META_COPY = re.compile(r'"(?:concept|boundary|label)"\s*:\s*"Verification(?: failure)?"')
 
 
 @dataclass
@@ -321,6 +357,66 @@ def validate_data_links(
             )
 
 
+def validate_theory_reference(
+    result: RepoResult,
+    repo_root: Path,
+    data_path: Path,
+    href: Any,
+    location: str,
+) -> None:
+    if not isinstance(href, str) or not href.strip():
+        add_issue(result, "FAIL", data_path, f"{location} has no theoryRef", "관련 theory 절의 상대 경로와 안정적인 anchor를 연결합니다.")
+        return
+
+    parsed = urlsplit(href.strip())
+    if parsed.scheme or parsed.netloc or href.startswith("/") or not parsed.path or not parsed.fragment:
+        add_issue(result, "FAIL", data_path, f"{location} theoryRef must be a local path with an anchor", "../../../theory.md#seq-NN-topic 형태로 작성합니다.")
+        return
+
+    target = (data_path.parent / unquote(parsed.path)).resolve()
+    try:
+        target.relative_to(repo_root.resolve())
+    except ValueError:
+        add_issue(result, "FAIL", data_path, f"{location} theoryRef escapes the repository", "현재 토픽 레포의 theory.md 절만 연결합니다.")
+        return
+
+    if not target.exists():
+        add_issue(result, "FAIL", data_path, f"{location} theoryRef target is missing: {href}", "상대 경로를 실제 theory.md 위치와 맞춥니다.")
+        return
+
+    content = target.read_text(encoding="utf-8")
+    fragment = re.escape(unquote(parsed.fragment))
+    anchor_match = re.search(rf"\bid\s*=\s*['\"]{fragment}['\"]", content)
+    if not anchor_match:
+        add_issue(result, "FAIL", data_path, f"{location} theoryRef anchor is missing: #{parsed.fragment}", "theory.md에 같은 id의 명시적 anchor를 둡니다.")
+
+    sequence_match = re.fullmatch(r"seq-(\d{2})", unquote(parsed.fragment))
+    if sequence_match and anchor_match:
+        sequence_id = sequence_match.group(1)
+        next_anchor = re.search(r"<a\s+id=['\"]seq-\d{2}['\"]", content[anchor_match.end() :])
+        section_end = anchor_match.end() + next_anchor.start() if next_anchor else len(content)
+        section = content[anchor_match.end() : section_end]
+
+        if not re.search(r"```mermaid\s*\n\s*sequenceDiagram\b", section):
+            add_issue(result, "FAIL", data_path, f"{location} theory section has no Mermaid sequenceDiagram", f"theory.md의 seq-{sequence_id} 절에 실제 주 경로 sequenceDiagram을 둡니다.")
+
+        if not re.search(r"\|\s*단계\s*\|\s*들어온 것\s*\|\s*한 일\s*\|\s*나간 것 또는 상태\s*\|", section):
+            add_issue(result, "FAIL", data_path, f"{location} theory section has no four-column state table", f"theory.md의 seq-{sequence_id} 절에 단계·입력·행동·출력 상태 표를 둡니다.")
+
+        code_blocks = re.findall(r"```([\w-]+)\s*\n(.*?)```", section, flags=re.DOTALL)
+        has_short_code = any(
+            language.lower() in THEORY_CODE_LANGUAGES
+            and 3 <= len([line for line in block.splitlines() if line.strip()]) <= 12
+            for language, block in code_blocks
+        )
+        if not has_short_code:
+            add_issue(result, "FAIL", data_path, f"{location} theory section has no 3-12 line code block", f"theory.md의 seq-{sequence_id} 절에 학생 설명 뒤 실제 핵심 코드 3~12줄을 둡니다.")
+
+        backlink = rf"\]\(\./visual-lab/sequences/{sequence_id}/(?:index\.html)?\)"
+        if not re.search(backlink, content):
+            add_issue(result, "FAIL", data_path, f"{location} theory section has no Visual Lab backlink", f"theory.md의 seq-{sequence_id} 절에서 ./visual-lab/sequences/{sequence_id}/ 로 돌아가는 링크를 제공합니다.")
+
+
 def canonical_branch_refs(repo: Path, sequence: dict[str, str]) -> dict[str, str]:
     refs: dict[str, str] = {}
     for field_name in BRANCH_FIELDS:
@@ -354,6 +450,16 @@ def validate_code_point_files(
         return
 
     for index, point in enumerate(code_points):
+        snippet = None
+        if isinstance(point, dict):
+            snippet = point.get("snippet") or point.get("example")
+        if not isinstance(snippet, str) or not snippet.strip():
+            add_issue(result, "FAIL", data_path, f"codePoints[{index}] has no snippet", "파일 tag 대신 설명 바로 아래에 실제 핵심 코드 3-12줄을 제공합니다.")
+        else:
+            line_count = len(snippet.strip("\n").splitlines())
+            if not 3 <= line_count <= 12:
+                add_issue(result, "FAIL", data_path, f"codePoints[{index}] snippet has {line_count} lines", "학생이 현재 판단에 필요한 실제 핵심 코드만 3-12줄로 줄입니다.")
+
         file_value = point.get("file") if isinstance(point, dict) else None
         if not isinstance(file_value, str) or not file_value.strip():
             add_issue(
@@ -777,10 +883,25 @@ def validate_semantic_workbench(
         if not isinstance(diagram.get("caption"), str) or not diagram["caption"].strip():
             add_issue(result, "FAIL", data_path, f"{location} has no caption", "학습자가 흐름을 한 문장으로 읽을 수 있는 caption을 작성합니다.")
 
+        participants = diagram.get("participants")
+        if participants is not None:
+            if (
+                not isinstance(participants, list)
+                or not participants
+                or any(not isinstance(item, str) or item not in nodes for item in participants)
+                or len(participants) != len(set(participants))
+            ):
+                add_issue(result, "FAIL", data_path, f"{location} has invalid participants", "표시 순서가 필요할 때 중복 없이 workbench.nodes key만 나열합니다.")
+
         lanes = diagram.get("lanes")
         if not isinstance(lanes, list) or not lanes:
             add_issue(result, "FAIL", data_path, f"{location} has no lanes", "정상, 실패, 비교처럼 의미가 다른 경로를 lane으로 나눕니다.")
             continue
+        declared_lane_ids = {
+            lane.get("id")
+            for lane in lanes
+            if isinstance(lane, dict) and isinstance(lane.get("id"), str) and lane["id"].strip()
+        }
         lane_ids: set[str] = set()
         for lane_index, lane in enumerate(lanes):
             lane_location = f"{location} lane {lane_index}"
@@ -795,6 +916,14 @@ def validate_semantic_workbench(
             for field_name in ("label", "description"):
                 if not isinstance(lane.get(field_name), str) or not lane[field_name].strip():
                     add_issue(result, "FAIL", data_path, f"{lane_location} has no {field_name}", "lane의 책임과 관찰 목적을 설명합니다.")
+
+            next_lane_ids = lane.get("nextLaneIds")
+            if next_lane_ids is not None and (
+                not isinstance(next_lane_ids, list)
+                or any(not isinstance(item, str) or item not in declared_lane_ids for item in next_lane_ids)
+                or len(next_lane_ids) != len(set(next_lane_ids))
+            ):
+                add_issue(result, "FAIL", data_path, f"{lane_location} has invalid nextLaneIds", "다음에 비교할 수 있는 현재 diagram의 lane id만 중복 없이 작성합니다.")
 
             steps = lane.get("steps")
             if not isinstance(steps, list) or not (2 <= len(steps) <= 7):
@@ -813,6 +942,24 @@ def validate_semantic_workbench(
                         add_issue(result, "FAIL", data_path, f"{step_location} has no {field_name}", "화살표에 동작 동사와 이동 데이터를 함께 작성합니다.")
                 if step.get("kind") not in DIAGRAM_EDGE_KINDS:
                     add_issue(result, "FAIL", data_path, f"{step_location} has an unsupported kind", "요청, 호출, 변환, 저장, 응답, 실패, 이벤트, 설정, 비교 kind 중 하나를 사용합니다.")
+                effect = step.get("effect")
+                if not isinstance(effect, dict):
+                    add_issue(result, "FAIL", data_path, f"{step_location} has no effect", "학생이 단계 전후를 비교하도록 kind, subject, before, after를 작성합니다.")
+                else:
+                    if effect.get("kind") not in STEP_EFFECT_KINDS:
+                        add_issue(result, "FAIL", data_path, f"{step_location} effect has an unsupported kind", "전달, 변환, 저장, 분기, 반환, 확산, 검증, 보존 중 하나를 사용합니다.")
+                    for field_name in ("subject", "before", "after"):
+                        if not isinstance(effect.get(field_name), str) or not effect[field_name].strip():
+                            add_issue(result, "FAIL", data_path, f"{step_location} effect has no {field_name}", "바뀌는 대상과 단계 전후 상태를 짧고 구체적으로 씁니다.")
+                    before = effect.get("before")
+                    after = effect.get("after")
+                    if isinstance(before, str) and isinstance(after, str):
+                        if before.strip() == after.strip():
+                            add_issue(result, "FAIL", data_path, f"{step_location} effect before and after are identical", "책임 이동이면 위치를, 변환·저장·검증이면 실제 상태 차이를 적습니다.")
+                        if GENERIC_EFFECT_STATE.search(before.strip()) or GENERIC_EFFECT_STATE.search(after.strip()):
+                            add_issue(result, "FAIL", data_path, f"{step_location} uses a generic effect state", "'호출 전/후' 같은 틀 문장 대신 실제 값, 저장 여부, 인증 주체, 연결 대상 또는 검증 결과를 씁니다.")
+                if step.get("evidenceScope") not in EVIDENCE_SCOPES:
+                    add_issue(result, "FAIL", data_path, f"{step_location} has an invalid evidenceScope", "code, test, runtime, manual, concept 중 실제 확인 범위를 하나 고릅니다.")
                 validate_code_point_ids(step.get("codePointIds"), step_location)
 
         not_reached = diagram.get("notReached")
@@ -872,6 +1019,7 @@ def validate_hub_data(result: RepoResult) -> None:
 
 
 def validate_sequence_data(result: RepoResult, sequence: dict[str, str], data_path: Path) -> None:
+    repo_root = ROOT / result.path
     if not data_path.exists():
         add_issue(
             result,
@@ -890,6 +1038,15 @@ def validate_sequence_data(result: RepoResult, sequence: dict[str, str], data_pa
             data_path,
             "window.visualLabData assignment is missing",
             "시퀀스 상세 데이터는 window.visualLabData = { ... } 형태로 작성합니다.",
+        )
+
+    if ENGLISH_META_COPY.search(content):
+        add_issue(
+            result,
+            "FAIL",
+            data_path,
+            "generic English Verification label remains in learner-facing data",
+            "검증 대상이나 실패 경계를 주제에 맞는 짧은 한국어로 적습니다.",
         )
 
     for field_name in SEQUENCE_DATA_FIELDS:
@@ -1015,9 +1172,22 @@ def validate_sequence_data(result: RepoResult, sequence: dict[str, str], data_pa
                     add_issue(result, "FAIL", data_path, f"workbench scenario {index} has an invalid or duplicate id", "시나리오 id를 고유한 문자열로 작성합니다.")
                 else:
                     scenario_ids.add(scenario_id)
-                for field_name in ("label", "prompt", "evidence", "outcome"):
+                for field_name in ("label", "prompt", "observationTitle", "evidence", "outcome"):
                     if not isinstance(scenario_item.get(field_name), str) or not scenario_item[field_name].strip():
-                        add_issue(result, "FAIL", data_path, f"workbench scenario {index} has no {field_name}", "label, prompt, evidence, outcome을 실제 학습 내용으로 작성합니다.")
+                        add_issue(result, "FAIL", data_path, f"workbench scenario {index} has no {field_name}", "입력 조건, 관찰 질문, 증거와 판단을 실제 학습 내용으로 작성합니다.")
+                reflection = scenario_item.get("reflection")
+                if not isinstance(reflection, dict) or not all(
+                    isinstance(reflection.get(field), str) and reflection[field].strip()
+                    for field in ("prompt", "hint")
+                ):
+                    add_issue(result, "FAIL", data_path, f"workbench scenario {index} has no reflection", "관찰 뒤 인과 규칙을 자기 말로 정리할 prompt와 짧은 hint를 작성합니다.")
+                validate_theory_reference(
+                    result,
+                    repo_root,
+                    data_path,
+                    scenario_item.get("theoryRef"),
+                    f"workbench scenario {index}",
+                )
                 prediction = scenario_item.get("prediction")
                 if not isinstance(prediction, dict):
                     add_issue(result, "FAIL", data_path, f"workbench scenario {index} has no prediction", "관찰 결과를 열기 전에 답할 prompt, options, answer, explanation을 작성합니다.")
@@ -1071,7 +1241,6 @@ def validate_sequence_data(result: RepoResult, sequence: dict[str, str], data_pa
 
         validate_semantic_workbench(result, data_path, workbench, code_points)
 
-    repo_root = ROOT / result.path
     validate_data_links(result, repo_root, data_path, parsed.get("relatedDocs", []), "relatedDocs")
     source_docs = parsed.get("sourceDocs", [])
     validate_data_links(result, repo_root, data_path, source_docs, "sourceDocs")

@@ -142,3 +142,36 @@ Semantic diagram 적용 뒤 저장된 desktop/mobile 화면을 학생의 첫 진
 추가 asset audit에서 `system-icons.svg`는 HTTP 200, `image/svg+xml`, 유효 XML과 30개 symbol을 가진 정상 파일이었다. 그러나 symbol만 포함하므로 파일을 직접 열면 빈 화면처럼 보이며, 외부 `<use>`는 `file://`에서 안정적이지 않다. 따라서 기술적으로 로드 가능한 것과 학생이 실제로 보았는지를 분리해 검사해야 한다.
 
 새 완료 기준은 broken request 0뿐 아니라 `img.complete`, `naturalWidth > 0`, 화면 안의 최소 표시 크기, 390px과 desktop 가시성, 200% zoom과 text fallback까지 포함한다.
+
+## 10. Lifeline과 이론 연결 재검수
+
+actor-once topology와 transition 카드 적용 뒤 13개 시퀀스, 50개 scenario를 다시 읽었다. 책임 이름은 정확해졌지만 학생은 actor 목록과 transition grid를 머릿속에서 다시 이어야 했다.
+
+| 항목 | 현재 문제 | 이번 변경 기준 |
+|---|---|---|
+| 시간 순서 | transition grid가 viewport에 따라 줄바꿈돼 실행 시간이 좌우·상하로 섞임 | participant header 아래 수직 lifeline과 위→아래 message |
+| 현재 변화 | from/to와 payload는 보이지만 단계 전후 상태가 흩어짐 | 현재 message에 subject, before, after를 함께 표시 |
+| message 종류 | self-call, 응답, event, failure의 선 문법이 약함 | loop, 역방향, 점선, 중단 표식과 visible label 병행 |
+| 모바일 | actor 카드 목록이 첫 transition보다 먼저 길게 쌓임 | 현재 `출발 책임 → 도착 책임` 한 단계가 먼저 보이는 압축 lifeline |
+| 코드 근거 | 파일 경로 badge가 코드가 맡은 일보다 먼저 보임 | 짧은 설명/주석 → 실제 핵심 코드 → 바뀌는 상태 |
+| 이론 왕복 | Visual Lab은 theory 문서 루트만 가리키고 theory에는 돌아오는 링크가 없음 | `seq-00`~`seq-12` 명시 anchor와 양방향 link |
+| 관찰 후 정리 | 대부분 prediction 뒤 결과를 읽고 끝남 | 모든 scenario에서 인과 규칙을 자기 말로 쓰는 reflection |
+| 문구 | 영문 meta label과 quiz형 칭찬이 학습 내용과 경쟁 | 주제별 질문과 행동을 말하는 자연스러운 한국어 |
+
+유지할 요소는 실제 local SVG asset, scenario prediction gate, 수동 이전/다음, native progress, code point 계약과 기술 콘텐츠다. 변경의 중심은 새 카드를 추가하는 일이 아니라 같은 실제 데이터를 시간 순서, 상태 변화와 확인 근거로 다시 연결하는 것이다.
+
+## 11. Theory와 브랜치 근거 재검수
+
+화면 문법을 고친 뒤 guide, implementation, answer branch의 실제 파일을 `git show`로 다시 대조했다. 흐름의 모양이 맞아도 다른 주차 코드나 완성 뒤 코드가 섞이면 학생에게는 틀린 증거가 되므로 다음 항목을 별도 수정 대상으로 잡았다.
+
+| 범위 | 발견한 문제 | 반영 기준 |
+|---|---|---|
+| 01~02 | starter TODO와 뒤 주차의 인증 포함 create 코드가 현재 코드처럼 보임 | starter와 완성 뒤 모양을 구분하고 02는 `request.author` 범위로 복원 |
+| 03~04 | GET path binding을 Bean Validation으로 묶고 JWT 검증·subject 추출을 한 호출로 합침 | DTO 검증과 path binding, `validateToken`과 `getEmail`을 실제 단계로 분리 |
+| 05~06 | TODO인 OAuth·SMTP 구현과 answer/main의 서로 다른 테스트를 현재 증거처럼 혼합 | 구현된 helper, 구현 목표, 단위 테스트가 보장하는 범위를 따로 표시 |
+| 09 | `.dockerignore`가 jar를 build context에서 제외하고 기본 Compose는 app을 실행하지 않음 | 현재 COPY blocker와 prod Compose 선행 조건을 성공 경로와 분리 |
+| 10 | 분리 job·script는 완성 목표이고 중첩 heredoc 때문에 현재 remote deploy가 중단됨 | answer-only 구조와 현재 최초 실패 gate를 명시하고 verify 성공을 단정하지 않음 |
+| 11 | answer에는 구조 정리뿐 아니라 trim, 예외, save·validation 변화가 함께 있음 | 유지된 test subset과 의도적 동작 변경을 별도 lane으로 표시 |
+| 12 | publish 호출, HTTP 응답과 consumer 완료 순서를 직선으로 확정하고 mock을 broker 성공으로 확대 | 호출 순서와 비동기 fork를 분리하고 publisher confirm 없는 broker 상태는 unknown으로 표시 |
+
+이 재검수 뒤에는 `호출 전/후 책임`, `반환 대기/보유`, `판정 입력/결과`처럼 어느 단계에도 붙일 수 있는 effect 문장도 실제 값과 상태로 교체한다. 중앙 validator는 같은 문구, theory의 sequenceDiagram·상태표·코드 block 누락, 영어 meta label을 실패로 처리한다.

@@ -129,7 +129,7 @@ window.visualLabData = {
       title: "Controller 요청 진입",
       file: "src/main/kotlin/.../PostController.kt",
       language: "kotlin",
-      snippet: "핵심 5-20줄만 넣는다.",
+      snippet: "실제 핵심 코드 3-12줄만 넣는다.",
       explanation: "요청 입구만 설명한다.",
       check: "요청 경로와 메서드가 맞는지 확인한다."
     }
@@ -161,7 +161,7 @@ window.visualLabData = {
 
 ## 3.1 Workbench 데이터 규칙
 
-모든 구현 완료 시퀀스는 top-level `workbench`를 가진다. 공통 renderer는 `workbench`를 조건 선택, `Learning Signal Trace`, 상태 snapshot, 관찰 증거와 판단으로 렌더링한다. 아래 축약 예시는 호환용 route와 snapshot을 설명하며 완성된 workbench는 3.1.1의 `nodes`와 `diagram`도 함께 제공한다.
+모든 구현 완료 시퀀스는 top-level `workbench`를 가진다. 공통 renderer는 `workbench`를 입력 조건 선택, 경로 예측, 단계별 책임 이동, 상태 변화, 관찰 근거와 회고 순서로 렌더링한다. 아래 축약 예시는 호환용 route와 snapshot을 설명하며 완성된 workbench는 3.1.1의 `nodes`와 `diagram`도 함께 제공한다.
 
 ```js
 workbench: {
@@ -180,6 +180,12 @@ workbench: {
       flowId: "lookup-flow",
       tone: "signal",
       prompt: "결과를 열기 전에 DB 조회와 Redis 저장이 일어날지 예측합니다.",
+      observationTitle: "비어 있는 key를 조회하면 어느 저장소를 먼저 읽을까?",
+      theoryRef: "../../../theory.md#seq-07",
+      reflection: {
+        prompt: "MISS 뒤에 원본을 읽고 cache를 채우는 이유를 한 문장으로 써 보세요.",
+        hint: "원본 저장소와 파생 복사본의 수명을 구분합니다."
+      },
       route: ["Client", "PostQueryService", "Redis miss", "Repository", "DB"],
       snapshot: [
         { label: "Cache lookup", value: "miss", tone: "warning" },
@@ -214,7 +220,10 @@ workbench: {
 | `flowId` | 필수 | 같은 객체의 `flows[].id` 중 하나를 참조한다. |
 | `tone` | 필수 | `signal`, `blocked`, `warning`, `recovered` 중 하나다. |
 | `prompt` | 필수 | 현재 조건에서 관찰할 질문 또는 상황이다. |
+| `observationTitle` | 필수 | 예측 뒤 실제 경로에서 확인할 한 가지 질문을 자연스러운 한국어로 쓴다. |
 | `prediction` | 필수 | `{ prompt, options, answer, explanation }`으로 관찰 전 판단과 관찰 뒤 설명을 연결한다. |
+| `theoryRef` | 필수 | `../../../theory.md#seq-NN`처럼 현재 조건을 설명하는 이론 절을 명시적 anchor까지 연결한다. |
+| `reflection` | 필수 | `{ prompt, hint }`로 관찰한 인과 규칙을 학습자가 자기 말로 다시 쓰게 한다. 입력 내용은 현재 화면 상태에만 두고 전송하지 않는다. |
 | `route` | 필수 | 실제 actor, destination, 저장소 또는 책임 경계를 순서대로 쓴 문자열 배열이다. |
 | `snapshot` | 필수 | `{ label, value, tone? }` 항목을 2개 이상 둔 배열이다. `tone`은 scenario와 같은 네 값을 사용한다. |
 | `evidence` | 필수 | 로그, 응답, 테스트, 상태 또는 화면에서 확인할 실제 증거다. |
@@ -231,6 +240,9 @@ workbench: {
 - `fanOut`에는 연결만 된 대상이 아니라 실제로 해당 topic을 구독해 메시지를 받는 대상만 쓴다.
 - scenario를 바꾸면 `flowId`에 연결된 `flows[].steps`가 Problem, Concept, Action, Check evidence를 제공해야 한다.
 - 공통 renderer는 과거 데이터의 `flows`에서 fallback trace를 만들 수 있지만, 완료된 시퀀스는 fallback을 최종 상태로 사용하지 않는다.
+- `theoryRef`가 가리키는 절에는 같은 id의 명시적 HTML anchor를 둔다. 자동 생성 heading anchor에만 의존하지 않는다.
+- 해당 theory 절 끝에는 `[Visual Lab에서 입력 조건을 보고 경로 예측하기](./visual-lab/sequences/NN/)` 링크를 두어 왕복할 수 있게 한다.
+- `reflection.prompt`는 정답 문장을 요구하지 않는다. “어느 경계에서 무엇이 바뀌었는가”처럼 실제로 관찰한 관계를 다시 쓰게 한다.
 
 ### 3.1.1 Semantic diagram 데이터 계약
 
@@ -286,6 +298,12 @@ workbench: {
       flowId: "validation-flow",
       tone: "blocked",
       prompt: "잘못된 title이 Service 전에 멈추는지 확인합니다.",
+      observationTitle: "잘못된 요청은 어느 책임에서 멈출까?",
+      theoryRef: "../../../theory.md#seq-03",
+      reflection: {
+        prompt: "왜 Service가 호출되지 않았는지 경계 이름을 넣어 써 보세요.",
+        hint: "argument binding 뒤 Controller method 앞을 봅니다."
+      },
       route: ["Client", "Spring MVC · Bean Validation", "GlobalExceptionHandler", "Client"],
       diagram: {
         caption: "PostCreateRequest가 validation gate에서 거부되어 Service는 호출되지 않습니다.",
@@ -300,7 +318,14 @@ workbench: {
                 to: "validation",
                 verb: "요청 · 바인딩",
                 payload: "POST /posts · JSON → PostCreateRequest",
-                kind: "request"
+                kind: "request",
+                effect: {
+                  kind: "transform",
+                  subject: "요청 본문",
+                  before: "JSON 문자열",
+                  after: "PostCreateRequest 객체"
+                },
+                evidenceScope: "runtime"
               },
               {
                 from: "validation",
@@ -308,6 +333,13 @@ workbench: {
                 verb: "검증 실패",
                 payload: "MethodArgumentNotValidException",
                 kind: "failure",
+                effect: {
+                  kind: "gate",
+                  subject: "요청 실행 경로",
+                  before: "Controller 진입 대기",
+                  after: "validation gate에서 중단"
+                },
+                evidenceScope: "runtime",
                 concept: "Service 이전 validation gate",
                 codePointIds: ["controller-create"]
               },
@@ -317,6 +349,13 @@ workbench: {
                 verb: "오류 응답",
                 payload: "400 ErrorResponse · field errors",
                 kind: "response",
+                effect: {
+                  kind: "return",
+                  subject: "HTTP 응답",
+                  before: "검증 예외",
+                  after: "400 ErrorResponse"
+                },
+                evidenceScope: "runtime",
                 check: "실제 error response의 field와 message를 확인합니다."
               }
             ]
@@ -359,16 +398,33 @@ workbench: {
 - `lanes`는 request/response와 event, build와 verify, Before와 After처럼 책임이 다른 흐름을 분리한다.
 - 각 lane은 고유 `id`, 짧은 `label`, 읽는 목적을 설명하는 `description`, 2~7개의 `steps`를 가진다.
 - 각 step의 `from`과 `to`는 `workbench.nodes` key를 참조하고 `verb`, `payload`, `kind`를 반드시 가진다.
+- 각 step은 `effect: { kind, subject, before, after }`를 가진다. `kind`는 `transfer`, `transform`, `persist`, `gate`, `return`, `fanout`, `verify`, `preserve` 중 하나이며 화살표 전후의 차이를 비교할 수 있게 쓴다.
+- `payload 변환 전 → payload 변환 완료`, `호출 전 책임 → 호출 후 책임`, `반환 대기 → 호출자 보유`, `evidence가 아직 관찰되지 않음 → 상태가 판정됨`처럼 어느 주제에도 붙일 수 있는 틀 문장은 쓰지 않는다. 실제 key/value, collection 또는 row의 존재, 인증 주체, 연결·구독 대상, 최초 실패 gate, assertion 결과가 어떻게 달라졌는지 적는다.
+- 각 step은 `evidenceScope`를 가진다. 값은 `code`, `test`, `runtime`, `manual`, `concept` 중 실제 확인 범위 하나다.
 - edge `kind`는 `request`, `call`, `transform`, `persist`, `response`, `failure`, `event`, `config`, `compare` 중 하나다.
 - `concept`, `check`, `codePointIds`는 해당 edge에서 실제 근거가 있을 때만 추가한다.
 - `notReached`는 실행되지 않은 node 또는 책임 label과 그 이유를 함께 제공한다. 단순 opacity나 빈 node로 대신하지 않는다.
 - `route`, `snapshot`, `evidence`, `outcome`, `flowId`는 기존 진행 상태와 evidence 연결을 위해 함께 유지한다.
 - lane은 독립 비교 경로일 수 있으므로 전체 `lanes[].steps`를 하나의 시간축으로 해석하지 않는다. 현재 lane만 단계 진행 상태를 가지며 다른 lane은 선택 가능한 경로다.
+- actor 표시 순서를 고정해야 할 때 `diagram.participants`에 `workbench.nodes` key를 중복 없이 쓴다. 생략하면 현재 lane의 첫 등장 순서를 사용한다.
+- 한 lane을 본 뒤 비교할 경로가 정해져 있을 때만 `lane.nextLaneIds`에 같은 diagram의 lane id를 쓴다.
 - progress는 현재 lane 범위만 사용한다. 학생이 수동으로 lane을 넘을 때는 `다음 경로`라고 표시한다.
 - semantic edge의 code evidence는 edge의 `codePointIds`, 도착 node, 출발 node 순서의 명시적 연결만 사용한다. legacy flow step의 배열 위치를 상속하지 않는다.
 - 모바일 세로 흐름에서도 `verb`, `payload`, `kind`, boundary와 state label을 생략하지 않는다.
 - edge가 단계 선택 control이면 keyboard focus와 접근 가능한 이름에 `from`, `to`, `verb`, `payload`, state가 모두 포함되어야 한다.
 - reduced motion은 전달 애니메이션만 제거하며 caption, 방향, payload와 notReached 이유는 정적으로 유지한다.
+
+코드 근거는 파일 경로 badge를 먼저 보여주지 않는다. 화면과 이론 문서 모두 다음 순서를 따른다.
+
+```text
+이 단계에서 확인할 한 문장
+→ 실제 핵심 코드 3~12줄
+→ 이 코드가 바꾸는 상태 또는 다음 책임 한 문장
+```
+
+- 첫 문장은 학생에게 필요한 맥락이며, 코드 안에 넣을 때는 해당 언어의 올바른 주석 문법을 사용한다.
+- 코드 조각은 현재 저장소의 실제 코드를 사용한다. 긴 완성 답안이나 임시 코드는 넣지 않는다.
+- 전체 코드 위치가 꼭 필요하면 주 근거 아래의 접힌 참고 영역에서 한 번만 연결한다.
 
 13개 시퀀스의 kind 매핑:
 
@@ -385,7 +441,7 @@ workbench: {
 | 08 | `realtime` | Connection & Broadcast Console |
 | 09 | `runtime` | Runtime Boundary |
 | 10 | `pipeline` | Pipeline Gate |
-| 11 | `refactor` | Behavior Invariant Map |
+| 11 | `refactor` | Behavior Change Ledger: 유지된 계약과 의도적 변경을 별도 lane으로 비교 |
 | 12 | `event` | Event Delivery Trace |
 
 ## 3.2 핵심 흐름 데이터 규칙
@@ -406,7 +462,7 @@ Flow는 정답 비교가 아니라 학생이 따라갈 문제 해결 순서다.
 ```
 
 - 한 단계에는 긴 이론이나 정답 코드 전체를 넣지 않는다.
-- Learning Signal Trace 기본 동작은 route/단계 선택, 이전/다음, 진행률 표시다.
+- Diagnostic Lifeline 기본 동작은 lane/message 선택, 이전/다음, 현재 단계와 상태 변화 표시다.
 - 버튼은 기본 focus 흐름을 유지하고 키보드 접근성을 해치지 않는다.
 단, 00 시퀀스는 HTTP, JSON, Postman, Git, DB 기초 수준을 넘지 않는다.
 
@@ -418,6 +474,7 @@ Flow는 정답 비교가 아니라 학생이 따라갈 문제 해결 순서다.
 |---|---|---|
 | Service 단위 테스트의 반환값과 예외 | 해당 Service 단위 동작 | HTTP path, status, response body 계약 전체 |
 | mock 또는 spy의 메서드 호출 | 발행자나 adapter가 호출됨 | 외부 API, mail server, RabbitMQ가 실제 수신·처리함 |
+| publisher confirm 없는 `convertAndSend` 반환·예외 | publisher 호출의 반환 또는 중단 | broker acceptance·routing 성공이나 확정적인 미전송 |
 | `contextLoads` | Spring context가 로드됨 | endpoint 요청·응답과 전체 기능이 정상임 |
 | `ConcurrentHashMap.putIfAbsent` | 현재 process 안의 중복 기록 방지 | 재시작·다중 instance에서도 유지되는 영속 멱등성 |
 | build/deploy 명령 종료 | 해당 명령 또는 job이 끝남 | container process, application log, HTTP 응답까지 정상임 |
@@ -1022,8 +1079,8 @@ findAll()
 영문 제목
 현재 학습 질문과 goal
 관찰 조건 selector
-Learning Signal Trace
-현재 route 상태와 snapshot
+participant header와 수직 lifeline
+현재 message와 before → after
 관찰 증거와 판단
 현재 단계의 Problem, Concept, Action, Check
 연결된 코드 포인트와 책임 경계

@@ -119,8 +119,8 @@ docs/visual-lab/sequences/NN/visual-lab-data.js
 - 선택 신호는 `#2955E4`, 관찰 증거는 `#3F8996`을 semantic token으로 사용한다.
 - Display, Body, Utility/Data typography 역할을 system font 안에서 분리한다.
 - 외부 font import를 추가하지 않는다.
-- `Learning Signal Trace` 하나만 signature element로 사용한다.
-- 완성된 workbench는 책임 주체 node와 전달 edge를 분리한 semantic diagram을 primary로 사용하고 legacy route는 fallback으로 유지한다.
+- `Diagnostic Lifeline` 하나만 signature element로 사용한다.
+- 완성된 workbench는 participant header, 수직 lifeline과 위→아래 message를 primary로 사용하고 legacy route는 fallback으로 유지한다.
 - node에는 icon, kind, role과 visible boundary label을 표시하고 edge에는 방향, verb, payload와 관계 kind를 표시한다.
 - node icon은 직접 렌더링 가능한 로컬 `docs/visual-lab/assets/icons/{icon}.svg`를 사용한다. `system-icons.svg`는 원본 sprite와 호환 자료로 보존한다.
 - 각 시퀀스는 `workbench.visual`의 `src`, `alt`, `caption`으로 주제 설명 SVG 한 개를 연결하고 `assets/SOURCE.md`, `assets/LICENSES.md`를 유지한다.
@@ -144,7 +144,7 @@ docs/visual-lab/sequences/NN/visual-lab-data.js
 08 Connection Console
 09 Runtime Boundary
 10 Pipeline Gate
-11 Behavior Invariant Map
+11 Behavior Change Ledger
 12 Event Delivery Trace
 ```
 
@@ -165,10 +165,18 @@ docs/visual-lab/sequences/NN/visual-lab-data.js
 
 semantic diagram에서 actor, service, handler, repository, broker, runtime과 상태를 관찰할 resource는 node다. HTTP method, 메서드 호출과 검증 행위는 edge `verb`, request DTO, token, event, query, command와 이동 파일은 edge `payload`로 둔다. artifact는 생성·실행 상태 자체를 비교할 때만 node로 둔다.
 
+각 edge는 `effect: { kind, subject, before, after }`와 `evidenceScope`를 가진다. 현재 단계는 출발·도착·payload뿐 아니라 무엇이 어떤 상태에서 무엇으로 바뀌었는지를 한 시야에 보여준다. self-call은 같은 lifeline의 loop, response는 역방향, event는 점선, failure는 중단과 미도달 이유로 구분한다.
+
+`호출 전/후 책임`, `반환 대기/보유`, `판정 입력/결과`, `evidence가 아직 관찰되지 않음`처럼 payload만 바꿔 끼울 수 있는 문장은 effect로 인정하지 않는다. 실제 값, row·collection, 인증 주체, 연결·구독, artifact, 최초 실패 gate 또는 assertion 결과를 쓴다.
+
+코드 근거는 파일 경로 tag로 시작하지 않는다. 학생이 확인할 한 문장 또는 올바른 코드 주석, 실제 핵심 코드 3~12줄, 바뀌는 상태 한 문장 순서로 쓴다. 전체 파일 위치는 꼭 필요할 때만 접힌 참고 영역에 둔다.
+표시할 코드는 해당 시퀀스의 guide·implementation·answer branch 실제 파일과 대조한다. starter가 TODO이거나 완성 뒤에만 존재하는 코드는 현재 코드처럼 단정하지 않고 구현 목표 또는 완성 뒤 확인할 모양으로 범위를 밝힌다.
+
 `check`, `evidence`, `outcome`은 실제 관찰 범위를 넘지 않는다.
 
 - Service 단위 테스트를 HTTP path/status/body 계약으로 표현하지 않는다.
 - mock 발행 호출을 외부 API, mail server나 RabbitMQ의 실제 수신 성공으로 표현하지 않는다.
+- publisher confirm/return이 없으면 `convertAndSend` 정상 반환을 broker acceptance·routing 성공으로, 모호한 전송 예외를 확정적인 미전송으로 표현하지 않는다.
 - `contextLoads`를 endpoint 정상 동작 증거로 사용하지 않는다.
 - in-memory map을 재시작 이후에도 유지되는 영속 멱등성으로 표현하지 않는다.
 - build/deploy 명령 종료를 container 상태, application log, HTTP 응답까지 정상이라는 증거로 사용하지 않는다.
@@ -199,13 +207,13 @@ UI copy는 학습자가 선택하고 확인할 대상을 먼저 말하며 기술
 - 상세 화면은 question header와 5단계 learning nav를 제공한다.
 - scenario selector는 `fieldset`, `legend`, button과 `aria-pressed`를 사용한다.
 - 선택 scenario는 실제 `flowId`와 연결되고 flow의 첫 단계로 초기화된다.
-- topic workbench는 signal trace, state snapshot, 관찰 증거, 판단을 함께 갱신한다.
+- topic workbench는 lifeline sequence, 현재 before/after, 관찰 증거, 판단을 함께 갱신한다.
 - `scenario.diagram`의 caption, lanes, semantic nodes, edge verb/payload/kind와 notReached를 함께 갱신한다.
 - `from`과 `to`는 `workbench.nodes` key를 참조하고 node boundary는 색상이나 배치가 아니라 text로 표시한다.
 - 서로 다른 lane은 하나의 직선 timeline으로 합치지 않는다. 현재 lane만 단계 상태와 progress를 가지며 다른 lane은 `선택 가능`으로 표시한다.
 - semantic edge의 code evidence는 edge 또는 node의 명시적 `codePointIds`로 연결하며 legacy flow step 위치를 상속하지 않는다.
 - signal node는 passed, active, pending, blocked 상태를 label로도 전달한다.
-- semantic edge가 단계 control이면 native button을 사용하고 접근 가능한 이름에 from, to, verb, payload, state를 포함한다.
+- semantic edge가 단계 control이면 native button을 사용하고 접근 가능한 이름에 from, to, verb, payload, before, after, state를 포함한다.
 - 이전/다음과 native `<progress>`를 사용한다. 자동 재생과 속도 control은 두지 않는다.
 - 선택 step의 Problem, Concept, Action, Check를 code point와 context drawer에 연결한다.
 - glossary와 관련 문서는 접을 수 있는 reference shelf에 둔다.
@@ -215,7 +223,7 @@ UI copy는 학습자가 선택하고 확인할 대상을 먼저 말하며 기술
 - 전체 DOM 재렌더링 뒤 `data-focus-key`로 선택 control의 focus를 복원한다.
 - section observer로 learning nav의 `aria-current="location"`을 갱신한다.
 - 상태 알림은 앱 재렌더링 밖에 유지되는 짧은 `role="status"` 한 곳으로 제한하고 현재 lane, from/to, verb와 payload를 알린다.
-- 720px 이하에서 semantic diagram을 node -> edge -> node의 세로 방향으로 바꾸고 arrow label과 payload를 유지한다.
+- 720px 이하에서는 participant 카드 목록을 먼저 쌓지 않고 현재 message를 `출발 → 도착`, payload, before → after 순서로 먼저 보여준다.
 - `prefers-reduced-motion: reduce`에서는 transition과 smooth scroll을 제거하고 active edge의 방향·payload·상태를 정적으로 갱신한다.
 - 390px에서 page-level horizontal overflow가 없어야 하며 legacy trace와 긴 code만 해당 영역에서 제한적으로 스크롤한다.
 

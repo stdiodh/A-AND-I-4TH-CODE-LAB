@@ -35,7 +35,7 @@ docs/visualizer/*
 - 상대 경로를 사용해 GitHub Pages에서도 열리게 합니다.
 - 새 UI 상태는 공통 semantic token과 component rule을 먼저 확장하며, 한 컴포넌트만 별도로 꾸미지 않습니다.
 - 학생이 결과를 예측하기 전에 scenario label이나 초기 snapshot으로 답을 공개하지 않습니다.
-- 전체 transition을 한 번에 펼치지 않고 현재 단계, 이유와 evidence를 control 가까이에 둡니다.
+- actor 카드와 transition 카드 grid를 따로 만들지 않습니다. participant header와 수직 lifeline 위에 message를 위에서 아래로 놓고 현재 단계의 before/after와 evidence를 control 가까이에 둡니다.
 - node icon은 `assets/icons/{icon}.svg`, 주제 설명은 `workbench.visual`의 로컬 SVG를 직접 렌더링하며 sprite fragment를 primary runtime 경로로 사용하지 않습니다.
 - `assets/SOURCE.md`와 `assets/LICENSES.md`를 유지하고 broken image, 0px asset과 offscreen asset을 완료로 처리하지 않습니다.
 - 자동 재생과 속도 control을 추가하지 않습니다. 학생이 이전/다음으로 관찰 속도를 결정하게 합니다.
@@ -44,6 +44,9 @@ docs/visualizer/*
 
 - Visual Lab은 이론 문서 대체물이 아닙니다.
 - 긴 이론과 정답 코드 전체를 넣지 않습니다.
+- 파일 경로 tag를 코드 근거의 제목처럼 노출하지 않습니다. 짧은 학생용 설명 또는 올바른 코드 주석, 실제 핵심 코드 3~12줄, 바뀌는 상태 한 문장 순서로 설명합니다.
+- `호출 전/후 책임`, `반환 대기/보유`, `판정 입력/결과` 같은 자동 생성형 문장을 상태 변화로 쓰지 않습니다. 해당 주차의 실제 코드와 실행 범위를 대조해 값, 저장 상태, 인증 주체, 연결 대상, 실패 gate 또는 assertion 결과를 구체적으로 적습니다.
+- 각 scenario는 관련 `theory.md`의 명시적 sequence anchor를 가리키고, 관찰 뒤 인과 규칙을 다시 쓰는 reflection을 제공합니다.
 - `answerBranch`, `sourceAnswerBranch`, `NN-answer` 문자열을 노출하지 않습니다.
 - 학생이 흐름을 이해하는 진입점으로 두고, 정답 비교 안내는 README, checklist의 멘토용 접힘 영역 또는 answer 브랜치 문서에서 처리합니다.
 
@@ -62,7 +65,7 @@ python3 scripts/validate-visual-labs.py
 - 루트 `docs/index.html`이 생성되어 있으면 실패 처리합니다.
 - 외부 CDN, 절대 URL asset, 정답 브랜치 노출 문자열을 최소 기준으로 탐지합니다.
 - 시퀀스 상세 데이터에 `window.visualLabData`, `kind`, `sequence`, `title`, `goal`, `problem`, `actors`, `flows`, `codePoints`가 있는지 확인합니다.
-- 시퀀스 상세 데이터의 `workbench`와 3~4개 실제 scenario가 공통 계약을 만족하는지 확인합니다.
+- 시퀀스 상세 데이터의 `workbench`와 3~4개 실제 scenario, 모든 step의 effect와 evidence scope가 공통 계약을 만족하는지 확인합니다.
 
 개별 Visual Lab을 브라우저에서 확인할 때는 대상 서브레포 안에서 정적 서버를 띄웁니다.
 
