@@ -120,4 +120,25 @@ Overview -> Why -> Before / After -> Flow -> Code Points
 다음 책임 주체
 ```
 
-새 기준은 node에 icon, 종류, 역할과 visible 책임 경계를 함께 표시하고, edge에 `from`, `to`, `verb`, `payload`, `kind`를 둔다. DTO, Entity, token, status와 event payload는 edge로 이동한다. failure는 실제 handler/응답과 `notReached` 이유를 표현한다. progress와 재생은 현재 lane 안에서만 동작하고 다른 lane은 `선택 가능` 경로로 남긴다.
+새 기준은 node에 icon, 종류, 역할과 visible 책임 경계를 함께 표시하고, edge에 `from`, `to`, `verb`, `payload`, `kind`를 둔다. DTO, Entity, token, status와 event payload는 edge로 이동한다. failure는 실제 handler/응답과 `notReached` 이유를 표현한다. progress는 현재 lane 안에서 동작하고 다른 lane은 `선택 가능` 경로로 남긴다.
+
+## 9. Student Comprehension Follow-up Audit
+
+Semantic diagram 적용 뒤 저장된 desktop/mobile 화면을 학생의 첫 진입 순서로 다시 검수했다. 기술 구조의 정확성은 좋아졌지만 “무엇을 먼저 해야 하는가”는 여전히 불명확했다.
+
+| 항목 | 학생 관점 문제 | 유지 | 변경 |
+|---|---|---|---|
+| 첫 viewport | 큰 질문 header가 조건과 첫 행동을 아래로 밀어냄 | 실제 학습 질문 | compact briefing과 첫 조건을 함께 배치 |
+| Scenario label | `miss`, `hit`, `blocked`가 결과를 미리 공개 | 실제 조건 데이터 | 입력 조건만 표시하고 예측 뒤 결과 공개 |
+| Semantic lane | 모든 actor와 transition을 펼쳐 현재 단계가 묻힘 | 실제 from/to/verb/payload | topology는 고정하고 현재 transition 한 개만 확장 |
+| Controls | 긴 diagram 아래에 있어 mobile에서 수십 화면 이동 | 이전/다음과 progress | 현재 이유·증거와 같은 viewport에 배치 |
+| Playback | 재생·속도가 학습 목표보다 먼저 보임 | 수동 단계 이동 | autoplay와 속도 control 제거 |
+| 용어 | 첫 화면에 전문 용어가 동시에 등장 | 정확한 기술 용어 | 첫 등장 시 짧은 한국어 역할 설명 |
+| Evidence | 개념 모델과 실제 실행 증거의 범위가 혼합될 수 있음 | 실제 code point와 check | 개념·코드·단위 테스트·수동 runtime label 분리 |
+| Icon asset | 21px sprite icon이 반복 node 안에서 사실상 보이지 않음 | 공통 outline 문법과 visible label | 40~48px 개별 SVG `<img>`와 text fallback |
+| Topic visual | 전체 path만 있어 memory/DB, cache state, fan-out 같은 선행 관계를 재구성해야 함 | 실제 시스템 관계 | 주차별 설명 SVG 한 개를 예측과 관찰 사이에 배치 |
+| Mobile | 저장된 390px 첫 화면 일부가 잘리고 실제 조작 진입을 증명하지 못함 | 1열 전환 | page overflow 0, 첫 행동 노출, asset bounding box 재검증 |
+
+추가 asset audit에서 `system-icons.svg`는 HTTP 200, `image/svg+xml`, 유효 XML과 30개 symbol을 가진 정상 파일이었다. 그러나 symbol만 포함하므로 파일을 직접 열면 빈 화면처럼 보이며, 외부 `<use>`는 `file://`에서 안정적이지 않다. 따라서 기술적으로 로드 가능한 것과 학생이 실제로 보았는지를 분리해 검사해야 한다.
+
+새 완료 기준은 broken request 0뿐 아니라 `img.complete`, `naturalWidth > 0`, 화면 안의 최소 표시 크기, 390px과 desktop 가시성, 200% zoom과 text fallback까지 포함한다.

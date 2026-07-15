@@ -31,6 +31,11 @@ A&I Backend Visual Lab은 각 시퀀스 서브모듈 안에서 정적 HTML, CSS,
 <topic-repo>/docs/visual-lab/visual-lab-data.js
 <topic-repo>/docs/visual-lab/visual-lab.js
 <topic-repo>/docs/visual-lab/assets/system-icons.svg
+<topic-repo>/docs/visual-lab/assets/icons/*.svg
+<topic-repo>/docs/visual-lab/assets/visual-lab-mark.svg
+<topic-repo>/docs/visual-lab/assets/diagrams/NN-*.svg
+<topic-repo>/docs/visual-lab/assets/SOURCE.md
+<topic-repo>/docs/visual-lab/assets/LICENSES.md
 <topic-repo>/docs/visual-lab/sequences/NN/index.html
 <topic-repo>/docs/visual-lab/sequences/NN/visual-lab-data.js
 ```
@@ -130,7 +135,7 @@ NN-answer
 - 기존 커리큘럼, 시퀀스 순서, 기술 사실과 데이터 스키마를 근거 없이 변경하지 않는다.
 - 외부 font import와 CDN 의존성을 추가하지 않는다.
 - hover 이동, 장식용 glow, 반복 gradient, 흩어진 animation을 사용하지 않는다.
-- 공통 CSS/JS와 `assets/system-icons.svg`는 외부 공용 경로에 의존하지 않고 8개 토픽 레포에 같은 내용으로 로컬 복제한다.
+- 공통 CSS/JS, 직접 렌더링 icon과 원본 `assets/system-icons.svg`는 외부 공용 경로에 의존하지 않고 8개 토픽 레포에 같은 내용으로 로컬 복제한다.
 - semantic diagram에서 책임 주체 node와 edge의 동작·payload를 분리하고 boundary label을 visible text로 제공한다.
 - 단위 테스트, mock, in-memory 상태와 명령 종료를 실제 통합 성공보다 넓은 evidence로 표현하지 않는다.
 
@@ -228,17 +233,19 @@ empty-state / fatal-state
 컴포넌트마다 색상, 간격, radius, motion 값을 다시 하드코딩하지 않는다.
 390px에서는 page-level horizontal overflow가 없어야 한다. semantic diagram은 node -> edge -> node 순서의 세로 흐름으로 바꾸며, legacy signal trace와 긴 code만 해당 영역 안에서 제한적으로 스크롤할 수 있다.
 
-### 7.2.1 docs/visual-lab/assets/system-icons.svg
+### 7.2.1 docs/visual-lab/assets
 
 역할:
 
-- semantic node kind를 구분하는 공통 outline symbol sprite
-- data의 `icon` 값을 `#icon-{icon}` symbol id로 연결
-- 외부 icon library, CDN, emoji와 주차별 임의 SVG 대체
+- `icons/{icon}.svg`: semantic node kind를 직접 렌더링하는 공통 outline icon
+- `diagrams/NN-*.svg`: 주차의 핵심 관계를 먼저 이해하는 설명 asset
+- `system-icons.svg`: icon 원본 sprite와 하위 호환 자료
+- `visual-lab-mark.svg`: hub와 sequence entry가 공통으로 참조하는 로컬 brand mark와 favicon
+- `SOURCE.md`, `LICENSES.md`: 자체 제작·파생 관계와 사용 조건
 
 허용 icon id는 `person`, `client`, `tool`, `api`, `service`, `repository`, `database`, `gate`, `security`, `token`, `external`, `mail`, `test`, `fixture`, `cache`, `websocket`, `broker`, `runtime`, `artifact`, `config`, `pipeline`, `host`, `refactor`, `event`, `queue`, `consumer`, `evidence`, `memory`, `handler`, `response`다.
 
-renderer는 상세 페이지에서 `../../assets/system-icons.svg#icon-{icon}`, hub에서 `./assets/system-icons.svg#icon-{icon}` 상대 경로를 사용한다. SVG icon에는 `aria-hidden="true"`와 `focusable="false"`를 적용하고 node label, kind, role, boundary를 text로 함께 렌더링한다.
+renderer는 상세 페이지에서 `../../assets/icons/{icon}.svg`, hub에서 `./assets/icons/{icon}.svg` 상대 경로를 `<img>`에 사용한다. icon 자체는 장식으로 처리하고 node label, kind, role, boundary를 text로 함께 렌더링한다. `workbench.visual`의 `src`, `alt`, `caption`은 시퀀스별 설명 SVG와 visible caption을 제공한다. 모든 SVG는 `viewBox`를 가지며 외부 URL, script와 font를 포함하지 않는다.
 
 ### 7.3 docs/visual-lab/visual-lab-data.js
 
@@ -453,9 +460,11 @@ Sequence 렌더링:
 compact context bar
 -> current question header
 -> learning nav
--> scenario selector
--> topic workbench / Learning Signal Trace
--> snapshot + evidence/outcome
+-> required premise terms (compact details) and condition selector
+-> learner prediction
+-> topic explanation SVG and persistent topology
+-> current transition + adjacent reason/evidence
+-> causal comparison and reflection
 -> selected code/context drawer
 -> verification
 -> next question
@@ -463,14 +472,17 @@ compact context bar
 
 필수 동작:
 
-- scenario 선택 시 `aria-pressed`를 갱신하고 연결된 `flowId`의 첫 단계로 이동한다.
+- scenario 선택은 결과가 아니라 입력 조건을 말하고 `aria-pressed`를 갱신한다.
+- `workbench.terms`는 예측 전에 접근 가능한 기본 닫힌 `details`로 렌더링해 첫 행동을 밀어내지 않는다.
+- 관찰 결과와 outcome은 학생이 예측을 선택한 뒤에 공개한다.
+- `workbench.visual`을 `<img>`와 visible `figcaption`으로 렌더링하고 load error에는 text fallback을 남긴다.
 - `scenario.diagram`이 있으면 semantic diagram을 primary로 렌더링하고 legacy `route`는 호환·fallback 상태로 유지한다.
 - diagram은 `caption`, lane header, node의 icon/kind/role/boundary, edge의 verb/payload/kind/state, `notReached` label과 reason을 모두 표시한다.
 - edge가 단계 선택 control이면 native button과 `from`, `to`, `verb`, `payload`, state를 포함한 접근 가능한 이름을 제공한다.
-- 다른 lane은 직전·다음 단계가 아니라 `선택 가능` 경로로 두고 progress와 자동 재생을 현재 lane 범위로 제한한다. lane 경계의 수동 이동은 `이전 경로` 또는 `다음 경로`로 표시한다.
+- 다른 lane은 직전·다음 단계가 아니라 `선택 가능` 경로로 두고 progress를 현재 lane 범위로 제한한다. lane 경계의 수동 이동은 `이전 경로` 또는 `다음 경로`로 표시한다.
 - semantic evidence는 edge/node의 명시적 `codePointIds`만 사용하고 legacy flow step 위치를 병합하지 않는다.
 - signal node는 passed, active, pending, blocked 상태를 label과 함께 제공한다.
-- 이전/다음, 재생/일시정지, 속도와 native `<progress>`로 단계 진행을 제공한다.
+- 이전/다음과 native `<progress>`로 단계 진행을 제공한다. 자동 재생과 속도 control은 두지 않는다.
 - scenario, route, control을 선택해 전체 DOM이 다시 렌더링돼도 `data-focus-key`로 focus를 복원한다.
 - 선택 step의 Problem, Concept, Action, Check와 `codePointIds`를 evidence 영역에 연결한다.
 - responsibility와 concept는 context drawer에, glossary와 문서는 접을 수 있는 reference shelf에 둔다.
@@ -480,11 +492,11 @@ compact context bar
 - section observer는 learning nav의 현재 위치를 `aria-current="location"`으로 표현한다.
 - 상태 변경 알림은 재렌더링 밖에 유지되는 짧은 `role="status"` 한 곳으로 제한하고 현재 lane, from/to, verb와 payload를 알린다.
 - 720px 이하에서 semantic transition을 node -> edge -> node의 세로 방향으로 바꾸고 arrow label과 payload를 유지한다.
-- reduced motion에서는 자동 재생과 속도 조절을 비활성화하고 active edge의 방향·payload·상태를 정적으로 제공한다.
+- reduced motion에서는 transition과 smooth scroll을 제거하고 active edge의 방향·payload·상태를 정적으로 제공한다.
 
 ### 7.6 Shared Engine 로컬 복제
 
-공통 `visual-lab.js`, `styles.css`, `assets/system-icons.svg`는 다음 8개 토픽 레포에 같은 내용으로 둔다.
+공통 `visual-lab.js`, `styles.css`, `assets/icons/*.svg`와 `assets/system-icons.svg`는 다음 8개 토픽 레포에 같은 내용으로 둔다.
 
 ```text
 aandi-prerequisite-bootcamp
@@ -500,7 +512,7 @@ spring-boot-event-driven-lab
 한 레포의 파일을 다른 서브모듈에서 runtime import하지 않는다.
 CDN, symlink, 새 package 대신 동일한 engine을 각 레포에 로컬 복제해 GitHub Pages 상대 경로를 유지한다.
 
-공통 engine이나 icon sprite를 변경하면 8개 사본을 모두 동기화하고 hash가 같은지 확인한다.
+공통 engine이나 icon asset을 변경하면 8개 사본을 모두 동기화하고 hash가 같은지 확인한다.
 시퀀스 고유 구조는 공통 engine을 fork하지 않고 `workbench.kind`와 canonical 데이터로 표현한다.
 
 ## 8. 구현 단계
@@ -523,6 +535,9 @@ CDN, symlink, 새 package 대신 동일한 engine을 각 레포에 로컬 복제
 
 - 실제 `flows`, actor, code point, check, next question 확인
 - 주제별 `workbench.kind`와 3~4개 scenario 작성
+- `workbench.visual`의 로컬 SVG, alt, caption과 asset 출처 문서 작성
+- `workbench.terms`의 첫 등장 용어 설명과 모든 scenario의 prediction 선택지 작성
+- scenario label은 결과를 숨긴 입력 조건으로 쓰고 예측 선택 뒤 outcome을 공개
 - 책임 주체 `nodes`와 edge `verb`/`payload`/`kind`, boundary, lane, caption, notReached 작성
 - 각 evidence가 실제 테스트와 runtime 관찰 범위를 넘지 않는지 확인
 - blocked, warning, recovered 상태와 evidence를 색상 외 정보로 작성
@@ -531,7 +546,7 @@ CDN, symlink, 새 package 대신 동일한 engine을 각 레포에 로컬 복제
 
 - hub와 sequence의 최소 `#app` shell 확인
 - semantic token, context bar, journey, question header, workbench, evidence, verification, next 레이아웃 반영
-- semantic node/edge와 mobile 세로화, local system icon sprite 연결
+- semantic node/edge와 mobile 세로화, 직접 렌더링 local icon과 주제 설명 SVG 연결
 - 8개 토픽 레포의 공통 CSS를 같은 내용으로 동기화
 
 ### Step 5. Shared engine 동기화
@@ -575,6 +590,7 @@ git diff --check
 shasum */docs/visual-lab/visual-lab.js
 shasum */docs/visual-lab/styles.css
 shasum */docs/visual-lab/assets/system-icons.svg
+find */docs/visual-lab/assets/icons -name '*.svg' -type f -print0 | sort -z | xargs -0 shasum
 ```
 
 ### Step 8. 브라우저 검수
@@ -585,7 +601,7 @@ shasum */docs/visual-lab/assets/system-icons.svg
 python3 -m http.server 8080 -d docs/visual-lab
 ```
 
-hub, 모든 상세 시퀀스, 모든 scenario, semantic diagram의 lane/node/edge/notReached, signal route fallback, controls, evidence, verification, next link를 확인한다.
+hub, 모든 상세 시퀀스, 모든 scenario의 예측 전/후, 주제 SVG의 실제 표시, semantic diagram의 lane/node/edge/notReached, controls, evidence, verification, next link를 확인한다.
 
 화면 크기:
 
@@ -613,7 +629,7 @@ hub, 모든 상세 시퀀스, 모든 scenario, semantic diagram의 lane/node/edg
 - scenario 변경 시 caption, lane, node boundary, edge verb/payload/kind와 notReached도 함께 바뀐다.
 - semantic edge를 keyboard로 선택하면 현재 단계와 evidence가 같은 상태를 가리킨다.
 - signal node와 이전/다음 control이 같은 단계 상태를 가리킨다.
-- 재생, 일시정지, 속도 변경과 마지막 단계 정지가 동작한다.
+- 이전/다음이 한 단계씩 이동하고 첫·마지막 경계에서 사용할 수 없는 방향을 명확히 표시한다.
 - native progress가 현재 단계와 verification 완료 수를 정확히 표현한다.
 - code point, responsibility, concept, reference가 현재 step과 연결된다.
 - verification checkbox는 페이지 내에서 동작하고 다음 질문 링크가 실제 경로로 이동한다.
@@ -636,7 +652,7 @@ hub, 모든 상세 시퀀스, 모든 scenario, semantic diagram의 lane/node/edg
 - 모든 interactive element에 visible `:focus-visible`이 있다.
 - scenario와 control 재렌더링 뒤 focus가 선택한 요소로 돌아온다.
 - semantic edge button에 visible focus와 충분한 접근 가능한 이름이 있다.
-- reduced motion에서 smooth scroll, transition, 자동 재생이 제거된다.
+- reduced motion에서 smooth scroll과 transition이 제거되고 같은 상태가 정적으로 보인다.
 - mobile에서 semantic diagram이 세로화되고 arrow label과 payload가 사라지지 않는다.
 - 390px에서 page-level horizontal overflow, 잘린 focus, 겹친 한국어 문장이 없다.
 - 긴 path와 code는 해당 영역 안에서만 스크롤된다.

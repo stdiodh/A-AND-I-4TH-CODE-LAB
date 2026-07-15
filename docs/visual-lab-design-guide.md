@@ -110,6 +110,9 @@ A&I Backend Visual Lab은 일반 문서 페이지가 아니다.
 
 ```css
 :root {
+  --color-correct: #176F72;
+  --color-boundary-strong: #6F82B8;
+
   --surface-canvas: var(--color-bg-base);
   --surface-primary: var(--color-card-white);
   --surface-secondary: var(--color-summary-bg);
@@ -139,7 +142,7 @@ A&I Backend Visual Lab은 일반 문서 페이지가 아니다.
   --edge-persist: var(--color-title-navy);
   --edge-failure: var(--color-incorrect);
 
-  --border-strong: var(--color-line-blue-light);
+  --border-strong: var(--color-boundary-strong);
   --border-soft: var(--color-outline-soft);
   --focus-ring: var(--color-accent-blue);
 }
@@ -155,6 +158,8 @@ A&I Backend Visual Lab은 일반 문서 페이지가 아니다.
 | Signal Blue | `#2955E4` | 선택한 조건과 active path |
 | Evidence Teal | `#3F8996` | 관찰 결과와 확인 증거 |
 | Boundary Line | `#C9D6F3` | 계층, trust, runtime, pipeline 경계 |
+
+`#176F72`는 작은 회복 상태 text의 대비를 위한 semantic support color, `#6F82B8`는 흰 작업면에서 3:1 이상의 비텍스트 경계 대비를 위한 support color다. 둘은 core accent로 반복하지 않고 각각 `--color-correct`, `--color-boundary-strong`을 통해서만 사용한다.
 
 공통 spacing, radius, elevation과 motion도 토큰으로만 확장한다.
 
@@ -298,13 +303,15 @@ radius는 small 8px, medium 14px, large 20px 안에서만 사용한다. hover에
 - edge는 방향과 함께 `verb`, `payload`, `kind`를 항상 표시한다. `kind`는 `request`, `call`, `transform`, `persist`, `response`, `failure`, `event`, `config`, `compare` 중 하나다.
 - node의 `boundary`는 `Controller`, `Persistence`, `Trust`, `Build time`, `Runtime`, `Broker`처럼 판단이나 책임이 실제로 바뀌는 위치를 visible text로 표시한다.
 - 서로 다른 lane을 하나의 실행 시간축으로 합치지 않는다. 현재 lane 안에서만 `지남`, `현재 관찰`, `다음`을 사용하고 다른 lane은 `선택 가능`으로 표시한다.
-- progress는 전체 edge 합계가 아니라 현재 lane 이름과 `현재 단계 / lane 단계 수`를 보여준다. lane 끝의 이동은 `다음 경로`로 명시하고 자동 재생은 현재 lane 끝에서 멈춘다.
+- progress는 전체 edge 합계가 아니라 현재 lane 이름과 `현재 단계 / lane 단계 수`를 보여준다. lane 끝의 이동은 `다음 경로`로 명시하고 학생이 수동으로 이동한다.
 - semantic edge와 evidence는 edge/node의 명시적 `codePointIds`로 연결하며 legacy flow step의 위치를 비례 상속하지 않는다.
 - `lane`은 동시에 존재하지만 성격이 다른 흐름을 분리한다. 주문 응답과 비동기 event 전달, build와 verify, Before와 After를 하나의 직선으로 합치지 않는다.
 - `caption`은 선택한 조건의 전체 경로를 한 문장으로 읽어준다.
 - `notReached`는 opacity로 숨기지 않고 실행되지 않은 대상과 이유를 함께 표시한다.
 
-시스템 icon은 각 토픽 레포의 `docs/visual-lab/assets/system-icons.svg`만 사용한다. 데이터의 `icon: "service"`는 sprite의 `#icon-service`를 가리킨다. icon은 장식이 아니라 node kind를 빠르게 구분하는 보조 수단이며 `aria-hidden="true"`로 두고 label, role, boundary를 visible text로 유지한다. 외부 icon CDN, emoji와 시퀀스별 임의 SVG는 추가하지 않는다.
+`system-icons.svg`는 공통 outline 원본과 하위 호환 자료로 보존한다. 실제 node는 직접 렌더링 가능한 `docs/visual-lab/assets/icons/{icon}.svg`를 `<img>`로 사용한다. icon은 40~48px에서 node kind를 빠르게 구분하는 보조 수단이며 alt를 비워 장식으로 처리하고 label, role, boundary를 visible text로 유지한다. load error에서도 기술 역할 label이 남아야 한다. hub와 sequence entry의 favicon은 같은 저장소 로컬 `assets/visual-lab-mark.svg`를 사용한다.
+
+각 시퀀스는 주제에서 직접 나온 설명 SVG 한 개를 `workbench.visual`의 `src`, `alt`, `caption`으로 연결한다. 설명 SVG는 memory와 DB 생명주기, cache 상태, subscription fan-out처럼 학생이 먼저 알아야 할 관계만 보여주고 interactive path나 text를 대체하지 않는다. desktop에서는 원본 비율을 유지하되 높이를 360px 이내로 제한하고, mobile에서는 그림 영역의 전체 폭을 사용한다. 390px 화면의 약 320px 그림 영역에서도 가장 작은 visible text가 10.5px 아래로 축소되지 않도록 관계 수, viewBox 폭과 SVG 내부 font-size를 함께 조정한다. `assets/SOURCE.md`와 `assets/LICENSES.md`에 출처와 사용 조건을 기록한다. 외부 icon CDN, emoji, 외부 font, script와 network URL은 사용하지 않는다.
 
 다이어그램의 `check`와 evidence는 실제 증거보다 넓은 보장을 주장하지 않는다. mock 호출은 외부 시스템 통합 성공, `contextLoads`는 HTTP 계약, in-memory map은 영속 멱등성, 배포 명령 종료는 서비스 정상 응답의 증거가 아니다.
 
@@ -351,22 +358,19 @@ Repository context
 ┌──────────────────────────────────────────────────────────┐
 │ Context bar                                              │
 ├───────────────┬──────────────────────────────────────────┤
-│ Sequence      │ 현재 학습 질문과 goal                   │
+│ 이번 질문 · 꼭 알아야 할 전제                           │
 ├──────────────────────────────────────────────────────────┤
-│ 질문 -> 관찰 -> 개념·코드 -> 검증 -> 다음 질문         │
+│ 결과를 숨긴 조건 -> 내 예측                             │
 ├──────────────────────────────────────────────────────────┤
-│ 조건 선택                                                │
-│ Learning Signal Trace                                   │
-│ snapshot | 관찰 증거 | 판단 | 단계 control             │
-├──────────────────────────────┬───────────────────────────┤
-│ 현재 단계 Problem/Concept/   │ 책임·개념 context         │
-│ Action/Check + code evidence │                           │
+│ 주제 설명 SVG · 고정된 system topology                  │
+│ 이전 | 현재 transition | 다음                           │
+│ 현재 단계의 이유 · evidence                             │
 ├──────────────────────────────────────────────────────────┤
-│ Verification -> Next question                           │
+│ 반대 조건 비교 -> 인과 규칙 정리 -> 다음 질문          │
 └──────────────────────────────────────────────────────────┘
 ```
 
-첫 viewport에는 현재 질문과 관찰 조건이 우선 보여야 한다. 긴 이론, glossary와 reference는 primary workbench 아래의 evidence 또는 접을 수 있는 shelf로 둔다.
+첫 viewport에는 현재 질문, 필수 전제, 첫 등장 용어, 입력 조건과 첫 행동이 보여야 한다. 모든 scenario는 `prediction`을 제공하고 선택 전에는 path, snapshot, outcome을 공개하지 않는다. 전체 actor와 transition을 행마다 펼치지 않고 topology에서 actor는 한 번만 배치한다. 한 번에 보이는 transition은 최대 7개이며 현재 transition 하나만 이유와 evidence를 확장한다. 긴 이론, glossary와 reference는 primary workbench 아래의 evidence 또는 접을 수 있는 shelf로 둔다.
 
 ## 11. 반응형·접근성·모션
 
@@ -398,8 +402,8 @@ Repository context
 - duration: `240ms`
 - easing: `cubic-bezier(0.2, 0.8, 0.2, 1)`
 - 자동 반복: 없음
-- 자동 재생: 학습자가 명시적으로 시작했을 때만 사용
-- `prefers-reduced-motion: reduce`: smooth scroll과 transition을 제거하고 재생·속도 control을 비활성화한 뒤 같은 상태를 즉시 표시
+- 자동 재생과 속도 control: 사용하지 않음. 학생이 이전/다음으로 관찰 속도를 결정
+- `prefers-reduced-motion: reduce`: smooth scroll과 transition을 제거하고 같은 상태를 즉시 표시
 - reduced motion에서도 active edge, 방향, payload와 `도달하지 않음` 이유를 정적인 상태로 모두 읽을 수 있어야 한다.
 
 ## 12. 금지 사항

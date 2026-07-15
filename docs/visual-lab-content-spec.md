@@ -168,13 +168,18 @@ workbench: {
   kind: "cache",
   title: "Cache State Inspector",
   instruction: "조건을 선택하고 Redis와 DB 경계를 비교합니다.",
+  visual: {
+    src: "../../assets/diagrams/07-cache-state-cycle.svg",
+    alt: "MySQL 원본과 Redis 파생 복사본의 조회·만료·무효화 흐름",
+    caption: "Redis 값은 TTL이 있는 파생 복사본이며 key가 없을 때 MySQL 원본을 다시 읽습니다."
+  },
   scenarios: [
     {
       id: "cache-miss",
-      label: "첫 조회 · cache miss",
+      label: "post:1 key 없음",
       flowId: "lookup-flow",
       tone: "signal",
-      prompt: "Redis에 key가 없을 때 실제 조회 경로를 확인합니다.",
+      prompt: "결과를 열기 전에 DB 조회와 Redis 저장이 일어날지 예측합니다.",
       route: ["Client", "PostQueryService", "Redis miss", "Repository", "DB"],
       snapshot: [
         { label: "Cache lookup", value: "miss", tone: "warning" },
@@ -194,6 +199,9 @@ workbench: {
 | `kind` | 필수 | 아래 13개 시퀀스 kind 중 하나를 사용한다. |
 | `title` | 필수 | 주차별 primary workbench 이름을 짧게 쓴다. |
 | `instruction` | 필수 | 학습자가 무엇을 선택하고 관찰할지 능동형 문장으로 쓴다. |
+| `visual` | 필수 | `{ src, alt, caption }`으로 주제 설명 SVG와 대체 설명을 연결한다. |
+| `terms` | 필수 | 예측 전에 필요한 용어를 `{ term, meaning }` 2개 이상으로 짧게 설명한다. 화면에서는 기본 닫힌 `details`로 제공해 모르는 학생이 먼저 확인하되 첫 행동을 밀어내지 않는다. |
+| `comparison` | 필수 | `{ label, left, right }`로 관찰 뒤 구분할 두 조건의 인과 차이를 설명한다. |
 | `nodes` | 필수 | scenario diagram이 참조할 책임 주체와 관찰 resource를 id로 관리하는 keyed catalog다. |
 | `scenarios` | 필수 | 실제 이론과 흐름에 근거한 조건을 3~4개 둔다. |
 
@@ -206,6 +214,7 @@ workbench: {
 | `flowId` | 필수 | 같은 객체의 `flows[].id` 중 하나를 참조한다. |
 | `tone` | 필수 | `signal`, `blocked`, `warning`, `recovered` 중 하나다. |
 | `prompt` | 필수 | 현재 조건에서 관찰할 질문 또는 상황이다. |
+| `prediction` | 필수 | `{ prompt, options, answer, explanation }`으로 관찰 전 판단과 관찰 뒤 설명을 연결한다. |
 | `route` | 필수 | 실제 actor, destination, 저장소 또는 책임 경계를 순서대로 쓴 문자열 배열이다. |
 | `snapshot` | 필수 | `{ label, value, tone? }` 항목을 2개 이상 둔 배열이다. `tone`은 scenario와 같은 네 값을 사용한다. |
 | `evidence` | 필수 | 로그, 응답, 테스트, 상태 또는 화면에서 확인할 실제 증거다. |
@@ -216,6 +225,7 @@ workbench: {
 
 작성 규칙:
 
+- scenario `label`은 `hit`, `miss`, `blocked`, 성공/실패처럼 관찰 결과를 미리 공개하지 않고 입력 조건만 말한다.
 - route와 snapshot에 임시 actor, 의미 없는 수치나 장식용 metric을 넣지 않는다.
 - `stopAfter`는 실패 또는 차단 조건에서 실제 도달 지점이 확인될 때만 쓴다.
 - `fanOut`에는 연결만 된 대상이 아니라 실제로 해당 topic을 구독해 메시지를 받는 대상만 쓴다.
@@ -339,7 +349,9 @@ workbench: {
 - request DTO, token, event, query, command와 전달 파일은 기본적으로 edge `payload`다. artifact의 생성·실행 상태를 비교할 때만 별도 node로 둔다.
 - `boundary`는 화면에 표시되는 책임 경계 이름이며 색상이나 위치만으로 대신하지 않는다.
 - `icon`은 `person`, `client`, `tool`, `api`, `service`, `repository`, `database`, `gate`, `security`, `token`, `external`, `mail`, `test`, `fixture`, `cache`, `websocket`, `broker`, `runtime`, `artifact`, `config`, `pipeline`, `host`, `refactor`, `event`, `queue`, `consumer`, `evidence`, `memory`, `handler`, `response` 중 하나다.
-- icon은 각 토픽 레포의 로컬 `docs/visual-lab/assets/system-icons.svg#icon-{icon}`에 연결한다. 외부 CDN, emoji와 임의 icon 파일을 사용하지 않는다.
+- icon은 각 토픽 레포의 직접 렌더링 가능한 `docs/visual-lab/assets/icons/{icon}.svg`에 연결한다. `system-icons.svg`는 원본 sprite와 호환 자료로만 보존한다.
+- 주제 설명 SVG와 icon은 `docs/visual-lab/assets`를 벗어나지 않으며 `viewBox`를 가지고 외부 URL, script와 font를 포함하지 않는다.
+- `assets/SOURCE.md`와 `assets/LICENSES.md`에 생성·파생 관계와 사용 조건을 기록한다. 외부 CDN, emoji와 network asset을 사용하지 않는다.
 
 `diagram` 작성 규칙:
 
@@ -352,7 +364,7 @@ workbench: {
 - `notReached`는 실행되지 않은 node 또는 책임 label과 그 이유를 함께 제공한다. 단순 opacity나 빈 node로 대신하지 않는다.
 - `route`, `snapshot`, `evidence`, `outcome`, `flowId`는 기존 진행 상태와 evidence 연결을 위해 함께 유지한다.
 - lane은 독립 비교 경로일 수 있으므로 전체 `lanes[].steps`를 하나의 시간축으로 해석하지 않는다. 현재 lane만 단계 진행 상태를 가지며 다른 lane은 선택 가능한 경로다.
-- progress와 재생은 현재 lane 범위만 사용하고, 자동 재생은 lane 끝에서 멈춘다. 수동으로 lane을 넘을 때는 `다음 경로`라고 표시한다.
+- progress는 현재 lane 범위만 사용한다. 학생이 수동으로 lane을 넘을 때는 `다음 경로`라고 표시한다.
 - semantic edge의 code evidence는 edge의 `codePointIds`, 도착 node, 출발 node 순서의 명시적 연결만 사용한다. legacy flow step의 배열 위치를 상속하지 않는다.
 - 모바일 세로 흐름에서도 `verb`, `payload`, `kind`, boundary와 state label을 생략하지 않는다.
 - edge가 단계 선택 control이면 keyboard focus와 접근 가능한 이름에 `from`, `to`, `verb`, `payload`, state가 모두 포함되어야 한다.

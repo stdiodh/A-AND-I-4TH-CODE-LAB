@@ -60,6 +60,8 @@ ALLOWED_COLORS = {
     "#8FB1FF",
     "#2F62F4",
     "#2C9FA0",
+    "#176F72",
+    "#6F82B8",
     "#ECFBFA",
     "#EEF4FF",
 }
@@ -83,6 +85,8 @@ TOKEN_BY_COLOR = {
     "#8FB1FF": "--color-summary-border",
     "#2F62F4": "--color-summary-title / --color-incorrect",
     "#2C9FA0": "--color-correct",
+    "#176F72": "--color-correct",
+    "#6F82B8": "--color-boundary-strong",
     "#ECFBFA": "--color-correct-bg",
     "#EEF4FF": "--color-incorrect-bg",
 }
@@ -219,6 +223,7 @@ def validate_role_tokens(result: RepoResult, path: Path, content: str) -> None:
             "#3F8996",
             "#2F62F4",
             "#2C9FA0",
+            "#176F72",
             "#EAF0FB",
             "#D4E8E9",
             "#ECFBFA",

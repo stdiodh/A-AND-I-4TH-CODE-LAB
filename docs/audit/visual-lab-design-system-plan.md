@@ -92,7 +92,7 @@ Selected input/state
 - 목적: 어떤 시스템 경계를 지나 결과가 바뀌었는지 전달.
 - duration: 220~280ms.
 - easing: `cubic-bezier(0.2, 0.8, 0.2, 1)`.
-- 반복: 자동 반복 없음. 재생은 학습자가 명시적으로 시작할 때만 단계 이동.
+- 반복: 없음. 단계는 학습자가 이전/다음으로 한 번에 하나씩 이동한다.
 - reduced motion: smooth scroll과 transition을 제거하고 active node, route, evidence label을 즉시 갱신.
 
 ## 9. Shared Experience Grammar
@@ -226,7 +226,7 @@ Not reached                                 Repository · DB mutation
 
 ### 14.4 Icon Asset System
 
-저장소 로컬 `docs/visual-lab/assets/system-icons.svg` sprite 하나를 사용한다. person, client, tool, api, service, repository, database, gate, security, token, external, mail, test, fixture, cache, websocket, broker, runtime, artifact, config, pipeline, host, refactor, event, queue, consumer, evidence, memory를 같은 stroke 문법으로 제공한다.
+초기안에서는 저장소 로컬 `docs/visual-lab/assets/system-icons.svg` sprite 하나를 사용하려 했다. 그러나 `<symbol>` 기반 sprite는 파일을 직접 열면 비어 보이고 실제 화면에서도 아이콘 크기가 작아 학생이 종류를 구분하기 어려웠다. 따라서 이 안은 15.4의 직접 렌더링 SVG 계약으로 대체한다. `system-icons.svg`는 원본·호환 자료로만 남기고, 실제 화면은 `assets/icons/{icon}.svg`를 `<img>`로 표시한다.
 
 외부 icon library, CDN, bitmap illustration은 사용하지 않는다. 아이콘 자체에 기술 의미를 맡기지 않고 label, role, boundary를 항상 함께 표시한다.
 
@@ -247,3 +247,124 @@ Not reached                                 Repository · DB mutation
 - 번호는 실제 실행 순서에만 사용하고, 장식 badge나 의미 없는 terminal·metric은 추가하지 않는다.
 
 이 revision critique를 완료했으므로 semantic diagram 구현을 시작할 수 있다.
+
+## 15. Student Comprehension Revision
+
+### 15.1 조사 결과
+
+Semantic lane은 기술 구조를 더 정확히 표현했지만 학생이 읽어야 할 actor와 edge를 한 번에 모두 펼쳤다. 07은 조건에 따라 최대 25개 edge, 08은 20개 edge가 보여 조작부와 현재 증거가 첫 화면에서 멀어졌다. scenario 이름에 `miss`, `hit`, `blocked` 같은 결과가 들어가 예측 전에 답을 공개했고, 21px sprite icon은 유효한 파일이어도 반복 카드 안에서 사실상 보이지 않았다.
+
+따라서 최종 경험을 다음 학습 순서로 수정한다.
+
+```text
+필수 전제
+-> 결과를 숨긴 입력 조건
+-> 학생의 예측
+-> 한 단계씩 관찰
+-> 현재 단계의 이유와 증거
+-> 반대 조건 비교
+-> 자기 말로 인과 규칙 정리
+```
+
+### 15.2 Revised Subject, Audience, Single Job
+
+- Subject: 운영 중인 백엔드 요청과 상태 변화를 증거로 설명하는 학습 환경.
+- Audience: DTO, Entity, Repository, JWT, Redis, STOMP와 runtime 경계를 아직 자연스럽게 연결하지 못하는 Spring Boot 학습자.
+- Single Job: 한 화면 안에서 조건을 예측하고, 현재 한 단계의 상태 변화를 관찰하며, 누가 무엇을 왜 다음 책임에 넘겼는지 설명하게 한다.
+
+### 15.3 Layout Comparison
+
+#### Direction A — System Inspector
+
+```text
+┌────────────────────────────────────────────────────────┐
+│ Question                                                │
+├────────────────────────────────────────────────────────┤
+│ Every lane / every actor / every transition            │
+│                                                        │
+│                                                        │
+├────────────────────────────────────────────────────────┤
+│ Controls / evidence                                    │
+└────────────────────────────────────────────────────────┘
+```
+
+정확한 전체 구조를 한 번에 볼 수 있지만 초보자는 현재 관찰 대상과 조작 순서를 잃는다.
+
+#### Direction B — Guided System Story
+
+```text
+┌────────────────────────────────────────────────────────┐
+│ 이번 질문 · 꼭 알아야 할 전제                          │
+├──────────────────────┬─────────────────────────────────┤
+│ 결과를 숨긴 조건      │ 모르는 용어 details            │
+│ 내 예측               │ 예측 뒤 주제 설명 SVG          │
+├──────────────────────┴─────────────────────────────────┤
+│ 이전 | 현재 전이 1개 | 다음                            │
+│ 왜 일어났나 · 무엇으로 확인하나                        │
+├────────────────────────────────────────────────────────┤
+│ 반대 조건 비교 · 내가 수정한 인과 규칙                 │
+└────────────────────────────────────────────────────────┘
+```
+
+Direction B를 선택한다. 필수 용어는 예측 전에 접근 가능한 기본 닫힌 `details`로 두어 모르는 학생은 확인할 수 있고, 아는 학생의 첫 행동은 밀어내지 않는다. 전체 topology는 고정된 배경 문맥으로 남기고 현재 transition 하나만 확장한다. 한 화면에 표시하는 edge는 최대 7개이며 actor를 행마다 반복하지 않는다. 자동 재생과 속도 control은 제거하고 학생이 이전/다음으로 관찰 속도를 직접 결정한다.
+
+### 15.4 Visible Asset Contract
+
+`system-icons.svg`는 원본과 호환성을 위한 sprite로 보존하되 primary runtime asset으로 사용하지 않는다. `<symbol>`만 있는 sprite는 파일 자체를 열면 빈 화면처럼 보이고, 외부 `<use>`는 `file://` 환경에서 안정적이지 않기 때문이다.
+
+```text
+docs/visual-lab/assets/
+├── icons/{icon}.svg
+├── diagrams/{sequence-topic}.svg
+├── visual-lab-mark.svg
+├── system-icons.svg
+├── SOURCE.md
+└── LICENSES.md
+```
+
+- node icon은 직접 렌더링 가능한 `assets/icons/{icon}.svg`를 `<img>`로 표시한다.
+- hub와 sequence entry는 같은 로컬 `visual-lab-mark.svg`를 favicon으로 연결해 깨진 외부 brand asset 요청을 만들지 않는다.
+- 주제 설명은 `workbench.visual = { src, alt, caption }`으로 연결한다.
+- 정적 설명 asset은 `<img>`와 visible `figcaption`을 사용하고, interactive path는 semantic HTML button으로 유지한다.
+- icon은 40~48px로 표시한다. 주제 설명 visual은 관계를 3~6개로 제한하고 원본 비율을 유지한다. desktop에서는 최대 360px 높이, mobile에서는 전체 폭을 사용하며, 390px 화면의 약 320px 그림 영역에서도 가장 작은 visible text가 10.5px 이상이 되도록 viewBox와 내부 font-size를 맞춘다.
+- load error에는 기술 역할 label을 visible fallback으로 남긴다.
+- 모든 SVG는 `viewBox`를 가지며 외부 font, script, URL을 포함하지 않는다.
+- `SOURCE.md`와 `LICENSES.md`에 자체 제작·파생 관계와 사용 조건을 기록한다.
+
+### 15.5 Topic Asset Mapping
+
+| Sequence | 설명 asset | 한눈에 보여줄 관계 |
+|---|---|---|
+| 00 | `00-request-tool-map.svg` | HTTP request/response와 Git·DB 도구 경계 |
+| 01 | `01-memory-crud-map.svg` | 메모리 CRUD 요청과 재시작 경계 |
+| 02 | `02-persistence-boundary.svg` | process memory와 외부 DB 생명주기 |
+| 03 | `03-request-gates.svg` | 잘못된 입력이 멈추는 경계 |
+| 04 | `04-auth-boundaries.svg` | token 발급과 검증의 분리 |
+| 05 | `05-external-trust.svg` | 외부 identity와 계정 복구 경계 |
+| 06 | `06-test-scope.svg` | test double과 실제 보장 범위 |
+| 07 | `07-cache-state-cycle.svg` | empty, hit, expire, evict, refill |
+| 08 | `08-connection-subscription-fanout.svg` | transport, STOMP session, subscription |
+| 09 | `09-runtime-nesting.svg` | jar, image, container, process 포함 관계 |
+| 10 | `10-pipeline-gates.svg` | build, deploy, verify gate |
+| 11 | `11-behavior-invariant.svg` | 구조 변화와 유지되는 동작 |
+| 12 | `12-response-event-fork.svg` | 동기 응답과 비동기 event 분기 |
+
+### 15.6 Genericity Critique와 보정
+
+- 이전안은 아이콘이 붙은 시스템 inspector로서 다른 개발자 dashboard에도 적용할 수 있었다. `예측을 먼저 제출해야 관찰 결과를 공개`하는 학습 상태를 primary interaction으로 바꾼다.
+- 카드 수를 줄이는 것만으로는 충분하지 않았다. 현재 step의 이유와 evidence를 control 바로 옆에 놓아 정보 거리를 줄인다.
+- terminal과 status badge를 줄이고, 각 번호와 divider는 실제 sequence 또는 현재 transition 순서에만 사용한다.
+- 검은 배경이나 accent를 제거해도 `조건 -> 예측 -> 관찰 -> 인과 규칙 수정`이 남도록 정체성을 색상이 아니라 학습 구조에 둔다.
+- SVG를 장식 삽화로 만들지 않고 memory/DB 생명주기, cache state, subscription fan-out처럼 해당 주제에서만 성립하는 관계를 표현한다.
+
+### 15.7 Completion Gate
+
+- 390px 첫 viewport에 질문, 입력 조건, 첫 행동이 보인다.
+- scenario 선택에서 현재 전이 control까지 keyboard 8회 이내로 도달한다.
+- 현재 단계, 이유, evidence와 이전/다음 control이 같은 viewport에 있다.
+- 결과를 scenario label이 미리 말하지 않는다.
+- page-level horizontal overflow, broken image와 console error가 0이다.
+- asset은 `naturalWidth > 0`이고 desktop과 390px에서 실제 크기로 표시된다.
+- 주제 SVG의 가장 작은 visible text는 390px 화면에서 10.5px 이상으로 계산되고 브라우저에서 읽을 수 있다.
+- 200% zoom, keyboard focus, reduced motion에서도 같은 의미를 읽을 수 있다.
+- 색상이나 icon 하나만으로 상태와 기술 의미를 전달하지 않는다.

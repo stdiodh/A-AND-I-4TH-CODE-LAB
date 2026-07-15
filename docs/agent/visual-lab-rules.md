@@ -34,6 +34,11 @@ docs/visualizer/*
 - React, Vue, Next.js, Bootstrap, Tailwind CDN을 사용하지 않습니다.
 - 상대 경로를 사용해 GitHub Pages에서도 열리게 합니다.
 - 새 UI 상태는 공통 semantic token과 component rule을 먼저 확장하며, 한 컴포넌트만 별도로 꾸미지 않습니다.
+- 학생이 결과를 예측하기 전에 scenario label이나 초기 snapshot으로 답을 공개하지 않습니다.
+- 전체 transition을 한 번에 펼치지 않고 현재 단계, 이유와 evidence를 control 가까이에 둡니다.
+- node icon은 `assets/icons/{icon}.svg`, 주제 설명은 `workbench.visual`의 로컬 SVG를 직접 렌더링하며 sprite fragment를 primary runtime 경로로 사용하지 않습니다.
+- `assets/SOURCE.md`와 `assets/LICENSES.md`를 유지하고 broken image, 0px asset과 offscreen asset을 완료로 처리하지 않습니다.
+- 자동 재생과 속도 control을 추가하지 않습니다. 학생이 이전/다음으로 관찰 속도를 결정하게 합니다.
 
 ## 내용 규칙
 

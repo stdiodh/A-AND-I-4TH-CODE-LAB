@@ -122,7 +122,8 @@ docs/visual-lab/sequences/NN/visual-lab-data.js
 - `Learning Signal Trace` 하나만 signature element로 사용한다.
 - 완성된 workbench는 책임 주체 node와 전달 edge를 분리한 semantic diagram을 primary로 사용하고 legacy route는 fallback으로 유지한다.
 - node에는 icon, kind, role과 visible boundary label을 표시하고 edge에는 방향, verb, payload와 관계 kind를 표시한다.
-- icon은 로컬 `docs/visual-lab/assets/system-icons.svg` sprite만 사용하고 emoji나 외부 icon CDN을 사용하지 않는다.
+- node icon은 직접 렌더링 가능한 로컬 `docs/visual-lab/assets/icons/{icon}.svg`를 사용한다. `system-icons.svg`는 원본 sprite와 호환 자료로 보존한다.
+- 각 시퀀스는 `workbench.visual`의 `src`, `alt`, `caption`으로 주제 설명 SVG 한 개를 연결하고 `assets/SOURCE.md`, `assets/LICENSES.md`를 유지한다.
 - Hero는 marketing 문구가 아니라 현재 학습 질문과 goal을 보여주는 question header다.
 - 범용 카드 grid보다 hub journey와 한 개의 primary workbench를 먼저 보여준다.
 - 번호는 실제 sequence와 실제 경로 순서에만 사용한다.
@@ -201,11 +202,11 @@ UI copy는 학습자가 선택하고 확인할 대상을 먼저 말하며 기술
 - topic workbench는 signal trace, state snapshot, 관찰 증거, 판단을 함께 갱신한다.
 - `scenario.diagram`의 caption, lanes, semantic nodes, edge verb/payload/kind와 notReached를 함께 갱신한다.
 - `from`과 `to`는 `workbench.nodes` key를 참조하고 node boundary는 색상이나 배치가 아니라 text로 표시한다.
-- 서로 다른 lane은 하나의 직선 timeline으로 합치지 않는다. 현재 lane만 단계 상태와 progress를 가지며 다른 lane은 `선택 가능`으로 표시하고 자동 재생은 lane 끝에서 멈춘다.
+- 서로 다른 lane은 하나의 직선 timeline으로 합치지 않는다. 현재 lane만 단계 상태와 progress를 가지며 다른 lane은 `선택 가능`으로 표시한다.
 - semantic edge의 code evidence는 edge 또는 node의 명시적 `codePointIds`로 연결하며 legacy flow step 위치를 상속하지 않는다.
 - signal node는 passed, active, pending, blocked 상태를 label로도 전달한다.
 - semantic edge가 단계 control이면 native button을 사용하고 접근 가능한 이름에 from, to, verb, payload, state를 포함한다.
-- 이전/다음, 재생/일시정지, 속도와 native `<progress>`를 사용한다.
+- 이전/다음과 native `<progress>`를 사용한다. 자동 재생과 속도 control은 두지 않는다.
 - 선택 step의 Problem, Concept, Action, Check를 code point와 context drawer에 연결한다.
 - glossary와 관련 문서는 접을 수 있는 reference shelf에 둔다.
 - verification은 native checkbox와 progress를 사용하고 현재 페이지 안에서만 상태를 유지한다.
@@ -215,7 +216,7 @@ UI copy는 학습자가 선택하고 확인할 대상을 먼저 말하며 기술
 - section observer로 learning nav의 `aria-current="location"`을 갱신한다.
 - 상태 알림은 앱 재렌더링 밖에 유지되는 짧은 `role="status"` 한 곳으로 제한하고 현재 lane, from/to, verb와 payload를 알린다.
 - 720px 이하에서 semantic diagram을 node -> edge -> node의 세로 방향으로 바꾸고 arrow label과 payload를 유지한다.
-- `prefers-reduced-motion: reduce`에서는 자동 재생과 속도 control을 비활성화하고 active edge의 방향·payload·상태를 정적으로 갱신한다.
+- `prefers-reduced-motion: reduce`에서는 transition과 smooth scroll을 제거하고 active edge의 방향·payload·상태를 정적으로 갱신한다.
 - 390px에서 page-level horizontal overflow가 없어야 하며 legacy trace와 긴 code만 해당 영역에서 제한적으로 스크롤한다.
 
 ## 9. visual-lab-data.js 데이터 필수 구조
@@ -272,6 +273,20 @@ window.visualLabData = {
     kind: "request-trace",
     title: "주제별 워크벤치",
     instruction: "조건을 선택하고 경로를 관찰하세요.",
+    visual: {
+      src: "../../assets/diagrams/NN-topic.svg",
+      alt: "주제의 핵심 시스템 관계",
+      caption: "관찰 전에 알아야 할 경계를 한 문장으로 설명합니다."
+    },
+    terms: [
+      { term: "Repository", meaning: "저장소 접근 방법을 Service에서 분리하는 책임" },
+      { term: "Entity", meaning: "DB table과 저장 규칙에 맞춘 객체" }
+    ],
+    comparison: {
+      label: "메모리와 DB의 데이터 수명",
+      left: { title: "Process memory", body: "애플리케이션 프로세스 종료와 함께 사라집니다." },
+      right: { title: "External database", body: "DB와 volume을 유지하면 새 프로세스도 같은 row를 읽습니다." }
+    },
     nodes: {
       client: {
         label: "Client",
@@ -310,6 +325,15 @@ window.visualLabData = {
         flowId: "main-flow",
         tone: "recovered",
         prompt: "어디를 관찰해야 할까요?",
+        prediction: {
+          prompt: "어느 책임이 다음에 호출될까요?",
+          options: [
+            { id: "service", label: "Service" },
+            { id: "database", label: "Database" }
+          ],
+          answer: "service",
+          explanation: "Controller는 HTTP 요청을 Service의 애플리케이션 흐름으로 넘깁니다."
+        },
         route: ["Client", "Controller", "Service", "Repository"],
         diagram: {
           caption: "PostCreateRequest가 Web과 Application 책임을 지나 Repository에 전달됩니다.",
@@ -388,19 +412,20 @@ window.visualLabData = {
 - `kind: "sequence"`이면 question, learning nav, workbench, evidence, verification, next를 렌더링한다.
 - scenario 선택과 flow/step state를 일관되게 갱신한다.
 - `scenario.diagram`이 있으면 semantic diagram을 primary로 렌더링하고 caption, lane, node, edge와 notReached를 semantic element로 구성한다.
-- local SVG symbol은 `<svg aria-hidden="true" focusable="false"><use href="...#icon-{icon}"></use></svg>`로 사용하고 visible node text를 생략하지 않는다.
+- local node icon은 `<img src="../../assets/icons/{icon}.svg" alt="">`로 사용하고 visible node text를 생략하지 않는다.
+- 주제 설명 SVG는 `workbench.visual`에서 읽어 `<img>`와 visible `figcaption`으로 표시하며 load error에는 text fallback을 남긴다.
 - semantic edge button은 선택 step의 Problem, Concept, Action, Check와 code point를 갱신하고 재렌더링 뒤 focus를 복원한다.
 - `scenario.diagram`이 없는 legacy fallback에서만 route 길이와 flow step 수를 비례해 매핑한다. semantic diagram의 edge는 각 button과 evidence step을 1:1로 연결한다.
 - `stopAfter` 뒤 route는 disabled blocked 상태와 `도달하지 않음` label을 사용한다.
 - step의 `codePointIds`로 code evidence를 찾고 없으면 명확한 empty state를 보여준다.
 - 관련 문서 링크는 새 탭으로 열고 `rel="noreferrer"`를 사용한다.
-- 첫/마지막 이동 button과 reduced-motion playback button을 올바르게 disabled 처리한다.
-- 전체 재렌더링 전 timer를 해제하고 focus key를 복원한다.
+- 첫/마지막 이동 button을 올바르게 disabled 처리한다.
+- 전체 재렌더링 전 focus key를 저장하고 복원한다.
 - DOM root가 없거나 data kind가 잘못돼도 JavaScript error 대신 안내 상태를 제공한다.
 
 ## 11. Shared Engine과 문서 동기화
 
-공통 `visual-lab.js`, `styles.css`, `assets/system-icons.svg`는 다음 8개 토픽 레포에 같은 내용으로 로컬 복제한다.
+공통 `visual-lab.js`, `styles.css`, `assets/icons/*.svg`와 `assets/system-icons.svg`는 다음 8개 토픽 레포에 같은 내용으로 로컬 복제한다.
 
 ```text
 aandi-prerequisite-bootcamp
@@ -413,7 +438,7 @@ spring-boot-refactoring-foundation-lab
 spring-boot-event-driven-lab
 ```
 
-공통 engine이나 icon sprite를 바꾸면 8개 사본을 모두 갱신하고 hash를 비교한다.
+공통 engine이나 icon asset을 바꾸면 8개 사본을 모두 갱신하고 hash를 비교한다.
 한 레포를 다른 서브모듈의 runtime dependency로 만들거나 CDN, symlink, 새 package를 추가하지 않는다.
 
 핵심 data field, token, component state 또는 검증 방식이 바뀌면 중앙 design guide, content spec, implementation plan, review prompt와 validator를 실제 코드에 맞게 동기화한다.
@@ -444,6 +469,7 @@ git diff --check
 shasum */docs/visual-lab/visual-lab.js
 shasum */docs/visual-lab/styles.css
 shasum */docs/visual-lab/assets/system-icons.svg
+find */docs/visual-lab/assets/icons -name '*.svg' -type f -print0 | sort -z | xargs -0 shasum
 ```
 
 로컬 브라우저:

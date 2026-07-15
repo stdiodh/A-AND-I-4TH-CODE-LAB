@@ -29,7 +29,10 @@ REQUIRED_HUB_FILES = [
     "styles.css",
     "visual-lab.js",
     "visual-lab-data.js",
+    "assets/visual-lab-mark.svg",
     "assets/system-icons.svg",
+    "assets/SOURCE.md",
+    "assets/LICENSES.md",
 ]
 HUB_DATA_FIELDS = ["kind", "title", "sequences"]
 SEQUENCE_DATA_FIELDS = [
@@ -109,6 +112,7 @@ CDN_URL_PATTERN = re.compile(
     re.IGNORECASE,
 )
 REMOTE_CSS_PATTERN = re.compile(r"@import\s+url\((['\"])?https?://", re.IGNORECASE)
+REMOTE_SVG_VALUE_PATTERN = re.compile(r"(?:https?:)?//|data:", re.IGNORECASE)
 ANSWER_EXPOSURE_FAIL = re.compile(
     r"(sourceAnswerBranch|answerBranch|\b\d{2}-answer\b|git\s+(checkout|switch)\s+\S*answer)",
     re.IGNORECASE,
@@ -452,7 +456,7 @@ def validate_required_hub_files(result: RepoResult) -> bool:
                 "FAIL",
                 path,
                 f"missing required Visual Lab hub file: {filename}",
-                "허브 구조는 index.html, styles.css, visual-lab.js, visual-lab-data.js와 assets/system-icons.svg를 유지합니다.",
+                "허브 파일과 assets/system-icons.svg, SOURCE.md, LICENSES.md를 유지합니다.",
             )
 
     return all_present
@@ -502,13 +506,14 @@ def validate_html_assets(result: RepoResult, path: Path, expected_scripts: set[s
                 "외부 CSS CDN을 사용하지 않습니다.",
             )
 
-    if expected_links and not expected_links.intersection(set(parser.links)):
+    missing_links = sorted(expected_links.difference(set(parser.links)))
+    if missing_links:
         add_issue(
             result,
             "FAIL",
             path,
-            "styles.css is not linked with the expected relative path",
-            f"허용 경로: {', '.join(sorted(expected_links))}",
+            f"expected link(s) are missing: {', '.join(missing_links)}",
+            "공통 stylesheet와 저장소 로컬 brand mark를 올바른 상대 경로로 연결합니다.",
         )
 
     missing_scripts = sorted(expected_scripts.difference(set(parser.scripts)))
@@ -577,12 +582,138 @@ def validate_icon_sprite(result: RepoResult, path: Path) -> None:
         )
 
 
+def validate_asset_metadata(result: RepoResult, path: Path, label: str) -> None:
+    if not path.exists():
+        return
+    content = path.read_text(encoding="utf-8").strip()
+    if len(content) < 40:
+        add_issue(
+            result,
+            "FAIL",
+            path,
+            f"{label} asset metadata is empty or incomplete",
+            "SVG의 자체 제작·파생 관계와 사용 조건을 검수 가능한 문장으로 기록합니다.",
+        )
+
+
+def validate_renderable_svg(result: RepoResult, path: Path, purpose: str) -> None:
+    if not path.exists():
+        add_issue(
+            result,
+            "FAIL",
+            path,
+            f"missing {purpose} SVG asset",
+            "데이터가 가리키는 저장소 로컬 SVG 파일을 추가합니다.",
+        )
+        return
+
+    try:
+        root = ET.parse(path).getroot()
+    except ET.ParseError as error:
+        add_issue(
+            result,
+            "FAIL",
+            path,
+            f"{purpose} asset is not valid SVG XML: {error}",
+            "브라우저가 직접 렌더링할 수 있도록 SVG XML 문법을 수정합니다.",
+        )
+        return
+
+    if not root.tag.endswith("svg"):
+        add_issue(result, "FAIL", path, f"{purpose} asset root is not <svg>", "SVG 파일의 최상위 요소를 <svg>로 작성합니다.")
+    view_box = root.get("viewBox")
+    if not view_box:
+        add_issue(result, "FAIL", path, f"{purpose} asset has no viewBox", "반응형 크기에서도 보이도록 SVG viewBox를 작성합니다.")
+
+    for element in root.iter():
+        if element.tag.endswith("script"):
+            add_issue(result, "FAIL", path, f"{purpose} asset contains a script", "학습 에셋은 정적 SVG 요소만 사용합니다.")
+        for name, value in element.attrib.items():
+            if name.endswith("href") and REMOTE_SVG_VALUE_PATTERN.search(value):
+                add_issue(result, "FAIL", path, f"{purpose} asset uses an external href: {value}", "SVG 내부 참조도 저장소 로컬 또는 fragment만 사용합니다.")
+            if name == "style" and REMOTE_SVG_VALUE_PATTERN.search(value):
+                add_issue(result, "FAIL", path, f"{purpose} asset uses an external style URL", "외부 폰트·이미지·스타일 URL을 제거합니다.")
+
+    if purpose == "workbench visual" and view_box:
+        text_nodes = [element for element in root.iter() if element.tag.endswith("text")]
+        if text_nodes:
+            source = path.read_text(encoding="utf-8")
+            font_sizes = [
+                float(value)
+                for value in re.findall(
+                    r"(?:font-size\s*(?::|=)\s*[\"']?\s*|font\s*:[^;{}]*?)([0-9]+(?:\.[0-9]+)?)(?:px)?",
+                    source,
+                    re.IGNORECASE,
+                )
+            ]
+            try:
+                view_box_width = float(view_box.replace(",", " ").split()[2])
+            except (IndexError, ValueError):
+                view_box_width = 0
+
+            if not font_sizes or view_box_width <= 0:
+                add_issue(
+                    result,
+                    "FAIL",
+                    path,
+                    "workbench visual text size cannot be verified",
+                    "루트 viewBox와 px 기반 font-size를 명시해 모바일에서도 글자 크기를 검증할 수 있게 합니다.",
+                )
+            else:
+                estimated_mobile_size = min(font_sizes) * min(1.0, 320 / view_box_width)
+                if estimated_mobile_size < 10.5:
+                    add_issue(
+                        result,
+                        "FAIL",
+                        path,
+                        f"workbench visual text becomes too small on mobile: about {estimated_mobile_size:.1f}px",
+                        "관계를 단순화하고 viewBox 폭을 줄이거나 최소 font-size를 키워 390px 화면에서 10.5px 이상으로 표시합니다.",
+                    )
+
+
+def resolve_visual_asset(result: RepoResult, data_path: Path, src: str, purpose: str) -> Path | None:
+    if not is_relative_asset(src):
+        add_issue(result, "FAIL", data_path, f"{purpose} src is not a local relative path: {src}", "../../assets/...처럼 현재 Visual Lab 내부의 상대 경로를 사용합니다.")
+        return None
+
+    lab_dir = data_path.parents[2].resolve()
+    target = (data_path.parent / unquote(urlsplit(src).path)).resolve()
+    try:
+        target.relative_to(lab_dir)
+    except ValueError:
+        add_issue(result, "FAIL", data_path, f"{purpose} src escapes docs/visual-lab: {src}", "설명 에셋은 현재 토픽 레포의 docs/visual-lab/assets 아래에 둡니다.")
+        return None
+    return target
+
+
 def validate_semantic_workbench(
     result: RepoResult,
     data_path: Path,
     workbench: dict[str, Any],
     code_points: list[Any],
 ) -> None:
+    visual = workbench.get("visual")
+    if not isinstance(visual, dict):
+        add_issue(
+            result,
+            "FAIL",
+            data_path,
+            "workbench visual must be an object",
+            "주제 설명 SVG를 workbench.visual의 src, alt, caption으로 연결합니다.",
+        )
+    else:
+        for field_name in ("src", "alt", "caption"):
+            if not isinstance(visual.get(field_name), str) or not visual[field_name].strip():
+                add_issue(result, "FAIL", data_path, f"workbench visual has no {field_name}", "설명 에셋에는 src, 대체 텍스트, 학생용 caption을 모두 작성합니다.")
+        src = visual.get("src")
+        if isinstance(src, str) and src.strip():
+            target = resolve_visual_asset(result, data_path, src.strip(), "workbench visual")
+            if target:
+                if target.suffix.lower() != ".svg":
+                    add_issue(result, "FAIL", data_path, f"workbench visual is not SVG: {src}", "외부 의존 없이 확대 가능한 저장소 로컬 SVG를 사용합니다.")
+                else:
+                    validate_renderable_svg(result, target, "workbench visual")
+
     nodes = workbench.get("nodes")
     if not isinstance(nodes, dict) or not nodes:
         add_issue(
@@ -618,7 +749,10 @@ def validate_semantic_workbench(
             if not isinstance(node.get(field_name), str) or not node[field_name].strip():
                 add_issue(result, "FAIL", data_path, f"workbench node {node_id!r} has no {field_name}", "각 node에 label, icon, kind, role, boundary를 작성합니다.")
         if node.get("icon") not in SYSTEM_ICON_NAMES:
-            add_issue(result, "FAIL", data_path, f"workbench node {node_id!r} uses an unsupported icon", "assets/system-icons.svg에 정의된 icon 이름을 사용합니다.")
+            add_issue(result, "FAIL", data_path, f"workbench node {node_id!r} uses an unsupported icon", "assets/icons에 정의된 icon 이름을 사용합니다.")
+        elif isinstance(node.get("icon"), str):
+            icon_path = data_path.parents[2] / "assets" / "icons" / f"{node['icon']}.svg"
+            validate_renderable_svg(result, icon_path, f"node icon {node['icon']}")
         if isinstance(node.get("kind"), str) and DIAGRAM_DATA_NODE_KIND.search(node["kind"]):
             add_issue(
                 result,
@@ -837,6 +971,29 @@ def validate_sequence_data(result: RepoResult, sequence: dict[str, str], data_pa
                     "워크벤치의 학습 목적과 조작 안내를 짧은 문장으로 작성합니다.",
                 )
 
+        terms = workbench.get("terms")
+        if not isinstance(terms, list) or len(terms) < 2:
+            add_issue(result, "FAIL", data_path, "workbench terms must contain at least 2 items", "첫 화면에 필요한 기술 용어를 term과 짧은 한국어 meaning으로 설명합니다.")
+        else:
+            for term_index, term_item in enumerate(terms):
+                if not isinstance(term_item, dict) or not all(
+                    isinstance(term_item.get(field), str) and term_item[field].strip()
+                    for field in ("term", "meaning")
+                ):
+                    add_issue(result, "FAIL", data_path, f"workbench term {term_index} is incomplete", "각 용어에 term과 한 역할만 설명하는 meaning을 작성합니다.")
+
+        comparison = workbench.get("comparison")
+        if not isinstance(comparison, dict) or not isinstance(comparison.get("label"), str) or not comparison["label"].strip():
+            add_issue(result, "FAIL", data_path, "workbench comparison is missing", "관찰 뒤 구분할 두 조건을 comparison.label, left, right로 작성합니다.")
+        else:
+            for side in ("left", "right"):
+                item = comparison.get(side)
+                if not isinstance(item, dict) or not all(
+                    isinstance(item.get(field), str) and item[field].strip()
+                    for field in ("title", "body")
+                ):
+                    add_issue(result, "FAIL", data_path, f"workbench comparison {side} is incomplete", "각 비교 항목에 title과 하나의 인과 차이를 설명하는 body를 작성합니다.")
+
         scenarios = workbench.get("scenarios")
         flow_ids = {flow.get("id") for flow in flows if isinstance(flow, dict)}
         if not isinstance(scenarios, list) or not (3 <= len(scenarios) <= 4):
@@ -861,6 +1018,28 @@ def validate_sequence_data(result: RepoResult, sequence: dict[str, str], data_pa
                 for field_name in ("label", "prompt", "evidence", "outcome"):
                     if not isinstance(scenario_item.get(field_name), str) or not scenario_item[field_name].strip():
                         add_issue(result, "FAIL", data_path, f"workbench scenario {index} has no {field_name}", "label, prompt, evidence, outcome을 실제 학습 내용으로 작성합니다.")
+                prediction = scenario_item.get("prediction")
+                if not isinstance(prediction, dict):
+                    add_issue(result, "FAIL", data_path, f"workbench scenario {index} has no prediction", "관찰 결과를 열기 전에 답할 prompt, options, answer, explanation을 작성합니다.")
+                else:
+                    for field_name in ("prompt", "answer", "explanation"):
+                        if not isinstance(prediction.get(field_name), str) or not prediction[field_name].strip():
+                            add_issue(result, "FAIL", data_path, f"workbench scenario {index} prediction has no {field_name}", "예측 질문, 정답 id와 관찰 뒤 설명을 모두 작성합니다.")
+                    options = prediction.get("options")
+                    if not isinstance(options, list) or not (2 <= len(options) <= 4):
+                        add_issue(result, "FAIL", data_path, f"workbench scenario {index} prediction options must contain 2-4 items", "학생이 비교할 수 있는 2~4개 예측 선택지를 제공합니다.")
+                    else:
+                        option_ids: set[str] = set()
+                        for option_index, option in enumerate(options):
+                            if not isinstance(option, dict) or not all(
+                                isinstance(option.get(field), str) and option[field].strip()
+                                for field in ("id", "label")
+                            ):
+                                add_issue(result, "FAIL", data_path, f"workbench scenario {index} prediction option {option_index} is incomplete", "각 예측 선택지에 id와 학생이 판단할 label을 작성합니다.")
+                                continue
+                            option_ids.add(option["id"])
+                        if isinstance(prediction.get("answer"), str) and prediction["answer"] not in option_ids:
+                            add_issue(result, "FAIL", data_path, f"workbench scenario {index} prediction answer is not an option id", "answer를 같은 prediction.options의 id와 맞춥니다.")
                 if scenario_item.get("flowId") not in flow_ids:
                     add_issue(result, "FAIL", data_path, f"workbench scenario {index} references an unknown flowId", "기존 flows[].id 중 하나를 연결합니다.")
                 if scenario_item.get("tone") not in WORKBENCH_TONES:
@@ -975,10 +1154,13 @@ def validate_repo(result: RepoResult) -> None:
         result,
         lab_dir / "index.html",
         expected_scripts={"./visual-lab-data.js", "./visual-lab.js"},
-        expected_links={"./styles.css"},
+        expected_links={"./styles.css", "./assets/visual-lab-mark.svg"},
     )
     validate_css_assets(result, lab_dir / "styles.css")
+    validate_renderable_svg(result, lab_dir / "assets" / "visual-lab-mark.svg", "brand mark")
     validate_icon_sprite(result, lab_dir / "assets" / "system-icons.svg")
+    validate_asset_metadata(result, lab_dir / "assets" / "SOURCE.md", "source")
+    validate_asset_metadata(result, lab_dir / "assets" / "LICENSES.md", "license")
     validate_hub_data(result)
 
     for sequence in result.sequences:
@@ -1000,7 +1182,7 @@ def validate_repo(result: RepoResult) -> None:
                 result,
                 sequence_index,
                 expected_scripts={"./visual-lab-data.js", "../../visual-lab.js"},
-                expected_links={"../../styles.css"},
+                expected_links={"../../styles.css", "../../assets/visual-lab-mark.svg"},
             )
         validate_sequence_data(result, sequence, sequence_data)
 

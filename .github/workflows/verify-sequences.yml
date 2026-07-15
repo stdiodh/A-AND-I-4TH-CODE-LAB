@@ -27,6 +27,9 @@ jobs:
       - name: Show Python version
         run: python3 --version
 
+      - name: Fetch submodule branch refs
+        run: git submodule foreach --recursive 'git fetch origin "+refs/heads/*:refs/remotes/origin/*" --prune'
+
       - name: Compile smoke script
         run: python3 -m compileall scripts/verify-sequences.py
 
