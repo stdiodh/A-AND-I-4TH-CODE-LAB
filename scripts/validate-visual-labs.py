@@ -167,6 +167,15 @@ ANSWER_EXPOSURE_FAIL = re.compile(
 )
 DIAGRAM_DATA_NODE_KIND = re.compile(r"\b(payload|dto|http result|comparison path)\b", re.IGNORECASE)
 ENGLISH_META_COPY = re.compile(r'"(?:concept|boundary|label)"\s*:\s*"Verification(?: failure)?"')
+MOBILE_VISUAL_WIDTH = 308
+FORBIDDEN_VISUAL_LAB_COPY = (
+    "관계를 먼저 읽고, 아래에서 한 단계씩 확인합니다.",
+)
+FORBIDDEN_RENDERER_MARKERS = (
+    "sequence-current-detail__payload",
+    "sequence-mobile-current__sentence",
+    "sequence-step-jump",
+)
 
 
 @dataclass
@@ -271,6 +280,12 @@ def relative_display(path: Path) -> str:
 
 def add_issue(result: RepoResult, level: str, path: Path, reason: str, hint: str) -> None:
     result.issues.append(Issue(level, relative_display(path), reason, hint))
+
+
+def normalize_ui_copy(value: Any) -> str:
+    if not isinstance(value, str):
+        return ""
+    return re.sub(r"[^0-9A-Za-z가-힣]+", "", value).casefold()
 
 
 def run_git(repo: Path, args: list[str]) -> subprocess.CompletedProcess[str]:
@@ -788,7 +803,7 @@ def validate_renderable_svg(result: RepoResult, path: Path, purpose: str) -> Non
                     "루트 viewBox와 px 기반 font-size를 명시해 모바일에서도 글자 크기를 검증할 수 있게 합니다.",
                 )
             else:
-                estimated_mobile_size = min(font_sizes) * min(1.0, 320 / view_box_width)
+                estimated_mobile_size = min(font_sizes) * min(1.0, MOBILE_VISUAL_WIDTH / view_box_width)
                 if estimated_mobile_size < 10.5:
                     add_issue(
                         result,
@@ -797,6 +812,31 @@ def validate_renderable_svg(result: RepoResult, path: Path, purpose: str) -> Non
                         f"workbench visual text becomes too small on mobile: about {estimated_mobile_size:.1f}px",
                         "관계를 단순화하고 viewBox 폭을 줄이거나 최소 font-size를 키워 390px 화면에서 10.5px 이상으로 표시합니다.",
                     )
+
+
+def validate_renderer_copy(result: RepoResult, path: Path) -> None:
+    if not path.exists():
+        return
+
+    source = path.read_text(encoding="utf-8")
+    for copy in FORBIDDEN_VISUAL_LAB_COPY:
+        if copy in source:
+            add_issue(
+                result,
+                "FAIL",
+                path,
+                f"renderer contains repeated filler copy: {copy}",
+                "경로, 상태 변화 또는 근거처럼 이 화면에서만 전달할 정보로 교체합니다.",
+            )
+    for marker in FORBIDDEN_RENDERER_MARKERS:
+        if marker in source:
+            add_issue(
+                result,
+                "FAIL",
+                path,
+                f"renderer reintroduces a duplicate current-step surface: {marker}",
+                "message, current inspector와 evidence가 각각 route, change와 source 한 역할만 맡도록 유지합니다.",
+            )
 
 
 def resolve_visual_asset(result: RepoResult, data_path: Path, src: str, purpose: str) -> Path | None:
@@ -940,6 +980,36 @@ def validate_semantic_workbench(
             continue
         if not isinstance(diagram.get("caption"), str) or not diagram["caption"].strip():
             add_issue(result, "FAIL", data_path, f"{location} has no caption", "학습자가 흐름을 한 문장으로 읽을 수 있는 caption을 작성합니다.")
+
+        prediction = scenario.get("prediction")
+        reflection = scenario.get("reflection")
+        copy_roles = {
+            "prompt": scenario.get("prompt"),
+            "prediction prompt": prediction.get("prompt") if isinstance(prediction, dict) else None,
+            "prediction explanation": prediction.get("explanation") if isinstance(prediction, dict) else None,
+            "observation title": scenario.get("observationTitle"),
+            "diagram caption": diagram.get("caption"),
+            "evidence": scenario.get("evidence"),
+            "outcome": scenario.get("outcome"),
+            "reflection prompt": reflection.get("prompt") if isinstance(reflection, dict) else None,
+        }
+        normalized_roles = {
+            role: normalize_ui_copy(value)
+            for role, value in copy_roles.items()
+            if normalize_ui_copy(value)
+        }
+        duplicate_groups: dict[str, list[str]] = {}
+        for role, normalized in normalized_roles.items():
+            duplicate_groups.setdefault(normalized, []).append(role)
+        for roles in duplicate_groups.values():
+            if len(roles) > 1:
+                add_issue(
+                    result,
+                    "WARN",
+                    data_path,
+                    f"workbench scenario {scenario_index} repeats the same copy across roles: {', '.join(roles)}",
+                    "조건, 판단 질문, 경로, 증거, 결론과 회상 질문이 각각 한 역할만 맡도록 문장을 나눕니다.",
+                )
 
         participants = diagram.get("participants")
         if participants is not None:
@@ -1411,6 +1481,7 @@ def validate_repo(result: RepoResult) -> None:
         expected_links={"./styles.css", "./assets/visual-lab-mark.svg"},
     )
     validate_css_assets(result, lab_dir / "styles.css")
+    validate_renderer_copy(result, lab_dir / "visual-lab.js")
     validate_renderable_svg(result, lab_dir / "assets" / "visual-lab-mark.svg", "brand mark")
     validate_icon_sprite(result, lab_dir / "assets" / "system-icons.svg")
     validate_asset_metadata(result, lab_dir / "assets" / "SOURCE.md", "source")

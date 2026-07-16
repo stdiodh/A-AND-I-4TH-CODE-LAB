@@ -297,7 +297,8 @@ body::before {
 - `semantic-node`: 실제 책임 주체나 관찰할 resource를 icon, kind, role, boundary와 함께 표시한다.
 - `semantic-edge`: 두 node 사이의 방향, 동사, payload와 관계 kind를 표시하는 단계 control이다.
 - `lifeline-sequence`: 책임 주체를 한 번만 놓고 위에서 아래로 실행 시간을 읽는 주 다이어그램이다.
-- `active-effect`: 현재 화살표가 바꾸는 대상의 before와 after를 나란히 보여주는 기록이다.
+- `current-step-inspector`: 현재 message 바로 옆에서 before와 after, 책임 경계와 근거 범위만 보여주는 기록이다. actor, verb와 payload는 message에서 다시 복사하지 않는다.
+- `mobile-current-step`: 1099px 이하의 집중 layout에서 route, payload, before와 after를 한 surface에 합친다. 별도 current detail을 바로 뒤에 반복하지 않는다.
 - `not-reached`: 선택한 조건에서 실행되지 않은 대상과 이유를 별도 목록으로 설명한다.
 - `evidence-layout`: 현재 단계의 Problem, Concept, Action, Check와 책임·개념을 연결한다.
 - `reference-shelf`: 용어, 범위와 문서 링크를 secondary `details`로 둔다.
@@ -338,13 +339,13 @@ radius는 small 8px, medium 14px, large 20px 안에서만 사용한다. hover에
 - HTTP method, 메서드 호출, 검증 행위와 같은 동작은 독립 node로 만들지 않고 edge의 `verb`와 `payload`로 표현한다.
 - request DTO, token, event, command, artifact가 단순히 이동하는 값이면 edge의 `payload`다. image처럼 생성·실행 상태 자체를 비교하는 대상일 때만 node로 승격한다.
 - edge는 방향과 함께 `verb`, `payload`, `kind`를 항상 표시한다. `kind`는 `request`, `call`, `transform`, `persist`, `response`, `failure`, `event`, `config`, `compare` 중 하나다.
-- 현재 edge는 `effect.subject`, `effect.before`, `effect.after`를 함께 보여준다. 단순 이동이면 위치 또는 소유 책임이 바뀌고, 변환·저장·검증이면 객체나 시스템 상태가 바뀐다.
+- 현재 edge의 message는 `from`, `to`, `verb`, `payload`만 맡고, 바로 옆 inspector는 `effect.before`, `effect.after`, 책임 경계와 `evidenceScope`만 맡는다. `effect.subject`가 payload와 같으면 보이는 제목으로 다시 출력하지 않는다. 단순 이동이면 위치 또는 소유 책임이 바뀌고, 변환·저장·검증이면 객체나 시스템 상태가 바뀐다.
 - `호출 전 책임`, `반환 대기`, `판정 입력`, `evidence가 아직 관찰되지 않음`처럼 payload만 바꿔 끼울 수 있는 틀 문장은 상태 변화로 인정하지 않는다. 학생이 실행 전후를 비교할 수 있도록 실제 값, 저장 위치, 인증 주체, 연결 대상, 실패 gate 또는 assertion 결과를 쓴다.
 - `evidenceScope`는 `code`, `test`, `runtime`, `manual`, `concept` 중 하나를 text로 표시해 코드 한 조각이 실제 실행 전체를 보장하는 것처럼 보이지 않게 한다.
 - `from === to`는 같은 lifeline을 되돌아오는 self-call loop로, `response`는 역방향 화살표로, `event`는 점선 message로, `failure`는 중단 표식과 도달하지 않은 책임으로 구분한다.
 - 코드 근거는 파일 경로 badge가 아니라 학생이 확인할 한 문장으로 시작한다. 바로 아래에 저장소의 실제 핵심 코드 3~12줄을 놓고, 끝에 이 코드가 바꾸는 상태나 다음 책임을 한 문장으로 적는다. 전체 파일 위치는 꼭 필요할 때만 접힌 참고 영역에 둔다.
 - node의 `boundary`는 `Controller`, `Persistence`, `Trust`, `Build time`, `Runtime`, `Broker`처럼 판단이나 책임이 실제로 바뀌는 위치를 visible text로 표시한다.
-- 모든 node는 `systemLayer`를 가진다. `outside`, `interface`, `application`, `resource`, `integration`, `runtime` 중 실제 시스템 위치 하나를 선택하고 participant header, layer rail과 lifeline에 같은 위치 label을 유지한다.
+- 모든 node는 `systemLayer`를 가진다. `outside`, `interface`, `application`, `resource`, `integration`, `runtime` 중 실제 시스템 위치 하나를 선택한다. 연속된 위치 label은 layer rail에서 그룹마다 한 번만 표시하고 participant header는 icon과 이름에 집중한다. 현재 출발·도착 책임의 boundary와 layer는 inspector 또는 모바일 현재 단계에서만 다시 보여준다.
 - 서로 다른 lane을 하나의 실행 시간축으로 합치지 않는다. 현재 lane 안에서만 `지남`, `현재 관찰`, `다음`을 사용하고 다른 lane은 `선택 가능`으로 표시한다.
 - progress는 전체 edge 합계가 아니라 현재 lane 이름과 `현재 단계 / lane 단계 수`를 보여준다. lane 끝의 이동은 `다음 경로`로 명시하고 학생이 수동으로 이동한다.
 - semantic edge와 evidence는 edge/node의 명시적 `codePointIds`로 연결하며 legacy flow step의 위치를 비례 상속하지 않는다.
@@ -355,7 +356,7 @@ radius는 small 8px, medium 14px, large 20px 안에서만 사용한다. hover에
 
 `system-icons.svg`는 공통 outline 원본과 하위 호환 자료로 보존한다. 실제 participant header는 직접 렌더링 가능한 `docs/visual-lab/assets/icons/{icon}.svg`를 `<img>`로 사용한다. icon은 책임을 빠르게 찾는 보조 수단이며 alt를 비워 장식으로 처리하고 label, role, boundary를 visible text로 유지한다. load error에서도 기술 역할 label이 남아야 한다. hub와 sequence entry의 favicon은 같은 저장소 로컬 `assets/visual-lab-mark.svg`를 사용한다.
 
-각 시퀀스는 주제에서 직접 나온 기본 설명 SVG 한 개를 `workbench.visual`의 `src`, `alt`, `caption`으로 연결한다. 한 시퀀스 안에서도 입력 조건에 따라 핵심 구조가 달라지면 `scenario.visual`에 같은 세 필드를 두어 해당 조건의 그림으로 교체할 수 있다. 설명 SVG는 memory와 DB 생명주기, cache 상태, subscription fan-out처럼 학생이 먼저 알아야 할 관계만 보여주고 interactive path나 text를 대체하지 않는다. desktop에서는 원본 비율을 유지하되 높이를 360px 이내로 제한하고, mobile에서는 그림 영역의 전체 폭을 사용한다. 390px 화면의 약 320px 그림 영역에서도 가장 작은 visible text가 10.5px 아래로 축소되지 않도록 관계 수, viewBox 폭과 SVG 내부 font-size를 함께 조정한다. `assets/SOURCE.md`와 `assets/LICENSES.md`에 출처와 사용 조건을 기록한다. 외부 icon CDN, emoji, 외부 font, script와 network URL은 사용하지 않는다.
+각 시퀀스는 주제에서 직접 나온 기본 설명 SVG 한 개를 `workbench.visual`의 `src`, `alt`, `caption`으로 연결한다. 한 시퀀스 안에서도 입력 조건에 따라 핵심 구조가 달라지면 `scenario.visual`에 같은 세 필드를 두어 해당 조건의 그림으로 교체할 수 있다. 설명 SVG는 memory와 DB 생명주기, cache 상태, subscription fan-out처럼 학생이 먼저 알아야 할 관계만 보여주고 interactive path나 text를 대체하지 않는다. desktop에서는 원본 비율을 유지하되 높이를 360px 이내로 제한하고, mobile에서는 그림 영역의 전체 폭을 사용한다. 390px 화면의 실제 약 308px 그림 영역에서도 가장 작은 visible text가 10.5px 아래로 축소되지 않도록 관계 수, viewBox 폭과 SVG 내부 font-size를 함께 조정한다. 글자를 줄여 맞추지 않고 node를 두 행이나 lane으로 나눈다. 같은 layer label은 연속 그룹마다 한 번만 보이고, 보이는 title·footer가 HTML caption이나 outcome을 반복하면 SVG에서는 제거한다. `<title>`과 `<desc>`는 접근성을 위해 유지한다. `assets/SOURCE.md`와 `assets/LICENSES.md`에 출처와 사용 조건을 기록한다. 외부 icon CDN, emoji, 외부 font, script와 network URL은 사용하지 않는다.
 
 다이어그램의 `check`와 evidence는 실제 증거보다 넓은 보장을 주장하지 않는다. mock 호출은 외부 시스템 통합 성공, `contextLoads`는 HTTP 계약, in-memory map은 영속 멱등성, 배포 명령 종료는 서비스 정상 응답의 증거가 아니다. publisher confirm이 없으면 `convertAndSend` 정상 반환도 broker acceptance·routing을 보장하지 않고, 모호한 전송 예외도 미전송을 확정하지 않는다.
 
@@ -406,8 +407,8 @@ Repository context
 ├──────────────────────────────────────────────────────────┤
 │ 결과를 숨긴 조건 -> 내 예측                             │
 ├──────────────────────────────────────────────────────────┤
-│ participant header와 수직 lifeline                      │
-│ 위→아래 message · 현재 before → after                   │
+│ layer rail · participant header와 수직 lifeline          │
+│ 위→아래 message          │ 현재 before → after          │
 │ 짧은 주석 → 실제 핵심 코드 → 확인 가능한 범위          │
 ├──────────────────────────────────────────────────────────┤
 │ 반대 조건 비교 -> 인과 규칙 정리 -> 다음 질문          │
@@ -420,11 +421,13 @@ Repository context
 
 ### 11.1 반응형
 
-- desktop은 최대 1320px 작업면과 2열 evidence layout을 사용할 수 있다.
-- 980px 이하에서는 header, workbench header와 evidence를 1열로 바꾼다.
-- 720px 이하에서는 learning nav를 가로 이동 가능한 대체 nav로 두고 scenario control과 결과를 세로로 재배치한다.
+- 1100px 이상은 lifeline과 current-step inspector를 나란히 두고 전체 위치와 현재 변화를 같은 시선에 연결한다.
+- 1099px 이하는 participant stage의 가로 스크롤을 강요하지 않고 현재 단계 집중 layout으로 전환한다.
+- 900px 이하는 shell 여백과 learning nav를 좁은 화면에 맞게 보정하고 scenario control과 결과를 세로로 재배치한다.
+- 420px 이하는 이전·다음 control을 한 열로 압축하되 현재 lane progress와 최소 44px touch target을 유지한다.
 - 390px에서 page-level horizontal overflow가 없어야 한다.
-- 900px 이하에서는 전체 participant 카드를 먼저 쌓지 않는다. 현재 message를 `출발 책임 → 도착 책임`, 각 책임의 시스템 레이어명, payload, before → after 순서의 압축 lifeline으로 먼저 보여주고 이전·다음 단계는 수동 control로 이동한다.
+- 1099px 이하에서는 전체 participant 카드를 먼저 쌓지 않는다. 현재 message를 `출발 책임 → 도착 책임`, 각 책임의 시스템 레이어명, payload, before → after 순서의 단일 surface로 보여주고 이전·다음 단계는 수동 control로 이동한다.
+- 모바일은 이전·다음 button과 현재 lane progress를 단계 이동의 주 control로 사용한다. 같은 route 문장을 다시 나열하는 전체 단계 바로 가기 목록은 렌더링하지 않는다.
 - legacy Signal Trace와 긴 code만 해당 영역 안에서 제한적인 가로 스크롤을 허용하며 semantic diagram 이해를 가로 스크롤에 의존시키지 않는다.
 - 긴 한국어, 파일 경로, 명령과 상태 label은 잘리거나 겹치지 않아야 한다.
 

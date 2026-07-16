@@ -236,6 +236,9 @@ workbench: {
 작성 규칙:
 
 - scenario `label`은 `hit`, `miss`, `blocked`, 성공/실패처럼 관찰 결과를 미리 공개하지 않고 입력 조건만 말한다.
+- `prompt`는 현재 주어진 상태, `prediction.prompt`는 학생이 내려야 할 판단 하나만 맡는다. 입력 조건 전체를 예측 질문에서 다시 쓰지 않는다.
+- `prediction.explanation`은 선택이 갈린 기준, `diagram.caption`은 실제 전체 경로, `evidence`는 증거의 종류·범위·한계, `outcome`은 관찰 뒤 남길 인과 규칙 하나만 맡는다.
+- `observationTitle`은 20~35자 안팎의 관찰 대상, lane `description`은 다른 lane과 구분되는 책임을 설명한다. caption의 축약본이나 scenario 전체 경로를 반복하지 않는다.
 - route와 snapshot에 임시 actor, 의미 없는 수치나 장식용 metric을 넣지 않는다.
 - `stopAfter`는 실패 또는 차단 조건에서 실제 도달 지점이 확인될 때만 쓴다.
 - `fanOut`에는 연결만 된 대상이 아니라 실제로 해당 topic을 구독해 메시지를 받는 대상만 쓴다.
@@ -244,6 +247,7 @@ workbench: {
 - `theoryRef`가 가리키는 절에는 같은 id의 명시적 HTML anchor를 둔다. 자동 생성 heading anchor에만 의존하지 않는다.
 - 해당 theory 절 끝에는 `[Visual Lab에서 입력 조건을 보고 경로 예측하기](./visual-lab/sequences/NN/)` 링크를 두어 왕복할 수 있게 한다.
 - `reflection.prompt`는 정답 문장을 요구하지 않는다. “어느 경계에서 무엇이 바뀌었는가”처럼 실제로 관찰한 관계를 다시 쓰게 한다.
+- reflection은 회상 행동이므로 유지하되 `outcome`을 단순히 의문형으로 복사하지 않는다.
 
 ### 3.1.1 Semantic diagram 데이터 계약
 
@@ -406,6 +410,7 @@ workbench: {
 - 각 lane은 고유 `id`, 짧은 `label`, 읽는 목적을 설명하는 `description`, 2~7개의 `steps`를 가진다.
 - 각 step의 `from`과 `to`는 `workbench.nodes` key를 참조하고 `verb`, `payload`, `kind`를 반드시 가진다.
 - 각 step은 `effect: { kind, subject, before, after }`를 가진다. `kind`는 `transfer`, `transform`, `persist`, `gate`, `return`, `fanout`, `verify`, `preserve` 중 하나이며 화살표 전후의 차이를 비교할 수 있게 쓴다.
+- `effect.subject`는 데이터 계약상 `payload`와 같을 수 있다. renderer는 두 값이 정규화 기준으로 같으면 subject 제목을 다시 보여주지 않고 before와 after만 표시한다.
 - `payload 변환 전 → payload 변환 완료`, `호출 전 책임 → 호출 후 책임`, `반환 대기 → 호출자 보유`, `evidence가 아직 관찰되지 않음 → 상태가 판정됨`처럼 어느 주제에도 붙일 수 있는 틀 문장은 쓰지 않는다. 실제 key/value, collection 또는 row의 존재, 인증 주체, 연결·구독 대상, 최초 실패 gate, assertion 결과가 어떻게 달라졌는지 적는다.
 - 각 step은 `evidenceScope`를 가진다. 값은 `code`, `test`, `runtime`, `manual`, `concept` 중 실제 확인 범위 하나다.
 - edge `kind`는 `request`, `call`, `transform`, `persist`, `response`, `failure`, `event`, `config`, `compare` 중 하나다.
@@ -418,7 +423,8 @@ workbench: {
 - 한 lane을 본 뒤 비교할 경로가 정해져 있을 때만 `lane.nextLaneIds`에 같은 diagram의 lane id를 쓴다.
 - progress는 현재 lane 범위만 사용한다. 학생이 수동으로 lane을 넘을 때는 `다음 경로`라고 표시한다.
 - semantic edge의 code evidence는 edge의 `codePointIds`, 도착 node, 출발 node 순서의 명시적 연결만 사용한다. legacy flow step의 배열 위치를 상속하지 않는다.
-- 모바일 세로 흐름에서도 `verb`, `payload`, `kind`, boundary, `systemLayer` label과 state label을 생략하지 않는다.
+- desktop message는 `from`, `to`, `verb`, `payload`를 맡고 current inspector는 `before → after`, 출발·도착 boundary와 `evidenceScope`를 맡는다. `check`와 실제 source는 아래 evidence section에서 한 번만 보여준다.
+- 모바일 세로 흐름은 route, `verb`, `payload`, `kind`, boundary, `systemLayer`, state label과 `before → after`를 한 current-step surface에 합친다. 바로 뒤에 같은 current detail을 다시 만들지 않는다.
 - edge가 단계 선택 control이면 keyboard focus와 접근 가능한 이름에 `from`, `to`, `verb`, `payload`, state가 모두 포함되어야 한다.
 - reduced motion은 전달 애니메이션만 제거하며 caption, 방향, payload와 notReached 이유는 정적으로 유지한다.
 
@@ -755,7 +761,7 @@ PostCreateRequest
 15. 관계 매핑 입문
 ```
 
-향후 전체 시퀀스 확장 시에는 `00`부터 `12`까지의 모든 시퀀스를 하나 이상의 카드나 흐름으로 연결한다.
+현재 `00`부터 `12`까지의 모든 시퀀스는 하나 이상의 실제 카드나 흐름으로 연결한다.
 단, 각 시퀀스의 상세 이론은 HTML에 복제하지 않고 해당 토픽 레포 링크로 연결한다.
 
 ## 7. 주제 데이터 구조 예시

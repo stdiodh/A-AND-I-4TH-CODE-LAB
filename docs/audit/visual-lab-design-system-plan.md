@@ -1,5 +1,11 @@
 # Visual Lab Design System Application Plan
 
+작성일: 2026-07-16
+
+상태: 1차 디자인 시스템·System Layer 적용 완료
+
+이 문서는 당시 설계 판단을 보존한다. 현재 구현 계약은 중앙 디자인 문서와 `visual-lab-readability-reduction-plan.md`를 따르고, 실제 검증 결과는 `visual-lab-design-system-review.md`에 누적한다.
+
 ## 1. Subject
 
 실행 중인 백엔드 요청, 객체, 상태, 경계와 전달 단위를 직접 추적하며 이론을 확인하는 정적 학습 환경.
@@ -326,7 +332,7 @@ docs/visual-lab/assets/
 - hub와 sequence entry는 같은 로컬 `visual-lab-mark.svg`를 favicon으로 연결해 깨진 외부 brand asset 요청을 만들지 않는다.
 - 주제 설명은 `workbench.visual = { src, alt, caption }`으로 연결한다.
 - 정적 설명 asset은 `<img>`와 visible `figcaption`을 사용하고, interactive path는 semantic HTML button으로 유지한다.
-- icon은 40~48px로 표시한다. 주제 설명 visual은 관계를 3~6개로 제한하고 원본 비율을 유지한다. desktop에서는 최대 360px 높이, mobile에서는 전체 폭을 사용하며, 390px 화면의 약 320px 그림 영역에서도 가장 작은 visible text가 10.5px 이상이 되도록 viewBox와 내부 font-size를 맞춘다.
+- icon은 40~48px로 표시한다. 주제 설명 visual은 관계를 3~6개로 제한하고 원본 비율을 유지한다. desktop에서는 최대 360px 높이, mobile에서는 전체 폭을 사용한다. 이 단계에서 약 320px을 가정했으며 후속 실측에서 308px로 보정했다. 현재 최소 글자 계약은 `visual-lab-readability-reduction-plan.md` 7절을 따른다.
 - load error에는 기술 역할 label을 visible fallback으로 남긴다.
 - 모든 SVG는 `viewBox`를 가지며 외부 font, script, URL을 포함하지 않는다.
 - `SOURCE.md`와 `LICENSES.md`에 자체 제작·파생 관계와 사용 조건을 기록한다.
@@ -371,7 +377,7 @@ docs/visual-lab/assets/
 
 ## 16. Sequence Diagram과 Theory 동기화 계획
 
-이 절은 2026-07-16 학생 관점 재검수 뒤 추가한 다음 구현 계획이다. 이번 단계에서는 계획만 확정하고 Visual Lab runtime, 시퀀스 데이터와 토픽 저장소의 `docs/theory.md`는 아직 수정하지 않는다.
+이 절은 2026-07-16 학생 관점 재검수 때 확정한 당시 구현 계획이다. 계획에 따른 Diagnostic Lifeline 적용은 완료됐으며 실제 범위와 검증은 `visual-lab-design-system-review.md` 8절에 기록한다.
 
 ### 16.1 Goal Result
 
@@ -773,7 +779,7 @@ Theory에 13개 Mermaid diagram을 넣는 것 역시 template가 될 수 있다.
 - theory의 Mermaid가 지원되지 않는 환경에서도 인접 text table로 같은 순서를 읽을 수 있다.
 - `node --check`, manifest, sequence, Visual Lab, color, link/anchor validator와 `git diff --check`가 모두 통과한다.
 
-### 16.17 Planned File Scope
+### 16.17 당시 Planned File Scope
 
 중앙 저장소에서 갱신할 후보는 다음과 같다.
 
@@ -802,6 +808,8 @@ docs/visual-lab/sequences/NN/visual-lab-data.js
 ## 17. System Layer Color와 읽기 부담 보정 계획
 
 이 절은 2026-07-16에 02, 07, 12를 1440px과 390px에서 다시 읽은 뒤 추가한다. 기존 구현은 현재 message와 상태 변화는 보여주지만 participant가 어느 시스템 레이어에 속하는지는 같은 흰색 node, 같은 회색 lifeline과 시퀀스마다 다른 `boundary` 문구를 읽어야만 알 수 있다.
+
+이 보정은 완료됐고 당시 결과는 `visual-lab-design-system-review.md` 8.1절에 보존한다. 후속 가독성 감량으로 바뀐 현재 breakpoint와 정보 소유권은 8.2절이 우선한다.
 
 ### 17.1 Subject, Audience, Single Job
 

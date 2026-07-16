@@ -514,7 +514,7 @@ compact context bar
 - data가 없거나 잘못된 경우 원인과 확인 파일을 알려주는 empty/fatal state를 렌더링한다.
 - section observer는 learning nav의 현재 위치를 `aria-current="location"`으로 표현한다.
 - 상태 변경 알림은 재렌더링 밖에 유지되는 짧은 `role="status"` 한 곳으로 제한하고 현재 lane, from/to, verb와 payload를 알린다.
-- 900px 이하에서는 participant 목록을 먼저 쌓지 않고 현재 message의 출발·도착·각 시스템 레이어명·payload·before/after를 먼저 보여준다.
+- 1099px 이하에서는 participant 목록을 먼저 쌓지 않고 현재 message의 출발·도착·각 시스템 레이어명·payload·before/after를 한 current-step surface로 보여준다.
 - reduced motion에서는 transition과 smooth scroll을 제거하고 active edge의 방향·payload·상태를 정적으로 제공한다.
 
 ### 7.6 Shared Engine 로컬 복제
@@ -565,19 +565,23 @@ CDN, symlink, 새 package 대신 동일한 engine을 각 레포에 로컬 복제
 - 모든 scenario에 `observationTitle`, `theoryRef`, `reflection`을 작성하고 theory 문서의 명시적 anchor와 맞춤
 - 각 evidence가 실제 테스트와 runtime 관찰 범위를 넘지 않는지 확인
 - blocked, warning, recovered 상태와 evidence를 색상 외 정보로 작성
+- prompt, prediction, caption, lane, evidence, outcome과 reflection이 각각 조건·판단·경로·책임·근거·결론·회상 역할 하나만 맡는지 확인
 
 ### Step 4. HTML shell과 shared style 동기화
 
 - hub와 sequence의 최소 `#app` shell 확인
 - semantic token, context bar, journey, question header, workbench, evidence, verification, next 레이아웃 반영
-- participant/lifeline/message와 mobile 압축 단계, 직접 렌더링 local icon과 주제 설명 SVG 연결
+- 1100px 이상의 participant/lifeline/message + current inspector와 1099px 이하의 단일 current-step surface 연결
+- message에는 route/verb/payload, inspector에는 before/after·boundary·근거 범위, evidence section에는 check/source만 남겨 같은 단계의 반복 제거
+- 직접 렌더링 local icon과 주제 설명 SVG 연결. SVG는 실제 308px 표시 폭에서 10.5px 미만 글자, text/connector 교차와 반복 layer label이 없도록 확인
 - 8개 토픽 레포의 공통 CSS를 같은 내용으로 동기화
 
 ### Step 5. Shared engine 동기화
 
 - hub/sequence 분기 렌더링
 - scenario와 flow state 연결
-- lifeline sequence, before/after, evidence/context drawer 렌더링
+- lifeline sequence, 옆 current inspector, 모바일 단일 current-step과 evidence/context drawer 렌더링
+- `effect.subject`와 payload가 같으면 subject 제목을 숨기고, 모바일은 이전·다음 button과 lane progress만으로 이동해 같은 route 목록을 다시 만들지 않음
 - focus restore, progress semantics, empty/fatal state 처리
 - 8개 토픽 레포의 공통 JS를 같은 내용으로 동기화
 
@@ -605,6 +609,10 @@ done
 
 python3 scripts/validate-manifest.py
 python3 scripts/validate-visual-labs.py
+find . -path '*/docs/visual-lab/*.html' -print0 \
+  | xargs -0 xmllint --html --noout
+find . -path '*/docs/visual-lab/*.svg' -print0 \
+  | xargs -0 xmllint --noout
 git diff --check
 ```
 
@@ -626,6 +634,8 @@ python3 -m http.server 8080 -d docs/visual-lab
 ```
 
 hub, 모든 상세 시퀀스, 모든 scenario의 예측 전/후, 주제 SVG의 실제 표시, semantic diagram의 lane/node/edge/notReached, controls, evidence, verification, next link를 확인한다.
+
+각 공개 상태에서 route/verb/payload, before/after와 step check가 같은 viewport에 두 번 보이지 않는지 확인한다. 1024px에서는 넓은 participant stage의 가로 스크롤 없이 현재 단계를 읽고, 390px에서는 current-step surface와 이전·다음 control을 한 viewport 안에서 읽을 수 있어야 한다.
 
 화면 크기:
 

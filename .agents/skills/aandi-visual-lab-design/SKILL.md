@@ -56,7 +56,7 @@ Keep the shell consistent, but choose a topic-specific primary workbench. Exampl
 - Require `workbench.visual`, `workbench.terms`, and a `prediction` for every scenario. Do not reveal path, snapshot, or outcome before the prediction.
 - Render node icons from local `assets/icons/{icon}.svg` and one topic explanation from `assets/diagrams`. Keep `system-icons.svg` only as source/backward compatibility, not the primary runtime path.
 - Give informative SVGs alt text and visible captions; retain visible text fallback when an image fails. Keep `assets/SOURCE.md` and `assets/LICENSES.md`.
-- Simplify each topic SVG so its smallest visible text remains at least 10.5px in the roughly 320px-wide image area of a 390px viewport; do not make students zoom a full desktop flowchart to read it.
+- Simplify each topic SVG so its smallest visible text remains at least 10.5px in the measured roughly 308px-wide image area of a 390px viewport; do not make students zoom a full desktop flowchart to read it.
 - Use manual previous/next navigation only. Do not add autoplay or speed controls.
 - Connect every structural element to real actors, states, responsibilities, code points, checks, or next questions.
 - Keep copy concise, active, learner-facing, and technically accurate. Never expose answer branch names, secrets, or long completed code.
