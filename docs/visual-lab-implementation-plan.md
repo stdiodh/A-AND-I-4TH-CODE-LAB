@@ -192,6 +192,16 @@ surface-secondary
 surface-evidence
 surface-diagram
 surface-node
+layer-outside-surface / layer-outside-line
+layer-interface-surface / layer-interface-line
+layer-application-surface / layer-application-line
+layer-resource-surface / layer-resource-line
+layer-integration-surface / layer-integration-line
+layer-runtime-surface / layer-runtime-line
+state-current
+state-passed
+state-failed
+state-pending
 signal-active
 signal-muted
 evidence
@@ -230,8 +240,8 @@ next-question
 empty-state / fatal-state
 ```
 
-컴포넌트마다 색상, 간격, radius, motion 값을 다시 하드코딩하지 않는다.
-390px에서는 page-level horizontal overflow가 없어야 한다. 전체 participant 카드를 먼저 쌓지 않고 현재 message의 출발·도착·payload·before/after를 세로로 보여주며, 긴 code만 해당 영역 안에서 제한적으로 스크롤할 수 있다.
+컴포넌트마다 색상, 간격, radius, motion 값을 다시 하드코딩하지 않는다. `layer-*`는 시스템 위치, `state-*`는 현재 진행 상태에만 사용해 두 의미를 섞지 않는다.
+390px에서는 page-level horizontal overflow가 없어야 한다. 전체 participant 카드를 먼저 쌓지 않고 현재 message의 출발·도착·각 시스템 레이어명·payload·before/after를 세로로 보여주며, 긴 code만 해당 영역 안에서 제한적으로 스크롤할 수 있다.
 
 ### 7.2.1 docs/visual-lab/assets
 
@@ -320,7 +330,8 @@ window.visualLabData = {
         icon: "client",
         kind: "actor",
         role: "HTTP 요청 전송",
-        boundary: "Client"
+        boundary: "Client",
+        systemLayer: "outside"
       },
       controller: {
         label: "PostController",
@@ -328,6 +339,7 @@ window.visualLabData = {
         kind: "request handler",
         role: "요청 DTO 수신과 Service 호출",
         boundary: "Web",
+        systemLayer: "interface",
         codePointIds: ["controller-entry"]
       },
       service: {
@@ -335,21 +347,24 @@ window.visualLabData = {
         icon: "service",
         kind: "application service",
         role: "저장 흐름 조립",
-        boundary: "Application"
+        boundary: "Application",
+        systemLayer: "application"
       },
       repository: {
         label: "PostRepository",
         icon: "repository",
         kind: "persistence port",
         role: "DB 접근 위임",
-        boundary: "Persistence"
+        boundary: "Persistence",
+        systemLayer: "resource"
       },
       database: {
         label: "MySQL",
         icon: "database",
         kind: "persistent storage",
         role: "row 영속 저장",
-        boundary: "Database"
+        boundary: "Database",
+        systemLayer: "resource"
       }
     },
     scenarios: [
@@ -422,7 +437,8 @@ window.visualLabData = {
 
 - `kind`는 시퀀스 주제에 맞는 request, request-trace, persistence, gate, auth, trust, test, cache, realtime, runtime, pipeline, refactor, event 중 하나를 사용한다.
 - 각 시퀀스는 실제 콘텐츠에 근거한 3~4개 scenario를 둔다.
-- `nodes`는 id로 참조하는 keyed catalog이며 각 항목에 `label`, `icon`, `kind`, `role`, `boundary`, 선택적 `codePointIds`를 둔다.
+- `nodes`는 id로 참조하는 keyed catalog이며 각 항목에 `label`, `icon`, `kind`, `role`, `boundary`, `systemLayer`, 선택적 `codePointIds`를 둔다.
+- `systemLayer`는 `outside`, `interface`, `application`, `resource`, `integration`, `runtime` 중 하나이며 시스템 위치를 나타낸다. current/passed/failed/pending 진행 상태와 같은 색상 의미로 사용하지 않는다.
 - node는 책임 주체나 상태를 관찰할 system resource다. method, command와 전달 DTO/token/event는 edge의 `verb`와 `payload`로 둔다.
 - `flowId`는 같은 객체의 `flows[].id`와 반드시 일치해야 한다.
 - `tone`은 `signal`, `blocked`, `warning`, `recovered` 중 하나다.
@@ -431,7 +447,9 @@ window.visualLabData = {
 - `evidence`는 실제 요청, 응답, 상태, 로그, 명령, 테스트 또는 코드 지점을 가리킨다.
 - `outcome`은 학습자가 증거를 보고 내릴 판단을 쓴다.
 - 각 scenario의 `diagram`은 `caption`, 하나 이상의 `lanes`, lane별 2~7개 `steps`를 가진다.
+- 시퀀스 기본 설명은 `workbench.visual`의 로컬 SVG, alt, caption을 사용한다. 조건별 구조가 실제로 다를 때만 scenario에 같은 구조의 `visual`을 추가하며, 모든 경로는 현재 `docs/visual-lab/assets` 안에 머문다.
 - diagram step의 `from`과 `to`는 `nodes` key를 참조하고 `verb`, `payload`, `kind`를 가진다. `kind`는 request, call, transform, persist, response, failure, event, config, compare 중 하나다.
+- `diagram.participants`가 전체 정렬 순서를 제공해도 renderer는 active lane의 step endpoint만 표시한다. 순서를 별도로 고정하는 `lane.participants`는 현재 lane의 모든 from/to node를 빠짐없이 포함한다.
 - 실행되지 않은 책임은 `notReached: [{ label, reason }]`로 설명한다.
 - blocked scenario의 `stopAfter`는 마지막으로 도달한 route의 0-based index다.
 - realtime broadcast처럼 실제 수신자 분기가 있을 때만 `fanOut`을 추가한다.
@@ -475,9 +493,10 @@ compact context bar
 - scenario 선택은 결과가 아니라 입력 조건을 말하고 `aria-pressed`를 갱신한다.
 - `workbench.terms`는 예측 전에 접근 가능한 기본 닫힌 `details`로 렌더링해 첫 행동을 밀어내지 않는다.
 - 관찰 결과와 outcome은 학생이 예측을 선택한 뒤에 공개한다.
-- `workbench.visual`을 `<img>`와 visible `figcaption`으로 렌더링하고 load error에는 text fallback을 남긴다.
+- `scenario.visual`이 있으면 이를, 없으면 `workbench.visual`을 `<img>`와 visible `figcaption`으로 렌더링하고 load error에는 text fallback을 남긴다.
 - `scenario.diagram`이 있으면 participant header와 수직 lifeline을 가진 semantic sequence를 primary로 렌더링하고 legacy `route`는 호환·fallback 상태로 유지한다.
-- diagram은 `caption`, lane header, participant의 icon/kind/role/boundary, message의 verb/payload/kind/state/effect/evidenceScope, `notReached` label과 reason을 모두 표시한다.
+- diagram은 `caption`, lane header, participant의 icon/kind/role/boundary/system layer, message의 verb/payload/kind/state/effect/evidenceScope, `notReached` label과 reason을 모두 표시한다.
+- participant와 lifeline은 `systemLayer`의 surface/line을 유지하고, current/passed/failed/pending은 별도 state 표식으로 겹쳐 표시한다. 색상만으로 어느 위치나 상태인지 전달하지 않는다.
 - edge가 단계 선택 control이면 native button과 `from`, `to`, `verb`, `payload`, `before`, `after`, state를 포함한 접근 가능한 이름을 제공한다.
 - 다른 lane은 직전·다음 단계가 아니라 `선택 가능` 경로로 두고 progress를 현재 lane 범위로 제한한다. lane 경계의 수동 이동은 `이전 경로` 또는 `다음 경로`로 표시한다.
 - semantic evidence는 edge/node의 명시적 `codePointIds`만 사용하고 legacy flow step 위치를 병합하지 않는다.
@@ -495,7 +514,7 @@ compact context bar
 - data가 없거나 잘못된 경우 원인과 확인 파일을 알려주는 empty/fatal state를 렌더링한다.
 - section observer는 learning nav의 현재 위치를 `aria-current="location"`으로 표현한다.
 - 상태 변경 알림은 재렌더링 밖에 유지되는 짧은 `role="status"` 한 곳으로 제한하고 현재 lane, from/to, verb와 payload를 알린다.
-- 720px 이하에서는 participant 목록을 먼저 쌓지 않고 현재 message의 출발·도착·payload·before/after를 먼저 보여준다.
+- 900px 이하에서는 participant 목록을 먼저 쌓지 않고 현재 message의 출발·도착·각 시스템 레이어명·payload·before/after를 먼저 보여준다.
 - reduced motion에서는 transition과 smooth scroll을 제거하고 active edge의 방향·payload·상태를 정적으로 제공한다.
 
 ### 7.6 Shared Engine 로컬 복제

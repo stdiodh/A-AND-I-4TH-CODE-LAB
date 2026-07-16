@@ -113,6 +113,24 @@ A&I Backend Visual Lab은 일반 문서 페이지가 아니다.
   --color-correct: #176F72;
   --color-boundary-strong: #6F82B8;
 
+  --layer-outside-surface: #F1F5F9;
+  --layer-outside-line: #5B677A;
+  --layer-interface-surface: #E6F4F7;
+  --layer-interface-line: #0E7490;
+  --layer-application-surface: #F2EDFF;
+  --layer-application-line: #6D43A8;
+  --layer-resource-surface: #EAF5EE;
+  --layer-resource-line: #2C7352;
+  --layer-integration-surface: #FFF4D6;
+  --layer-integration-line: #926000;
+  --layer-runtime-surface: #EEF2F7;
+  --layer-runtime-line: #52627A;
+
+  --state-current: #2955E4;
+  --state-passed: #176F72;
+  --state-failed: #B4233C;
+  --state-pending: #6F82B8;
+
   --surface-canvas: var(--color-bg-base);
   --surface-primary: var(--color-card-white);
   --surface-secondary: var(--color-summary-bg);
@@ -126,21 +144,21 @@ A&I Backend Visual Lab은 일반 문서 페이지가 아니다.
   --ink-secondary: var(--color-subtext);
   --ink-quiet: var(--color-subtext);
 
-  --signal-active: var(--color-accent-blue);
-  --signal-muted: var(--color-summary-border);
-  --evidence: var(--color-accent-teal);
+  --signal-active: var(--state-current);
+  --signal-muted: var(--state-pending);
+  --evidence: var(--state-passed);
   --evidence-ink: var(--color-title-navy);
   --hypothesis: var(--color-subtext);
   --decision: var(--color-title-navy);
 
-  --danger: var(--color-incorrect);
-  --warning: var(--color-subtext);
-  --recovered: var(--color-correct);
-  --blocked: var(--color-subtext);
+  --danger: var(--state-failed);
+  --warning: var(--state-pending);
+  --recovered: var(--state-passed);
+  --blocked: var(--state-pending);
   --edge-request: var(--color-accent-blue);
   --edge-response: var(--color-accent-teal);
   --edge-persist: var(--color-title-navy);
-  --edge-failure: var(--color-incorrect);
+  --edge-failure: var(--state-failed);
 
   --border-strong: var(--color-boundary-strong);
   --border-soft: var(--color-outline-soft);
@@ -159,7 +177,20 @@ A&I Backend Visual Lab은 일반 문서 페이지가 아니다.
 | Evidence Teal | `#3F8996` | 관찰 결과와 확인 증거 |
 | Boundary Line | `#C9D6F3` | 계층, trust, runtime, pipeline 경계 |
 
-`#176F72`는 작은 회복 상태 text의 대비를 위한 semantic support color, `#6F82B8`는 흰 작업면에서 3:1 이상의 비텍스트 경계 대비를 위한 support color다. 둘은 core accent로 반복하지 않고 각각 `--color-correct`, `--color-boundary-strong`을 통해서만 사용한다.
+`#176F72`는 통과·회복 상태 text의 대비를 위한 support color, `#6F82B8`는 대기 상태와 흰 작업면의 강한 구조선에 사용하는 support color다. 기존 `--color-correct`, `--color-boundary-strong`은 호환을 위해 유지하고 새 진행 표현은 `--state-passed`, `--state-pending`을 사용한다. 둘을 core accent로 반복하지 않는다.
+
+시스템 위치와 실행 상태는 서로 다른 색상 축이다. 위치는 participant가 어느 책임 층에 있는지를 계속 보여주고, 상태는 현재 message의 진행 여부만 표시한다.
+
+| `systemLayer` | 화면 label | Surface | Line | 의미 |
+|---|---|---|---|---|
+| `outside` | 외부·호출자 | `#F1F5F9` | `#5B677A` | 사용자, client, 개발 도구처럼 시스템 밖에서 시작하는 주체 |
+| `interface` | 입구·출구 | `#E6F4F7` | `#0E7490` | Controller, filter, handler, protocol endpoint |
+| `application` | 서비스·정책 | `#F2EDFF` | `#6D43A8` | use case, orchestration, domain/application policy |
+| `resource` | 상태·데이터 | `#EAF5EE` | `#2C7352` | repository, DB, memory, cache처럼 상태를 보유하는 책임 |
+| `integration` | 연동·메시징 | `#FFF4D6` | `#926000` | 외부 API, mail, broker, queue와 adapter |
+| `runtime` | 실행·배포 | `#EEF2F7` | `#52627A` | build, artifact, process, container, host와 pipeline |
+
+`current`, `passed`, `failed`, `pending`은 각각 `#2955E4`, `#176F72`, `#B4233C`, `#6F82B8`을 사용한다. 실패색은 실패 message와 중단 표식에만 쓰며 application layer의 보라색이나 integration layer의 황갈색을 경고 의미로 재해석하지 않는다. 모든 위치와 상태는 visible label을 함께 제공한다.
 
 공통 spacing, radius, elevation과 motion도 토큰으로만 확장한다.
 
@@ -313,16 +344,18 @@ radius는 small 8px, medium 14px, large 20px 안에서만 사용한다. hover에
 - `from === to`는 같은 lifeline을 되돌아오는 self-call loop로, `response`는 역방향 화살표로, `event`는 점선 message로, `failure`는 중단 표식과 도달하지 않은 책임으로 구분한다.
 - 코드 근거는 파일 경로 badge가 아니라 학생이 확인할 한 문장으로 시작한다. 바로 아래에 저장소의 실제 핵심 코드 3~12줄을 놓고, 끝에 이 코드가 바꾸는 상태나 다음 책임을 한 문장으로 적는다. 전체 파일 위치는 꼭 필요할 때만 접힌 참고 영역에 둔다.
 - node의 `boundary`는 `Controller`, `Persistence`, `Trust`, `Build time`, `Runtime`, `Broker`처럼 판단이나 책임이 실제로 바뀌는 위치를 visible text로 표시한다.
+- 모든 node는 `systemLayer`를 가진다. `outside`, `interface`, `application`, `resource`, `integration`, `runtime` 중 실제 시스템 위치 하나를 선택하고 participant header, layer rail과 lifeline에 같은 위치 label을 유지한다.
 - 서로 다른 lane을 하나의 실행 시간축으로 합치지 않는다. 현재 lane 안에서만 `지남`, `현재 관찰`, `다음`을 사용하고 다른 lane은 `선택 가능`으로 표시한다.
 - progress는 전체 edge 합계가 아니라 현재 lane 이름과 `현재 단계 / lane 단계 수`를 보여준다. lane 끝의 이동은 `다음 경로`로 명시하고 학생이 수동으로 이동한다.
 - semantic edge와 evidence는 edge/node의 명시적 `codePointIds`로 연결하며 legacy flow step의 위치를 비례 상속하지 않는다.
 - `lane`은 동시에 존재하지만 성격이 다른 흐름을 분리한다. 주문 응답과 비동기 event 전달, build와 verify, Before와 After를 하나의 직선으로 합치지 않는다.
 - `caption`은 선택한 조건의 전체 경로를 한 문장으로 읽어준다.
 - `notReached`는 opacity로 숨기지 않고 실행되지 않은 대상과 이유를 함께 표시한다.
+- `diagram.participants`는 전체 비교 경로의 안정적인 정렬 기준일 수 있지만, 공개된 active lane에는 그 lane의 `steps[].from`과 `steps[].to`에 실제 등장하는 participant만 표시한다. 필요할 때 `lane.participants`로 이 부분집합의 순서만 명시하며 step node를 누락하지 않는다.
 
 `system-icons.svg`는 공통 outline 원본과 하위 호환 자료로 보존한다. 실제 participant header는 직접 렌더링 가능한 `docs/visual-lab/assets/icons/{icon}.svg`를 `<img>`로 사용한다. icon은 책임을 빠르게 찾는 보조 수단이며 alt를 비워 장식으로 처리하고 label, role, boundary를 visible text로 유지한다. load error에서도 기술 역할 label이 남아야 한다. hub와 sequence entry의 favicon은 같은 저장소 로컬 `assets/visual-lab-mark.svg`를 사용한다.
 
-각 시퀀스는 주제에서 직접 나온 설명 SVG 한 개를 `workbench.visual`의 `src`, `alt`, `caption`으로 연결한다. 설명 SVG는 memory와 DB 생명주기, cache 상태, subscription fan-out처럼 학생이 먼저 알아야 할 관계만 보여주고 interactive path나 text를 대체하지 않는다. desktop에서는 원본 비율을 유지하되 높이를 360px 이내로 제한하고, mobile에서는 그림 영역의 전체 폭을 사용한다. 390px 화면의 약 320px 그림 영역에서도 가장 작은 visible text가 10.5px 아래로 축소되지 않도록 관계 수, viewBox 폭과 SVG 내부 font-size를 함께 조정한다. `assets/SOURCE.md`와 `assets/LICENSES.md`에 출처와 사용 조건을 기록한다. 외부 icon CDN, emoji, 외부 font, script와 network URL은 사용하지 않는다.
+각 시퀀스는 주제에서 직접 나온 기본 설명 SVG 한 개를 `workbench.visual`의 `src`, `alt`, `caption`으로 연결한다. 한 시퀀스 안에서도 입력 조건에 따라 핵심 구조가 달라지면 `scenario.visual`에 같은 세 필드를 두어 해당 조건의 그림으로 교체할 수 있다. 설명 SVG는 memory와 DB 생명주기, cache 상태, subscription fan-out처럼 학생이 먼저 알아야 할 관계만 보여주고 interactive path나 text를 대체하지 않는다. desktop에서는 원본 비율을 유지하되 높이를 360px 이내로 제한하고, mobile에서는 그림 영역의 전체 폭을 사용한다. 390px 화면의 약 320px 그림 영역에서도 가장 작은 visible text가 10.5px 아래로 축소되지 않도록 관계 수, viewBox 폭과 SVG 내부 font-size를 함께 조정한다. `assets/SOURCE.md`와 `assets/LICENSES.md`에 출처와 사용 조건을 기록한다. 외부 icon CDN, emoji, 외부 font, script와 network URL은 사용하지 않는다.
 
 다이어그램의 `check`와 evidence는 실제 증거보다 넓은 보장을 주장하지 않는다. mock 호출은 외부 시스템 통합 성공, `contextLoads`는 HTTP 계약, in-memory map은 영속 멱등성, 배포 명령 종료는 서비스 정상 응답의 증거가 아니다. publisher confirm이 없으면 `convertAndSend` 정상 반환도 broker acceptance·routing을 보장하지 않고, 모호한 전송 예외도 미전송을 확정하지 않는다.
 
@@ -391,7 +424,7 @@ Repository context
 - 980px 이하에서는 header, workbench header와 evidence를 1열로 바꾼다.
 - 720px 이하에서는 learning nav를 가로 이동 가능한 대체 nav로 두고 scenario control과 결과를 세로로 재배치한다.
 - 390px에서 page-level horizontal overflow가 없어야 한다.
-- 720px 이하에서는 전체 participant 카드를 먼저 쌓지 않는다. 현재 message를 `출발 책임 → 도착 책임`, payload, before → after 순서의 압축 lifeline으로 먼저 보여주고 이전·다음 단계는 수동 control로 이동한다.
+- 900px 이하에서는 전체 participant 카드를 먼저 쌓지 않는다. 현재 message를 `출발 책임 → 도착 책임`, 각 책임의 시스템 레이어명, payload, before → after 순서의 압축 lifeline으로 먼저 보여주고 이전·다음 단계는 수동 control로 이동한다.
 - legacy Signal Trace와 긴 code만 해당 영역 안에서 제한적인 가로 스크롤을 허용하며 semantic diagram 이해를 가로 스크롤에 의존시키지 않는다.
 - 긴 한국어, 파일 경로, 명령과 상태 label은 잘리거나 겹치지 않아야 한다.
 

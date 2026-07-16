@@ -205,7 +205,7 @@ workbench: {
 | `kind` | 필수 | 아래 13개 시퀀스 kind 중 하나를 사용한다. |
 | `title` | 필수 | 주차별 primary workbench 이름을 짧게 쓴다. |
 | `instruction` | 필수 | 학습자가 무엇을 선택하고 관찰할지 능동형 문장으로 쓴다. |
-| `visual` | 필수 | `{ src, alt, caption }`으로 주제 설명 SVG와 대체 설명을 연결한다. |
+| `visual` | 필수 | `{ src, alt, caption }`으로 시퀀스의 기본 주제 설명 SVG와 대체 설명을 연결한다. |
 | `terms` | 필수 | 예측 전에 필요한 용어를 `{ term, meaning }` 2개 이상으로 짧게 설명한다. 화면에서는 기본 닫힌 `details`로 제공해 모르는 학생이 먼저 확인하되 첫 행동을 밀어내지 않는다. |
 | `comparison` | 필수 | `{ label, left, right }`로 관찰 뒤 구분할 두 조건의 인과 차이를 설명한다. |
 | `nodes` | 필수 | scenario diagram이 참조할 책임 주체와 관찰 resource를 id로 관리하는 keyed catalog다. |
@@ -222,6 +222,7 @@ workbench: {
 | `prompt` | 필수 | 현재 조건에서 관찰할 질문 또는 상황이다. |
 | `observationTitle` | 필수 | 예측 뒤 실제 경로에서 확인할 한 가지 질문을 자연스러운 한국어로 쓴다. |
 | `prediction` | 필수 | `{ prompt, options, answer, explanation }`으로 관찰 전 판단과 관찰 뒤 설명을 연결한다. |
+| `visual` | 선택 | 기본 구조와 다른 조건만 `{ src, alt, caption }`으로 scenario 전용 SVG를 연결한다. 생략하면 `workbench.visual`을 사용한다. |
 | `theoryRef` | 필수 | `../../../theory.md#seq-NN`처럼 현재 조건을 설명하는 이론 절을 명시적 anchor까지 연결한다. |
 | `reflection` | 필수 | `{ prompt, hint }`로 관찰한 인과 규칙을 학습자가 자기 말로 다시 쓰게 한다. 입력 내용은 현재 화면 상태에만 두고 전송하지 않는다. |
 | `route` | 필수 | 실제 actor, destination, 저장소 또는 책임 경계를 순서대로 쓴 문자열 배열이다. |
@@ -259,7 +260,8 @@ workbench: {
       icon: "client",
       kind: "actor",
       role: "HTTP 요청 전송",
-      boundary: "Client"
+      boundary: "Client",
+      systemLayer: "outside"
     },
     validation: {
       label: "Spring MVC · Bean Validation",
@@ -267,6 +269,7 @@ workbench: {
       kind: "validation gate",
       role: "argument binding 뒤 Controller method 전에 입력 조건 판단",
       boundary: "HTTP argument resolution",
+      systemLayer: "interface",
       codePointIds: ["controller-create"]
     },
     handler: {
@@ -274,21 +277,24 @@ workbench: {
       icon: "handler",
       kind: "exception handler",
       role: "검증 예외를 HTTP 오류 응답으로 변환",
-      boundary: "Error response mapping"
+      boundary: "Error response mapping",
+      systemLayer: "interface"
     },
     controller: {
       label: "PostController",
       icon: "api",
       kind: "request handler",
       role: "검증을 통과한 요청만 수신",
-      boundary: "Web"
+      boundary: "Web",
+      systemLayer: "interface"
     },
     service: {
       label: "PostService",
       icon: "service",
       kind: "application service",
       role: "유효한 요청의 처리 흐름 조립",
-      boundary: "Application"
+      boundary: "Application",
+      systemLayer: "application"
     }
   },
   scenarios: [
@@ -382,14 +388,15 @@ workbench: {
 `nodes` 작성 규칙:
 
 - key는 scenario 안에서 안정적으로 재사용할 kebab-case 또는 camelCase id다.
-- 각 node는 `label`, `icon`, `kind`, `role`, `boundary`를 모두 가진다. 실제 코드와 연결할 때만 `codePointIds`를 추가한다.
+- 각 node는 `label`, `icon`, `kind`, `role`, `boundary`, `systemLayer`를 모두 가진다. 실제 코드와 연결할 때만 `codePointIds`를 추가한다.
 - node는 actor, service, handler, repository, storage, broker, runtime 또는 상태 자체를 관찰할 artifact/resource다.
 - method, command, HTTP verb, 검증 행위처럼 두 책임 사이에서 일어나는 동작은 node가 아니라 edge `verb`다.
 - request DTO, token, event, query, command와 전달 파일은 기본적으로 edge `payload`다. artifact의 생성·실행 상태를 비교할 때만 별도 node로 둔다.
 - `boundary`는 화면에 표시되는 책임 경계 이름이며 색상이나 위치만으로 대신하지 않는다.
+- `systemLayer`는 `outside`, `interface`, `application`, `resource`, `integration`, `runtime` 중 하나다. 호출자, 입구·출구, 서비스·정책, 상태·데이터, 연동·메시징, 실행·배포라는 시스템 위치를 뜻하며 진행 상태를 뜻하지 않는다.
 - `icon`은 `person`, `client`, `tool`, `api`, `service`, `repository`, `database`, `gate`, `security`, `token`, `external`, `mail`, `test`, `fixture`, `cache`, `websocket`, `broker`, `runtime`, `artifact`, `config`, `pipeline`, `host`, `refactor`, `event`, `queue`, `consumer`, `evidence`, `memory`, `handler`, `response` 중 하나다.
 - icon은 각 토픽 레포의 직접 렌더링 가능한 `docs/visual-lab/assets/icons/{icon}.svg`에 연결한다. `system-icons.svg`는 원본 sprite와 호환 자료로만 보존한다.
-- 주제 설명 SVG와 icon은 `docs/visual-lab/assets`를 벗어나지 않으며 `viewBox`를 가지고 외부 URL, script와 font를 포함하지 않는다.
+- `workbench.visual`과 선택적 `scenario.visual`의 `src`는 `docs/visual-lab/assets` 안의 로컬 SVG를 가리킨다. 두 visual은 모두 비어 있지 않은 `alt`, visible `caption`, `viewBox`를 가지며 외부 URL, script와 font를 포함하지 않는다.
 - `assets/SOURCE.md`와 `assets/LICENSES.md`에 생성·파생 관계와 사용 조건을 기록한다. 외부 CDN, emoji와 network asset을 사용하지 않는다.
 
 `diagram` 작성 규칙:
@@ -406,11 +413,12 @@ workbench: {
 - `notReached`는 실행되지 않은 node 또는 책임 label과 그 이유를 함께 제공한다. 단순 opacity나 빈 node로 대신하지 않는다.
 - `route`, `snapshot`, `evidence`, `outcome`, `flowId`는 기존 진행 상태와 evidence 연결을 위해 함께 유지한다.
 - lane은 독립 비교 경로일 수 있으므로 전체 `lanes[].steps`를 하나의 시간축으로 해석하지 않는다. 현재 lane만 단계 진행 상태를 가지며 다른 lane은 선택 가능한 경로다.
-- actor 표시 순서를 고정해야 할 때 `diagram.participants`에 `workbench.nodes` key를 중복 없이 쓴다. 생략하면 현재 lane의 첫 등장 순서를 사용한다.
+- actor 표시 순서를 고정해야 할 때 `diagram.participants`에 `workbench.nodes` key를 중복 없이 쓴다. 이 값은 전체 비교 경로의 정렬 기준이며, active lane 화면에는 현재 lane step의 `from`과 `to`에 등장하는 node만 남긴다.
+- 특정 lane의 participant 순서를 따로 고정할 때만 `lane.participants`에 현재 lane의 node key를 중복 없이 쓴다. 이 배열은 해당 lane의 모든 step `from`/`to`를 포함해야 하며 관련 없는 node를 추가하지 않는다.
 - 한 lane을 본 뒤 비교할 경로가 정해져 있을 때만 `lane.nextLaneIds`에 같은 diagram의 lane id를 쓴다.
 - progress는 현재 lane 범위만 사용한다. 학생이 수동으로 lane을 넘을 때는 `다음 경로`라고 표시한다.
 - semantic edge의 code evidence는 edge의 `codePointIds`, 도착 node, 출발 node 순서의 명시적 연결만 사용한다. legacy flow step의 배열 위치를 상속하지 않는다.
-- 모바일 세로 흐름에서도 `verb`, `payload`, `kind`, boundary와 state label을 생략하지 않는다.
+- 모바일 세로 흐름에서도 `verb`, `payload`, `kind`, boundary, `systemLayer` label과 state label을 생략하지 않는다.
 - edge가 단계 선택 control이면 keyboard focus와 접근 가능한 이름에 `from`, `to`, `verb`, `payload`, state가 모두 포함되어야 한다.
 - reduced motion은 전달 애니메이션만 제거하며 caption, 방향, payload와 notReached 이유는 정적으로 유지한다.
 

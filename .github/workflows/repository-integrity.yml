@@ -30,9 +30,13 @@ jobs:
         run: |
           python3 -m py_compile scripts/validate-manifest.py
           python3 -m py_compile scripts/validate-visual-labs.py
+          python3 -m py_compile scripts/validate-visual-lab-colors.py
 
       - name: Validate manifest and sequence documents
         run: python3 scripts/validate-manifest.py
 
       - name: Validate Visual Lab structure
         run: python3 scripts/validate-visual-labs.py
+
+      - name: Validate Visual Lab colors
+        run: python3 scripts/validate-visual-lab-colors.py

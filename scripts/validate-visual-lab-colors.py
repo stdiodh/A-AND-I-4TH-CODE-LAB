@@ -2,9 +2,9 @@
 """Validate Visual Lab color tokens across topic subrepositories.
 
 This script checks Visual Lab CSS files without external dependencies. Colors
-outside the central design guide token set are warnings, while red/orange/yellow
-dominant colors, neon-like colors, dark-mode backgrounds, and external CSS/font
-imports are failures.
+outside the central design guide token set are warnings. Unapproved saturated
+colors, dark-mode backgrounds, missing system-layer/state tokens, and external
+CSS/font imports are failures.
 """
 
 from __future__ import annotations
@@ -64,6 +64,19 @@ ALLOWED_COLORS = {
     "#6F82B8",
     "#ECFBFA",
     "#EEF4FF",
+    "#F1F5F9",
+    "#5B677A",
+    "#E6F4F7",
+    "#0E7490",
+    "#F2EDFF",
+    "#6D43A8",
+    "#EAF5EE",
+    "#2C7352",
+    "#FFF4D6",
+    "#926000",
+    "#EEF2F7",
+    "#52627A",
+    "#B4233C",
 }
 
 TOKEN_BY_COLOR = {
@@ -89,6 +102,41 @@ TOKEN_BY_COLOR = {
     "#6F82B8": "--color-boundary-strong",
     "#ECFBFA": "--color-correct-bg",
     "#EEF4FF": "--color-incorrect-bg",
+    "#F1F5F9": "--layer-outside-surface",
+    "#5B677A": "--layer-outside-line",
+    "#E6F4F7": "--layer-interface-surface",
+    "#0E7490": "--layer-interface-line",
+    "#F2EDFF": "--layer-application-surface",
+    "#6D43A8": "--layer-application-line",
+    "#EAF5EE": "--layer-resource-surface",
+    "#2C7352": "--layer-resource-line",
+    "#FFF4D6": "--layer-integration-surface",
+    "#926000": "--layer-integration-line",
+    "#EEF2F7": "--layer-runtime-surface",
+    "#52627A": "--layer-runtime-line",
+    "#B4233C": "--state-failed",
+}
+
+REQUIRED_LAYER_TOKENS = {
+    "--layer-outside-surface": "#F1F5F9",
+    "--layer-outside-line": "#5B677A",
+    "--layer-interface-surface": "#E6F4F7",
+    "--layer-interface-line": "#0E7490",
+    "--layer-application-surface": "#F2EDFF",
+    "--layer-application-line": "#6D43A8",
+    "--layer-resource-surface": "#EAF5EE",
+    "--layer-resource-line": "#2C7352",
+    "--layer-integration-surface": "#FFF4D6",
+    "--layer-integration-line": "#926000",
+    "--layer-runtime-surface": "#EEF2F7",
+    "--layer-runtime-line": "#52627A",
+}
+
+REQUIRED_STATE_TOKENS = {
+    "--state-current": "#2955E4",
+    "--state-passed": "#176F72",
+    "--state-failed": "#B4233C",
+    "--state-pending": "#6F82B8",
 }
 
 
@@ -215,26 +263,50 @@ def replacement_hint(color: str) -> str:
 
 
 def validate_role_tokens(result: RepoResult, path: Path, content: str) -> None:
-    role_pattern = re.compile(r"--role-(?:error|warning)\s*:\s*(#[0-9A-Fa-f]{3,8})", re.IGNORECASE)
+    role_pattern = re.compile(r"--role-(error|warning)\s*:\s*(#[0-9A-Fa-f]{3,8})", re.IGNORECASE)
+    expected_colors = {
+        "error": "#B4233C",
+        "warning": "#6F82B8",
+    }
     for match in role_pattern.finditer(content):
-        color = normalize_hex(match.group(1))
-        if color not in {
-            "#2955E4",
-            "#3F8996",
-            "#2F62F4",
-            "#2C9FA0",
-            "#176F72",
-            "#EAF0FB",
-            "#D4E8E9",
-            "#ECFBFA",
-            "#EEF4FF",
-        }:
+        role = match.group(1).lower()
+        color = normalize_hex(match.group(2))
+        expected_color = expected_colors[role]
+        if color != expected_color:
             add_issue(
                 result,
                 "FAIL",
                 path,
-                f"role-error/role-warning uses non blue/teal token: {color}",
-                "role-error와 role-warning 이름은 유지해도 실제 색상은 blue/teal 계열 토큰으로 매핑합니다.",
+                f"role-{role} must use {expected_color}, got {color}",
+                "오류와 경고 역할은 시스템 레이어색이 아니라 해당 중앙 state token으로 매핑합니다.",
+            )
+
+
+def validate_required_semantic_tokens(result: RepoResult, path: Path, content: str) -> None:
+    declarations = {
+        match.group(1): normalize_hex(match.group(2))
+        for match in re.finditer(
+            r"(--(?:layer|state)-[a-z-]+)\s*:\s*(#[0-9A-Fa-f]{3,8})",
+            content,
+        )
+    }
+    for token, expected_color in {**REQUIRED_LAYER_TOKENS, **REQUIRED_STATE_TOKENS}.items():
+        actual_color = declarations.get(token)
+        if actual_color is None:
+            add_issue(
+                result,
+                "FAIL",
+                path,
+                f"required semantic token is missing: {token}",
+                "시스템 위치 색과 진행 상태 색을 분리한 중앙 layer/state token 계약을 선언합니다.",
+            )
+        elif actual_color != expected_color:
+            add_issue(
+                result,
+                "FAIL",
+                path,
+                f"{token} must be {expected_color}, got {actual_color}",
+                "8개 토픽에서 동일한 중앙 layer/state palette를 사용합니다.",
             )
 
 
@@ -251,6 +323,8 @@ def validate_css_file(result: RepoResult, path: Path) -> None:
         )
 
     validate_role_tokens(result, path, content)
+    if path.name == "styles.css":
+        validate_required_semantic_tokens(result, path, content)
 
     seen_colors: set[str] = set()
     for match in HEX_PATTERN.finditer(content):

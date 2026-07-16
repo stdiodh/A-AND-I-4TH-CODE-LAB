@@ -798,3 +798,126 @@ docs/visual-lab/sequences/NN/visual-lab-data.js
 ```
 
 기존 `index.html`, icon과 topic SVG는 경로 계약 또는 기술 설명이 바뀌지 않는 한 유지한다. 새 framework, package, external font, CDN과 장식 asset은 추가하지 않는다.
+
+## 17. System Layer Color와 읽기 부담 보정 계획
+
+이 절은 2026-07-16에 02, 07, 12를 1440px과 390px에서 다시 읽은 뒤 추가한다. 기존 구현은 현재 message와 상태 변화는 보여주지만 participant가 어느 시스템 레이어에 속하는지는 같은 흰색 node, 같은 회색 lifeline과 시퀀스마다 다른 `boundary` 문구를 읽어야만 알 수 있다.
+
+### 17.1 Subject, Audience, Single Job
+
+- Subject: 실제 백엔드 요청이 외부 호출자, 입구, 애플리케이션 판단, 상태 자원, 외부 연동과 실행 기반 사이를 이동하는 위치 추적 환경.
+- Audience: Controller, Service, Repository, DB를 개별 용어로는 알지만 Redis, broker, container까지 포함한 전체 흐름에서 현재 위치를 즉시 구분하기 어려운 학습자.
+- Single Job: 학생이 현재 message의 출발·도착 node가 어느 레이어에 있고 어떤 경계를 건너는지 5초 안에 말하게 한다.
+
+### 17.2 Layer Contract와 지원 Palette
+
+기존 `kind`와 자유로운 `boundary` 문구에서 위치를 추론하지 않는다. 모든 `workbench.nodes`에 다음 `systemLayer` 중 하나를 명시한다.
+
+```text
+outside      외부·호출자
+interface    입구·출구
+application  서비스·정책
+resource     상태·데이터
+integration  연동·메시징
+runtime      실행·배포
+```
+
+core palette는 유지한다. 아래 색은 participant header, layer rail, lifeline, mobile actor와 topic SVG의 실제 system node에만 쓰는 지원 palette다. 본문은 항상 System Ink를 사용한다.
+
+```css
+:root {
+  --layer-outside-surface: #F1F5F9;
+  --layer-outside-line: #5B677A;
+  --layer-interface-surface: #E6F4F7;
+  --layer-interface-line: #0E7490;
+  --layer-application-surface: #F2EDFF;
+  --layer-application-line: #6D43A8;
+  --layer-resource-surface: #EAF5EE;
+  --layer-resource-line: #2C7352;
+  --layer-integration-surface: #FFF4D6;
+  --layer-integration-line: #926000;
+  --layer-runtime-surface: #EEF2F7;
+  --layer-runtime-line: #52627A;
+
+  --state-current: #2955E4;
+  --state-passed: #176F72;
+  --state-failed: #B4233C;
+  --state-pending: #6F82B8;
+}
+```
+
+작은 layer label 대비를 실제 surface 위에서 다시 계산해 `outside` line은 `#5B677A`(5.23:1), `resource` line은 `#2C7352`(5.11:1)로 확정했다. 두 값은 4.5:1 경계에 걸치지 않도록 여유를 둔다.
+
+레이어와 상태는 같은 CSS property를 덮어쓰지 않는다.
+
+```text
+레이어: 옅은 node surface, 상단 strip, lifeline, visible 한국어 label
+상태: 현재 outline, message arrow, check·× marker, 현재·지남·다음·중단 text
+```
+
+### 17.3 Layout Comparison
+
+#### Direction A — Participant 색상만 변경
+
+```text
+[외부 Client] [입구 Controller] [앱 Service] [상태 DB]
+      │               │              │          │
+```
+
+변경량은 작지만 색을 모르면 그룹과 경계를 다시 각 node에서 읽어야 한다.
+
+#### Direction B — Layer Rail과 Active-lane Lifeline
+
+```text
+외부          입구·출구       서비스·정책         상태·데이터
+Client   ->   Controller  ->  Service  -> Repo -> MySQL
+  │               │              │          │       │
+  └──────── 현재 message와 before -> after ─────────┘
+```
+
+Direction B를 선택한다. 연속된 participant의 `systemLayer`를 한 번 묶어 읽고, node에도 같은 label과 tint를 반복해 가로·세로 위치를 함께 확인한다. 여러 lane이 있는 시퀀스는 전체 diagram의 participant 합집합이 아니라 현재 lane에 등장하는 participant만 배치한다. 다른 lane은 selector와 분기 설명으로 유지한다.
+
+모바일에서는 desktop lifeline을 축소하지 않고 다음처럼 현재 경계를 직접 표시한다.
+
+```text
+[외부·호출자] Client
+       요청 ↓
+[입구·출구] PostController
+```
+
+### 17.4 Topic SVG 적용
+
+- 00~06의 복제된 blue/teal node 문법을 실제 `systemLayer` node 색으로 교체한다.
+- 07의 EMPTY, HIT, TTL, DEL 상태 문법은 유지하고 조회 정책은 application, Redis와 MySQL은 resource로 직접 표시한다.
+- 08의 transport, subscription과 fan-out 구조는 유지하고 outside, interface, integration, resource 위치를 구분한다.
+- 09~10은 artifact와 실행 기반, build/deploy/verify gate를 구분한다. 실패는 layer fill이 아니라 state marker로 표시한다.
+- 11의 유지/변경 lane 색은 보존하고 lane 안 node에만 layer 색을 적용한다.
+- 12의 producer return/broker delivery fork 색은 보존하고 Controller, Service, broker, queue와 consumer node 위치를 별도로 표시한다. 고정 SVG와 선택 scenario가 다른 이야기를 하지 않도록 필요한 scenario에 선택적 visual을 제공한다.
+
+### 17.5 Motion
+
+기존 Diagnostic Lifeline의 수동 step 전환 한 번만 유지한다. layer color는 움직이지 않고 현재 message의 state outline과 arrow만 240ms로 갱신한다. reduced motion에서는 같은 위치·state label을 즉시 표시한다.
+
+### 17.6 Genericity Critique와 보정
+
+첫 안처럼 6색을 page card 전체에 적용하면 일반 pastel architecture dashboard가 된다. icon 종류마다 색을 주면 기술 위치가 아니라 장식 분류가 되고, 모든 SVG를 같은 6단 column으로 만들면 cache cycle, runtime nesting과 event fork의 고유 구조가 사라진다.
+
+따라서 다음처럼 제한한다.
+
+- page chrome, 질문, code, evidence와 checklist는 기존 중립 표면을 유지한다.
+- layer 색은 실제 system node와 lifeline에만 쓴다.
+- 상태는 layer background를 덮지 않고 outline, line style, marker와 text로 표현한다.
+- 각 SVG의 주제별 topology는 유지하고 node의 위치 문법만 통일한다.
+- 색을 제거해도 visible layer label, boundary, from/to, verb와 payload로 같은 의미를 읽을 수 있어야 한다.
+
+### 17.7 Completion Gate
+
+- Visual Lab HTML의 raw `&` lint 오류가 0이다.
+- 147개 node가 허용된 `systemLayer`를 가진다.
+- 13개 SVG가 승인된 layer/state palette만 사용하고 layer 이름을 visible text로 제공한다.
+- 12의 active lane은 필요한 participant만 렌더링하며 desktop에서 전체 lane 합집합을 강제하지 않는다.
+- 390px current message에 출발·도착 layer와 boundary가 남는다.
+- text 대비 4.5:1, non-text boundary 3:1을 만족한다.
+- 13개 sequence와 50개 scenario에서 page overflow, broken image, console error가 0이다.
+- keyboard focus, 200% zoom, reduced motion과 forced colors에서도 위치와 상태를 구분할 수 있다.
+- shared CSS와 JavaScript는 8개 토픽 저장소에서 같은 hash를 유지한다.

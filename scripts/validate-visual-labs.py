@@ -62,6 +62,14 @@ WORKBENCH_KINDS = {
     "event",
 }
 WORKBENCH_TONES = {"signal", "blocked", "warning", "recovered"}
+SYSTEM_LAYERS = {
+    "outside",
+    "interface",
+    "application",
+    "resource",
+    "integration",
+    "runtime",
+}
 DIAGRAM_EDGE_KINDS = {
     "request",
     "call",
@@ -148,6 +156,11 @@ CDN_URL_PATTERN = re.compile(
 )
 REMOTE_CSS_PATTERN = re.compile(r"@import\s+url\((['\"])?https?://", re.IGNORECASE)
 REMOTE_SVG_VALUE_PATTERN = re.compile(r"(?:https?:)?//|data:", re.IGNORECASE)
+RAW_HTML_AMPERSAND = re.compile(r"&(?!#\d+;|#x[0-9A-Fa-f]+;|[A-Za-z][A-Za-z0-9]+;)")
+RAW_HTML_AMPERSAND_EXCLUDED_BLOCK = re.compile(
+    r"<!--.*?-->|<(script|style)\b[^>]*>.*?</\1\s*>",
+    re.IGNORECASE | re.DOTALL,
+)
 ANSWER_EXPOSURE_FAIL = re.compile(
     r"(sourceAnswerBranch|answerBranch|\b\d{2}-answer\b|git\s+(checkout|switch)\s+\S*answer)",
     re.IGNORECASE,
@@ -573,6 +586,15 @@ def validate_html_assets(result: RepoResult, path: Path, expected_scripts: set[s
         return
 
     content = path.read_text(encoding="utf-8")
+    entity_check_content = RAW_HTML_AMPERSAND_EXCLUDED_BLOCK.sub("", content)
+    if RAW_HTML_AMPERSAND.search(entity_check_content):
+        add_issue(
+            result,
+            "FAIL",
+            path,
+            "Visual Lab HTML contains an unescaped ampersand",
+            "HTML text와 속성의 &는 &amp;처럼 유효한 character reference로 작성합니다.",
+        )
     parser = AssetParser()
     parser.feed(content)
 
@@ -740,7 +762,7 @@ def validate_renderable_svg(result: RepoResult, path: Path, purpose: str) -> Non
             if name == "style" and REMOTE_SVG_VALUE_PATTERN.search(value):
                 add_issue(result, "FAIL", path, f"{purpose} asset uses an external style URL", "외부 폰트·이미지·스타일 URL을 제거합니다.")
 
-    if purpose == "workbench visual" and view_box:
+    if purpose.endswith(" visual") and view_box:
         text_nodes = [element for element in root.iter() if element.tag.endswith("text")]
         if text_nodes:
             source = path.read_text(encoding="utf-8")
@@ -792,6 +814,51 @@ def resolve_visual_asset(result: RepoResult, data_path: Path, src: str, purpose:
     return target
 
 
+def validate_visual_definition(
+    result: RepoResult,
+    data_path: Path,
+    visual: Any,
+    purpose: str,
+) -> None:
+    if not isinstance(visual, dict):
+        add_issue(
+            result,
+            "FAIL",
+            data_path,
+            f"{purpose} must be an object",
+            "주제 설명 SVG를 src, alt, caption 문자열로 연결합니다.",
+        )
+        return
+
+    for field_name in ("src", "alt", "caption"):
+        if not isinstance(visual.get(field_name), str) or not visual[field_name].strip():
+            add_issue(
+                result,
+                "FAIL",
+                data_path,
+                f"{purpose} has no {field_name}",
+                "설명 에셋에는 src, 대체 텍스트, 학생용 caption을 모두 작성합니다.",
+            )
+
+    src = visual.get("src")
+    if not isinstance(src, str) or not src.strip():
+        return
+
+    target = resolve_visual_asset(result, data_path, src.strip(), purpose)
+    if not target:
+        return
+    if target.suffix.lower() != ".svg":
+        add_issue(
+            result,
+            "FAIL",
+            data_path,
+            f"{purpose} is not SVG: {src}",
+            "외부 의존 없이 확대 가능한 저장소 로컬 SVG를 사용합니다.",
+        )
+        return
+    validate_renderable_svg(result, target, purpose)
+
+
 def validate_semantic_workbench(
     result: RepoResult,
     data_path: Path,
@@ -799,26 +866,7 @@ def validate_semantic_workbench(
     code_points: list[Any],
 ) -> None:
     visual = workbench.get("visual")
-    if not isinstance(visual, dict):
-        add_issue(
-            result,
-            "FAIL",
-            data_path,
-            "workbench visual must be an object",
-            "주제 설명 SVG를 workbench.visual의 src, alt, caption으로 연결합니다.",
-        )
-    else:
-        for field_name in ("src", "alt", "caption"):
-            if not isinstance(visual.get(field_name), str) or not visual[field_name].strip():
-                add_issue(result, "FAIL", data_path, f"workbench visual has no {field_name}", "설명 에셋에는 src, 대체 텍스트, 학생용 caption을 모두 작성합니다.")
-        src = visual.get("src")
-        if isinstance(src, str) and src.strip():
-            target = resolve_visual_asset(result, data_path, src.strip(), "workbench visual")
-            if target:
-                if target.suffix.lower() != ".svg":
-                    add_issue(result, "FAIL", data_path, f"workbench visual is not SVG: {src}", "외부 의존 없이 확대 가능한 저장소 로컬 SVG를 사용합니다.")
-                else:
-                    validate_renderable_svg(result, target, "workbench visual")
+    validate_visual_definition(result, data_path, visual, "workbench visual")
 
     nodes = workbench.get("nodes")
     if not isinstance(nodes, dict) or not nodes:
@@ -851,9 +899,17 @@ def validate_semantic_workbench(
         if not isinstance(node_id, str) or not node_id.strip() or not isinstance(node, dict):
             add_issue(result, "FAIL", data_path, "workbench nodes contain an invalid entry", "node key와 값 객체를 유효하게 작성합니다.")
             continue
-        for field_name in ("label", "icon", "kind", "role", "boundary"):
+        for field_name in ("label", "icon", "kind", "role", "boundary", "systemLayer"):
             if not isinstance(node.get(field_name), str) or not node[field_name].strip():
-                add_issue(result, "FAIL", data_path, f"workbench node {node_id!r} has no {field_name}", "각 node에 label, icon, kind, role, boundary를 작성합니다.")
+                add_issue(result, "FAIL", data_path, f"workbench node {node_id!r} has no {field_name}", "각 node에 label, icon, kind, role, boundary, systemLayer를 작성합니다.")
+        if node.get("systemLayer") not in SYSTEM_LAYERS:
+            add_issue(
+                result,
+                "FAIL",
+                data_path,
+                f"workbench node {node_id!r} uses an unsupported systemLayer",
+                "outside, interface, application, resource, integration, runtime 중 실제 위치 하나를 사용합니다.",
+            )
         if node.get("icon") not in SYSTEM_ICON_NAMES:
             add_issue(result, "FAIL", data_path, f"workbench node {node_id!r} uses an unsupported icon", "assets/icons에 정의된 icon 이름을 사용합니다.")
         elif isinstance(node.get("icon"), str):
@@ -875,6 +931,8 @@ def validate_semantic_workbench(
     for scenario_index, scenario in enumerate(scenarios):
         if not isinstance(scenario, dict):
             continue
+        if scenario.get("visual") is not None:
+            validate_visual_definition(result, data_path, scenario.get("visual"), "scenario visual")
         diagram = scenario.get("diagram")
         location = f"workbench scenario {scenario_index} diagram"
         if not isinstance(diagram, dict):
@@ -916,6 +974,15 @@ def validate_semantic_workbench(
             for field_name in ("label", "description"):
                 if not isinstance(lane.get(field_name), str) or not lane[field_name].strip():
                     add_issue(result, "FAIL", data_path, f"{lane_location} has no {field_name}", "lane의 책임과 관찰 목적을 설명합니다.")
+
+            lane_participants = lane.get("participants")
+            if lane_participants is not None and (
+                not isinstance(lane_participants, list)
+                or not lane_participants
+                or any(not isinstance(item, str) or item not in nodes for item in lane_participants)
+                or len(lane_participants) != len(set(lane_participants))
+            ):
+                add_issue(result, "FAIL", data_path, f"{lane_location} has invalid participants", "현재 lane에 실제 등장하는 workbench.nodes key만 중복 없이 나열합니다.")
 
             next_lane_ids = lane.get("nextLaneIds")
             if next_lane_ids is not None and (
@@ -961,6 +1028,24 @@ def validate_semantic_workbench(
                 if step.get("evidenceScope") not in EVIDENCE_SCOPES:
                     add_issue(result, "FAIL", data_path, f"{step_location} has an invalid evidenceScope", "code, test, runtime, manual, concept 중 실제 확인 범위를 하나 고릅니다.")
                 validate_code_point_ids(step.get("codePointIds"), step_location)
+
+            if isinstance(lane_participants, list) and steps:
+                step_node_ids = {
+                    step.get(endpoint)
+                    for step in steps
+                    if isinstance(step, dict)
+                    for endpoint in ("from", "to")
+                    if step.get(endpoint) in nodes
+                }
+                missing_participants = sorted(step_node_ids - set(lane_participants))
+                if missing_participants:
+                    add_issue(
+                        result,
+                        "FAIL",
+                        data_path,
+                        f"{lane_location} participants omit step nodes: {', '.join(missing_participants)}",
+                        "lane.participants에는 현재 lane의 모든 from/to node를 포함합니다.",
+                    )
 
         not_reached = diagram.get("notReached")
         if not_reached is not None:
