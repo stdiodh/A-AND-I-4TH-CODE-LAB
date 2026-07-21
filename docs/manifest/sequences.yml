@@ -143,7 +143,7 @@ sequences:
     visualLabPath: "docs/visual-lab/index.html"
     visualLabHubPath: "docs/visual-lab/index.html"
     visualLabSequencePath: "docs/visual-lab/sequences/05/index.html"
-    runCommand: "docker compose up -d && ./gradlew bootRun"
+    runCommand: "test -f .env || cp .env.example .env && docker compose config --quiet && docker compose up -d --wait --wait-timeout 120 && ./gradlew bootRun"
     testCommand: "./gradlew test"
     swaggerPath: "/swagger"
     prerequisites:
