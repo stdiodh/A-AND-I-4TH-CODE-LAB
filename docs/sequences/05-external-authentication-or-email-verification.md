@@ -1,290 +1,171 @@
-# 05. 외부 인증과 SMTP 계정 복구 입문
+# 05. 외부 인증과 SMTP 계정 복구
 
 ## 목표
 
-기존 JWT 인증 흐름 위에 OAuth2 로그인, SMTP 메일 발송, 계정 복구 유스케이스를 작은 단계로 붙입니다.
-한 번에 깊게 구현하기보다 외부 연동 결과를 우리 서비스 사용자와 안전하게 연결하는 흐름에 집중합니다.
+최신 `04-answer`의 JWT 인증·인가 흐름 위에 Google OAuth2 로그인과 SMTP 기반 비밀번호 재설정을 연결합니다.
+학생은 외부 profile을 내부 계정과 안전하게 연결하고, reset token의 수명 주기와 트랜잭션 이후 비동기 메일 발송 경계를 테스트로 확인합니다.
 
-## 이 시퀀스에서 배우는 것
+## 브랜치와 문서
 
-- Google OAuth2 리다이렉트 흐름
-- provider와 providerId로 외부 사용자를 식별하는 방법
-- LOCAL 사용자와 OAUTH 사용자의 차이
-- 메일 발송 책임을 인터페이스와 구현체로 나누는 방법
-- 계정 복구 요청에서 민감한 정보 노출을 피하는 방법
-- 외부 계정이 어려울 때 mock 또는 local profile로 흐름을 확인하는 방법
-
-## 시작 브랜치
+- 토픽 레포: `spring-boot-db-access-lab`
+- 가이드: `main`
+- 학생 시작점: `05-implementation`
+- 참고 정답: `05-answer`
+- 토픽 상세 문서: `README.md`, `docs/theory.md`, `docs/implementation.md`, `docs/checklist.md`
 
 ```bash
 git checkout 05-implementation
 ```
 
-## 실습 전 확인
+실제 Google client secret과 SMTP password는 저장소에 기록하지 않고 로컬 `.env`에만 둡니다.
 
-- 토픽 레포: `spring-boot-db-access-lab`
-- 가이드 브랜치: `main`
-- 시작 브랜치: `05-implementation`
-- 이전 기준: `04-answer`
-- 실제 Google client secret, SMTP password는 코드와 문서에 쓰지 않습니다.
-- 외부 계정 준비가 어렵다면 mock 또는 local profile 대안으로 흐름을 먼저 확인합니다.
+## 직접 구현할 범위
 
-## 단계 구성
+`05-implementation`에서 수정할 범위는 **5개 파일의 TODO 6개**입니다.
+표에 없는 production 파일은 제공된 연결 계약이므로 먼저 테스트와 호출 흐름만 확인합니다.
 
-05는 하나의 시퀀스지만 내부를 세 단계로 나눕니다.
+| 순서 | 파일 | 메서드 | 확인할 흐름 |
+|---:|---|---|---|
+| 1 | `oauth/security/CustomOAuthUserService.kt` | `normalizePrincipal` | 검증된 OAuth profile 정규화 |
+| 2 | `oauth/service/OAuthAccountService.kt` | `handleOAuthLogin` | 내부 계정 연결과 JWT 발급 |
+| 3 | `oauth/security/OAuthLoginHandlers.kt` | `onAuthenticationSuccess` | 안전한 성공 redirect |
+| 4-A | `recovery/service/AccountRecoveryService.kt` | `requestPasswordReset` | reset token 발급·회전·cooldown |
+| 4-B | `recovery/service/AccountRecoveryService.kt` | `confirmPasswordReset` | token 확정·비밀번호 변경·단일 사용 |
+| 5 | `recovery/mail/SmtpRecoveryMailSender.kt` | `sendPasswordResetMail` | SMTP 메시지 조립·발송 |
 
-```text
-05-A OAuth2 로그인 흐름
-05-B SMTP 메일 발송 흐름
-05-C 계정 복구 유스케이스
-```
-
-## 05-A. OAuth2 로그인 흐름
-
-### 목표
-
-Google OAuth2 로그인 성공 결과에서 provider, providerId, email을 읽고 우리 서비스 사용자와 연결합니다.
-외부 로그인 성공 후에도 우리 서비스 기준의 JWT 또는 사용자 정보 응답이 필요하다는 점을 확인합니다.
-
-### 사전 준비
-
-- `04-answer`의 회원가입, 로그인, JWT 흐름을 이해합니다.
-- Google OAuth2 설정값은 환경변수 또는 local profile로 주입합니다.
-- 외부 계정 준비가 어렵다면 OAuth 사용자 정보를 mock으로 제공하는 테스트 또는 local profile을 사용합니다.
-
-### 구현할 TODO
-
-1. OAuth2 로그인 시작 URL과 redirect 흐름을 확인합니다.
-2. Google 사용자 정보에서 `email`과 provider id를 읽습니다.
-3. provider 이름과 providerId를 내부 사용자 식별 기준으로 저장합니다.
-4. LOCAL 사용자와 OAUTH 사용자의 차이를 코드에서 드러냅니다.
-5. provider가 검증한 이메일인지 확인하고, 기존 로컬 계정의 자동 연결 위험을 설명합니다.
-6. 기존 OAuth 계정의 이메일이 바뀌었을 때 다른 내부 계정과 충돌하지 않는지 확인합니다.
-7. OAuth2 성공 후 자체 JWT를 URL query가 아닌 fragment로 전달하는 데모 흐름을 확인합니다.
-
-### 실행 확인 방법
-
-- 브라우저에서 OAuth2 로그인 시작 URL로 이동합니다.
-- 성공 후 redirect URL에 필요한 결과가 붙는지 확인합니다.
-- 외부 계정이 없다면 mock profile로 `OAuthAccountService` 흐름을 먼저 확인합니다.
-
-### 실패 케이스
-
-- OAuth 응답에 email이 없습니다.
-- providerId를 읽지 못합니다.
-- 이미 같은 email을 가진 LOCAL 사용자가 있습니다.
-- 기존 OAuth 계정의 변경된 email을 다른 내부 계정이 이미 사용하고 있습니다.
-- OAuth2 성공은 했지만 우리 서비스 JWT가 발급되지 않습니다.
-- JWT를 query parameter에 넣어 서버 로그, 방문 기록, referrer에 남깁니다. 데모는 fragment를 사용하고 운영에서는 일회용 code 또는 HttpOnly cookie를 검토합니다.
-- 검증되지 않은 이메일이나 명시적 동의 없이 기존 로컬 계정을 자동 연결합니다.
-
-### 테스트 방법
-
-```bash
-./gradlew test
-```
-
-테스트에서는 외부 Google 서버에 직접 의존하지 않습니다.
-OAuth profile 값을 fake 객체나 service 단위 테스트로 넣어 내부 사용자 연결 흐름을 확인합니다.
-
-### 자주 발생하는 문제
-
-- 외부 로그인 성공만으로 우리 서비스 인증이 끝났다고 생각합니다.
-- providerId 대신 email만으로 외부 사용자를 구분하려고 합니다.
-- 실제 client secret을 코드, README, 테스트에 적습니다.
-- OAuth2 설정 실패와 우리 서비스 사용자 연결 실패를 같은 문제로 봅니다.
-
-### 완료 기준
-
-- provider와 providerId가 왜 필요한지 설명할 수 있습니다.
-- LOCAL 사용자와 OAUTH 사용자의 차이를 설명할 수 있습니다.
-- OAuth2 성공 후 우리 서비스 JWT 또는 사용자 정보 흐름으로 이어집니다.
-- 외부 계정 없이도 service 단위 흐름을 테스트할 수 있습니다.
-
-## 05-B. SMTP 메일 발송 흐름
-
-### 목표
-
-계정 복구에서 메일 발송 책임을 분리합니다.
-비즈니스 흐름은 `RecoveryMailSender` 인터페이스에 의존하고, 실제 SMTP 발송은 `SmtpRecoveryMailSender` 구현체가 담당하게 합니다.
-
-### 사전 준비
-
-- 메일 발송에 필요한 host, port, username, password를 환경변수로 준비합니다.
-- 실제 SMTP password는 코드와 문서에 쓰지 않습니다.
-- 실습 중에는 local profile 또는 fake sender로 발송 흐름만 확인할 수 있습니다.
-
-### 구현할 TODO
-
-1. `RecoveryMailSender` 인터페이스를 확인합니다.
-2. `SmtpRecoveryMailSender` 구현체에서 메일 제목, 본문, 수신자를 구성합니다.
-3. SMTP 설정을 환경변수 기반으로 연결합니다.
-4. 실제 비밀번호가 로그나 응답에 노출되지 않도록 확인합니다.
-5. 외부 SMTP가 어렵다면 fake sender로 service 테스트를 먼저 작성합니다.
-
-### 실행 확인 방법
-
-- local profile에서 fake sender 또는 테스트 SMTP 값을 사용합니다.
-- 실제 SMTP를 사용할 때는 환경변수만 설정하고 코드는 바꾸지 않습니다.
-- 로그에는 발송 성공/실패 흐름만 남기고 password는 남기지 않습니다.
-
-### 실패 케이스
-
-- SMTP 인증 실패
-- host 또는 port 설정 오류
-- 수신자 email 형식 오류
-- 메일 발송 예외가 계정 복구 API 응답을 과도하게 노출함
-
-### 테스트 방법
-
-```bash
-./gradlew test
-```
-
-테스트에서는 SMTP 서버에 직접 의존하지 않습니다.
-`RecoveryMailSender`를 fake 또는 mock으로 대체해 service가 어떤 메일 발송 요청을 만드는지 확인합니다.
-
-### 자주 발생하는 문제
-
-- `AccountRecoveryService`에서 JavaMailSender를 직접 사용합니다.
-- SMTP password를 application.yaml이나 문서에 평문으로 적습니다.
-- 메일 발송 실패를 사용자에게 너무 자세히 알려줍니다.
-- 외부 SMTP 연결이 안 된 것을 계정 복구 로직 실패로 오해합니다.
-
-### 완료 기준
-
-- 메일 발송 책임이 인터페이스와 구현체로 분리되었습니다.
-- SMTP 설정은 환경변수 기반입니다.
-- 테스트는 실제 SMTP 서버 없이 통과합니다.
-- 민감정보가 코드, 문서, 로그에 노출되지 않습니다.
-
-## 05-C. 계정 복구 유스케이스
-
-### 목표
-
-비밀번호 재설정 요청에서 임시 식별자를 포함한 reset link를 만들고 메일 발송 책임으로 넘기는 흐름을 작게 설계합니다.
-토큰 저장, 만료 검증, 실제 비밀번호 변경, 재사용 차단은 이번 답안에 포함되지 않은 후속 보안 구현으로 구분합니다.
-
-### 사전 준비
-
-- 05-B의 `RecoveryMailSender` 흐름이 분리되어 있어야 합니다.
-- 복구 링크 base URL은 환경변수로 주입합니다.
-- 존재하지 않는 email 요청도 안전하게 응답해야 합니다.
-
-### 구현할 TODO
-
-1. 비밀번호 재설정 요청 DTO를 확인합니다.
-2. 요청 email로 사용자를 조회합니다.
-3. 존재하지 않는 email이어도 계정 존재 여부를 노출하지 않습니다.
-4. 복구 토큰을 생성합니다.
-5. 임시 식별자를 포함한 reset link를 만들고 메일 발송 요청으로 넘깁니다.
-6. 현재 구현만으로는 재설정을 완료할 수 없는 이유를 설명합니다.
-7. 후속 구현에 필요한 토큰 저장, 만료, 일회성 사용 기준을 정리합니다.
-
-### 실행 확인 방법
-
-- 비밀번호 재설정 요청 API를 호출합니다.
-- 존재하는 email과 존재하지 않는 email이 같은 형태의 응답을 주는지 확인합니다.
-- 테스트 또는 local profile로 reset link 생성 결과를 확인합니다.
-
-### 실패 케이스
-
-- 존재하지 않는 email 요청
-- 만료된 토큰, 이미 사용한 토큰, token/email 불일치, 새 password validation은 후속 구현에서 다룰 실패 케이스입니다.
-
-### 테스트 방법
-
-```bash
-./gradlew test
-```
-
-현재 테스트는 애플리케이션 context를 확인합니다. reset link와 sender 호출은 local fake sender 또는 후속 단위 테스트로 확인할 수 있습니다.
-외부 SMTP나 실제 Google 계정은 테스트 필수 조건이 아닙니다.
-
-### 자주 발생하는 문제
-
-- 존재하지 않는 email을 바로 알려줍니다.
-- 임시 UUID가 URL에 있다는 이유만으로 안전한 reset token 저장소가 완성됐다고 생각합니다.
-- token, email, password 같은 민감한 값을 로그에 남깁니다.
-- 계정 복구와 로그인 인증을 같은 책임으로 섞습니다.
-
-### 완료 기준
-
-- 복구 요청 API가 계정 존재 여부를 노출하지 않습니다.
-- 현재 reset link 생성 범위와 후속 토큰 저장·만료·재사용 차단 범위를 구분합니다.
-- 메일 발송은 `RecoveryMailSender`를 통해 요청됩니다.
-- `./gradlew test`가 통과합니다.
-
-## 필요한 환경변수
-
-실제 값은 로컬 환경이나 GitHub Secrets에만 둡니다.
-문서와 코드에는 아래 이름만 사용합니다.
+실습은 다음 순서를 유지합니다.
 
 ```text
-GOOGLE_CLIENT_ID
-GOOGLE_CLIENT_SECRET
-SPRING_MAIL_HOST
-SPRING_MAIL_PORT
-SPRING_MAIL_USERNAME
-SPRING_MAIL_PASSWORD
-APP_FRONTEND_URL
-APP_PASSWORD_RESET_URL
-JWT_SECRET
+OAuth profile -> account -> redirect
+-> recovery request -> recovery confirm
+-> AFTER_COMMIT -> bounded async executor -> SMTP
 ```
 
-## 실행 방법
+`PasswordResetTokenCodec`, token entity·repository, controller, `RecoveryMailDispatch`, Security 설정과 HTML 화면은 제공된 scaffold입니다.
+TODO 구현 중 기대 입력·출력과 실행 순서를 확인하는 용도로 읽습니다.
+
+## 구현 계약
+
+### OAuth2
+
+- Google의 `email_verified=true`인 profile만 받습니다.
+- 외부 사용자는 `provider + providerId`로 식별합니다.
+- 같은 email의 LOCAL 계정이나 다른 외부 계정을 자동 연결하지 않습니다.
+- 성공 redirect의 JWT는 query가 아니라 fragment로 전달하고, HTML 실습 화면이 메모리로 읽은 즉시 URL에서 제거합니다.
+- 실패 응답에는 token, email, provider 원문 오류 같은 내부 정보를 노출하지 않습니다.
+
+### 계정 복구
+
+- 요청: `POST /account-recovery/password-reset`
+- 확정: `POST /account-recovery/password-reset/confirm`
+- raw token은 `SecureRandom` 32-byte를 Base64URL without padding으로 인코딩합니다.
+- DB에는 raw token이 아니라 SHA-256 hash만 저장합니다.
+- 사용자당 token 행 하나를 회전하므로 재발급하면 이전 token이 무효가 됩니다.
+- 기본 TTL은 15분, LOCAL 사용자별 재요청 cooldown은 1분입니다.
+- 확정 시 BCrypt 비밀번호 변경과 token의 `usedAt` 기록을 같은 트랜잭션에서 처리합니다.
+- 요청은 계정 존재, OAuth 계정, SMTP 결과를 구분하지 않고 유효한 형식이면 `Cache-Control: no-store`와 202를 반환합니다.
+- 확정 성공은 `Cache-Control: no-store`와 204입니다. 만료·재사용·회전·존재하지 않는 token은 같은 400 `INVALID_PASSWORD_RESET_TOKEN`으로 처리합니다.
+
+### 메일 발송
+
+- token 저장 트랜잭션이 commit된 뒤 `AFTER_COMMIT` event가 실행됩니다.
+- `RecoveryMailDispatch`는 크기가 제한된 executor에서 SMTP를 비동기로 호출하므로 HTTP 요청은 발송 완료를 기다리지 않습니다.
+- recipient, raw token, reset link, SMTP 내부 오류를 공개 응답이나 로그에 남기지 않습니다.
+
+## 로컬 실행
+
+`.env.example`을 복사하고 로컬 값만 수정합니다.
 
 ```bash
-docker compose up -d
+test -f .env || cp .env.example .env
+docker compose config --quiet
+docker compose up -d --wait --wait-timeout 120
 ./gradlew bootRun
 ```
 
-외부 계정 설정이 준비되지 않았다면 `./gradlew test`와 local profile 대안으로 내부 흐름을 먼저 확인합니다.
+기본 compose는 MySQL과 Mailpit을 실행합니다.
+SMTP는 `localhost:1025`, Mailpit 화면은 `http://localhost:8025`이며 인증과 TLS 없이 로컬 메일·reset link를 확인할 수 있습니다.
 
-## 테스트 방법
+주요 환경변수:
+
+- OAuth: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+- redirect: `APP_FRONTEND_URL`, `APP_PASSWORD_RESET_URL`
+- reset 정책: `APP_PASSWORD_RESET_TOKEN_TTL=PT15M`, `APP_PASSWORD_RESET_RESEND_COOLDOWN=PT1M`
+- 발신자: `APP_RECOVERY_MAIL_FROM`
+- SMTP: `SPRING_MAIL_HOST`, `SPRING_MAIL_PORT`, `SPRING_MAIL_USERNAME`, `SPRING_MAIL_PASSWORD`
+- SMTP 옵션: `SPRING_MAIL_PROPERTIES_MAIL_SMTP_*`
+- 기존 설정: `DB_*`, `JWT_*`
+
+확인 위치:
+
+- 인증 실습 화면: `http://localhost:8080/auth-practice/`
+- OAuth 시작: `http://localhost:8080/oauth2/authorization/google`
+- Google callback: `http://localhost:8080/login/oauth2/code/google`
+- Mailpit: `http://localhost:8025`
+- Swagger: `http://localhost:8080/swagger`
+
+## 자동 테스트와 증거
+
+자동 테스트는 Google과 SMTP 외부 네트워크를 사용하지 않습니다.
+OAuth profile, mail sender와 JavaMailSender 경계는 mock 또는 fake로 대체하고 내부 정책과 최신 04 회귀를 확인합니다.
+
+제공된 scaffold gate는 TODO 구현 전에도 통과해야 합니다.
 
 ```bash
-./gradlew test
+./gradlew test \
+  --tests '*PasswordResetTokenCodecTest' \
+  --tests '*PasswordResetTokenRepositoryTest' \
+  --tests '*RecoveryMailDispatchTest' \
+  --tests '*RecoveryMailEventIntegrationTest' \
+  --tests '*AccountRecoveryController*Test' \
+  --tests '*AuthPracticePageIntegrationTest'
 ```
 
-테스트가 확인하는 것:
+초기 `05-implementation`에서 전체 테스트를 실행하면 104개 중 TODO와 연결된 24개 실패가 정상입니다.
+설정·컴파일 실패나 그 밖의 실패를 의도된 starter 상태로 취급하면 안 됩니다.
 
-- 현재 자동 테스트는 애플리케이션 context를 확인합니다.
-- OAuth service, 메일 발송 위임, 토큰 만료와 재사용 차단은 구현을 확장할 때 별도 단위 테스트가 필요합니다.
-- 실제 OAuth와 SMTP 흐름은 외부 계정 또는 명시적인 test double 없이 검증됐다고 판단하지 않습니다.
+모든 TODO를 완성한 starter와 `05-answer`의 완료 gate:
 
-실패하면 먼저 볼 것:
+```bash
+rg -n 'TODO\(' src/main/kotlin
+./gradlew test
+node --check src/main/resources/static/auth-practice/app.js
+git diff --check
+```
 
-- 실제 Google client secret이나 SMTP password가 테스트에 필요하도록 만들지 않았는지 확인합니다.
-- mock/local profile이 활성화되어 외부 네트워크 없이 테스트가 실행되는지 봅니다.
-- 토큰 만료를 구현한다면 현재 시간 기준과 만료 시간 계산을 먼저 확인합니다.
+- TODO 검색: 0건
+- 전체 테스트: 104/104 통과
+- JavaScript 문법과 diff 검사: 통과
 
-완료 기준:
+자동 테스트의 증거 범위는 profile 검증·계정 연결·redirect, recovery 202/204, token hash·회전·TTL·단일 사용, cooldown, AFTER_COMMIT bounded async와 SMTP 메시지 조립입니다.
 
-- context 테스트가 외부 연동 없이 통과합니다.
-- OAuth, SMTP, reset link는 자동 테스트와 수동 확인 범위를 구분해 설명할 수 있습니다.
+## 실제 외부 연동 확인
 
-## 확인할 API 또는 화면
+실제 Google consent·callback과 Gmail 인증·수신은 자동 테스트와 별도의 수동 E2E입니다.
 
-- Swagger: `http://localhost:8080/swagger`
-- OAuth2 로그인 시작 URL
-- OAuth2 성공 후 URL fragment 기반 JWT 데모 흐름과 운영 환경의 안전한 교환 방식 차이
-- 비밀번호 재설정 메일 요청 API
-- reset link 생성 흐름
-- 메일 발송 성공/실패 로그
+1. Google console에 `http://localhost:8080/login/oauth2/code/google`을 callback URI로 등록합니다.
+2. 유효한 Google credential을 로컬 `.env`에 넣고 로그인·redirect·`/auth/me` 흐름을 확인합니다.
+3. Gmail을 사용할 때는 SMTP app password, TLS와 허용된 발신자를 로컬 환경변수로 override합니다.
+4. 복구 요청이 즉시 202를 반환하고 메일이 비동기로 도착하는지 확인합니다.
+5. reset 성공 204, 같은 token 재사용과 만료·회전 token의 동일한 공개 실패를 확인합니다.
+6. credential, email, token, reset link와 SMTP 내부 오류가 로그에 남지 않는지 확인합니다.
+
+외부 credential이 없을 때는 Mailpit과 자동 테스트까지가 로컬 실습 증거이며, 실제 Google·Gmail 성공으로 기록하지 않습니다.
 
 ## 완료 기준
 
-- 05-A OAuth2 사용자 연결 흐름을 설명할 수 있습니다.
-- 05-B 메일 발송 책임이 분리되었습니다.
-- 05-C reset link 생성 범위와 아직 구현하지 않은 토큰 저장, 만료, 실제 재설정 범위를 설명할 수 있습니다.
-- 외부 계정 없이도 mock/local profile로 핵심 흐름을 확인할 수 있습니다.
-- 민감한 값이 코드나 문서에 직접 노출되지 않았습니다.
-- `./gradlew test`가 통과합니다.
+- 5개 파일의 TODO 6개를 정해진 순서로 구현했습니다.
+- OAuth identity와 자동 연결 금지, 안전한 redirect 경계를 설명할 수 있습니다.
+- raw token과 DB hash, 15분 TTL, 사용자별 회전, 1분 cooldown과 단일 사용을 확인했습니다.
+- BCrypt 변경과 `usedAt` 처리가 같은 트랜잭션에 있습니다.
+- recovery 202/204와 일반화된 실패 응답을 확인했습니다.
+- AFTER_COMMIT·bounded async SMTP가 HTTP 응답과 분리되어 있습니다.
+- scaffold gate와 최종 104/104 테스트 결과를 구분합니다.
+- 실제 Google·Gmail 수동 E2E 여부를 자동 테스트와 구분해 기록합니다.
 
-## 정답과 비교하는 방법
+## 정답과 비교
 
-막혔거나 실습을 마친 뒤에만 참고 정답과 비교합니다.
+실습을 마친 뒤에만 참고 정답과 비교합니다.
 
 ```bash
 git diff 05-implementation..05-answer
@@ -293,4 +174,4 @@ git diff 05-implementation..05-answer
 ## 다음 시퀀스
 
 다음은 `06. 테스트와 검증`입니다.
-기존 Service 흐름을 테스트로 검증합니다.
+05에서 만든 정상·실패 계약을 더 작은 테스트 단위와 회귀 증거로 정리합니다.
