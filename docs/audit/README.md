@@ -24,7 +24,7 @@
 
 | 문서 | 상태 | 역할 |
 |---|---|---|
-| `sequence-06-testing-refactoring-plan.md` | 06 원격 전환 완료, Visual Lab·중앙 반영 대기 | 최신 05 기준으로 06 브랜치를 재정렬한 결과, Service 테스트 학습 범위, legacy 문서 정리와 후속 반영 gate를 기록한다. |
+| `sequence-06-testing-refactoring-plan.md` | 06 원격 전환 완료, Visual Lab·중앙 draft PR 검토 대기 | 최신 05 기준으로 06 브랜치를 재정렬한 결과, Service 테스트 학습 범위, legacy 문서 정리와 후속 반영 gate를 기록한다. |
 
 ## 화면 증거
 
