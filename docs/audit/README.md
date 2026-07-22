@@ -20,6 +20,12 @@
 
 계획 문서는 구현이 끝나면 삭제하지 않는다. 상단 상태를 `완료`로 바꾸고 실제 결과, 검증 명령과 최종 review 위치를 연결한다. 새로운 구현 규칙은 계획 문서에만 남기지 않고 위 중앙 기준 문서와 validator에 함께 반영한다.
 
+## 시퀀스 브랜치 기록
+
+| 문서 | 상태 | 역할 |
+|---|---|---|
+| `sequence-06-testing-refactoring-plan.md` | 06 원격 전환 완료, Visual Lab·중앙 반영 대기 | 최신 05 기준으로 06 브랜치를 재정렬한 결과, Service 테스트 학습 범위, legacy 문서 정리와 후속 반영 gate를 기록한다. |
+
 ## 화면 증거
 
 - `screenshots/visual-lab-redesign`: 최초 Guided Story 개편의 before/after 기록

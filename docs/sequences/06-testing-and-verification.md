@@ -2,17 +2,16 @@
 
 ## 목표
 
-이미 만든 Service 흐름과 인증/인가 흐름을 테스트로 다시 확인합니다.
-테스트 종류를 모두 넓히기보다 Service 단위 테스트와 핵심 HTTP 정책 테스트의 실행 기준을 명확히 잡습니다.
+최신 `05-answer`의 기능, 보안 계약과 자동 테스트를 그대로 보존한 채 Service 단위 테스트 네 개를 추가합니다.
+이미 제공된 104개 회귀 테스트와 학생이 새로 완성할 네 테스트의 역할을 구분하고, fixture·mock·assertion으로 Service의 판단을 격리해 검증합니다.
 
 ## 이 시퀀스에서 배우는 것
 
-- 테스트가 필요한 이유
-- Service 단위 테스트 범위
-- 정상 케이스와 실패 케이스 구분
-- fixture로 테스트 입력 정리
-- mock으로 의존성 분리
-- validation 400, 인증 실패 401, 인가 실패 403 확인
+- Given, When, Then으로 한 동작을 검증하는 방법
+- fixture로 반복 준비를 줄이되 판단에 중요한 값은 테스트 본문에 드러내는 기준
+- Repository, `PasswordEncoder`, `JwtTokenProvider`를 mock으로 분리하는 기준
+- 정상 반환, 기대 예외, 저장 인자와 collaborator 호출을 검증하는 방법
+- Service 단위 테스트와 HTTP 통합 테스트가 제공하는 증거의 차이
 
 ## 시작 브랜치
 
@@ -25,85 +24,101 @@ git checkout 06-implementation
 - 토픽 레포: `spring-boot-db-access-lab`
 - 가이드 브랜치: `main`
 - 시작 브랜치: `06-implementation`
-- 이전 기준: `05-answer`
-- 이번 시퀀스는 전체 E2E보다 Service 단위 테스트와 최소 HTTP 정책 테스트에 집중합니다.
+- 이전 기준: 최신 `05-answer`
+- production 코드, 설정과 기존 104개 테스트는 수정하지 않습니다.
+- Google·SMTP credential 없이 자동 테스트를 실행할 수 있습니다.
 
-## 구현할 TODO
+## 이번에 다루는 파일
 
-1. 테스트 대상 Service를 확인합니다.
-2. 테스트 fixture를 준비합니다.
-3. `PostService` 정상 케이스와 조회 실패 케이스를 테스트합니다.
-4. `PostService` 실패 케이스를 테스트합니다.
-5. `AuthService` 인증 성공 케이스를 테스트합니다.
-6. `AuthService` 인증 실패 케이스를 테스트합니다.
-7. 각 단위 테스트가 보장하는 범위와 보장하지 않는 HTTP 범위를 구분합니다.
-8. 테스트를 반복 실행하며 결과를 확인합니다.
-
-## 실행 방법
-
-```bash
-docker compose up -d
-./gradlew bootRun
+```text
+src/test/kotlin/com/andi/rest_crud/
+├── auth/service/AuthServiceTest.kt
+├── post/service/PostAuthorizationServiceTest.kt
+├── post/service/PostServiceTest.kt
+└── support/TestFixtureFactory.kt
 ```
 
-애플리케이션 실행이 꼭 필요하지 않은 테스트 실습은 테스트 명령을 먼저 실행해도 됩니다.
+`TestFixtureFactory`와 기존 `PostAuthorizationServiceTest`, `AuthServiceTest`의 signup 테스트 네 개는 완성된 상태로 제공됩니다.
+fixture를 새로 만드는 것이 아니라 다음 네 test body를 완성하는 것이 이번 과제입니다.
 
-## 테스트 방법
+| 대상 | 정상 흐름 | 실패 흐름 |
+|---|---|---|
+| `PostService` | 생성 입력과 principal email이 저장값과 응답에 보존됨 | 없는 id 조회가 `PostNotFoundException`을 발생시킴 |
+| `AuthService` | email 정규화 뒤 token과 만료 정보를 반환함 | 비밀번호 불일치가 JWT 생성 전에 중단됨 |
+
+## 구현 순서
+
+1. 제공된 `TestFixtureFactory`의 기본값과 override 지점을 읽습니다.
+2. `PostService.create`의 저장 인자와 응답 mapping을 검증합니다.
+3. `PostService.getById`의 조회 실패 예외를 검증합니다.
+4. `AuthService.login` 성공 시 email 정규화, password 비교, token과 expiry를 검증합니다.
+5. 비밀번호 불일치 시 `InvalidCredentialsException`과 JWT 미호출을 검증합니다.
+6. 대상 테스트를 먼저 실행한 뒤 전체 회귀 suite를 반복 실행합니다.
+
+## starter 상태 확인
+
+`06-implementation`은 test source가 컴파일되지만 신규 네 body의 명시적인 `TODO()` 때문에 전체 테스트가 실패합니다.
 
 ```bash
+./gradlew testClasses
 ./gradlew test
 ```
 
-테스트가 확인하는 것:
+첫 명령은 통과해야 합니다. 두 번째 명령은 신규 네 테스트만 `NotImplementedError`로 실패해야 합니다.
+기존 테스트, Spring context나 dependency 실패는 정상적인 starter 상태가 아닙니다.
 
-- unit test는 Service의 비즈니스 판단을 빠르게 확인합니다.
-- 이번 답안은 `PostService`와 `AuthService` 단위 테스트를 직접 완성합니다.
-- slice test와 integration test는 다음 확장 단계에서 한 계층의 연결과 HTTP 정책을 확인하는 선택지입니다.
-- validation 400, 인증 실패 401, 인가 실패 403은 현재 단위 테스트가 직접 보장하지 않는 범위로 구분합니다.
+## 답안 검증 순서
 
-권장 실행 순서:
+네 body를 완성한 뒤 좁은 범위부터 확인합니다.
 
-1. 실패하는 단위 테스트 하나를 먼저 읽습니다.
-2. 관련 fixture와 mock 설정을 확인합니다.
-3. 전체 `./gradlew test`를 다시 실행합니다.
-4. HTTP 통합 테스트를 추가한다면 요청 body, 인증 헤더, DB 준비 데이터를 함께 확인합니다.
+```bash
+./gradlew test \
+  --tests '*AuthServiceTest' \
+  --tests '*PostServiceTest'
 
-실패하면 먼저 볼 것:
+./gradlew test
+./gradlew test --rerun-tasks
+git diff --check
+```
 
-- 테스트 이름이 given/when/then 의도를 드러내는지 확인합니다.
-- 실패 메시지의 expected/actual 값을 비교합니다.
-- 외부 서비스가 필요한 테스트라면 mock 또는 local profile 대안을 사용합니다.
+답안은 기존 104개와 신규 4개, 최소 108개의 `@Test` 선언을 보존해야 하며 완성된 두 test file에 `TODO()`가 없어야 합니다.
 
-완료 기준:
+## 기존 HTTP 검증과의 경계
 
-- 단위 테스트가 보장하는 범위와 slice/integration test가 필요한 범위를 설명할 수 있습니다.
-- 테스트 실행 순서와 실패 메시지 읽는 법을 설명할 수 있습니다.
-- 전체 테스트가 통과하고, 각 테스트가 어떤 동작을 보장하는지 말할 수 있습니다.
+신규 네 Service 테스트는 실제 DB, BCrypt 계산, JWT 서명과 HTTP filter chain을 실행하지 않습니다.
+최신 05에는 다음 HTTP·보안 증거가 이미 통합 테스트로 제공됩니다.
 
-## 확인할 API 또는 화면
+- `auth/controller/AuthIntegrationTest.kt`: validation 400과 인증 흐름
+- `post/controller/PostAuthorizationIntegrationTest.kt`: 인증 실패 401과 인가 실패 403
+- `common/config/SecurityErrorHandlerTest.kt`: 보안 오류 응답 계약
 
-- 테스트 실행 결과
-- `PostServiceTest`
-- `AuthServiceTest`
-- 향후 통합 테스트 후보: validation 400, 인증 없는 보호 API 401, 다른 사용자 수정/삭제 403
-- 실패 테스트가 실패 이유를 정확히 보여주는지 확인
+신규 Service 테스트가 이 증거를 대신하지 않으며, 기존 통합 테스트도 삭제하거나 약화하지 않습니다.
 
-## 자주 발생하는 문제
+## Visual Lab
 
-- 모든 테스트를 실제 DB 기반으로 만들려고 합니다. Service 단위 테스트는 mock으로 책임을 분리하고, HTTP 정책은 작은 통합 테스트로 확인합니다.
-- 정상 케이스만 테스트합니다. 실패 케이스도 하나 이상 작성합니다.
-- 테스트마다 입력값을 길게 반복합니다. fixture로 반복 입력을 줄입니다.
-- 테스트 이름이 무엇을 검증하는지 드러나지 않습니다.
-- 401과 403을 같은 실패로 봅니다. 인증 실패와 인가 실패는 다른 상태 코드로 확인합니다.
+fixture, mock, Service, assertion과 테스트별 보장 범위를 화면에서 비교할 수 있습니다.
+
+- [06 테스트와 검증 Visual Lab](../../spring-boot-db-access-lab/docs/visual-lab/sequences/06/index.html)
+
+로컬 확인:
+
+```bash
+python3 -m http.server 8081 -d spring-boot-db-access-lab/docs/visual-lab
+```
+
+```text
+http://localhost:8081/sequences/06/
+```
 
 ## 완료 기준
 
-- Service 정상/실패 테스트가 작성되었습니다.
-- fixture 또는 테스트 helper로 반복 입력이 정리되었습니다.
-- 인증 성공/실패 흐름을 테스트로 확인했습니다.
-- 공개·보호·작성자 전용 API의 HTTP 정책은 현재 단위 테스트 밖의 통합 테스트 후보로 구분했습니다.
-- `./gradlew test`가 통과합니다.
-- 어떤 테스트가 어떤 동작을 보장하는지 설명할 수 있습니다.
+- 최신 05의 production, 설정과 기존 104개 테스트를 보존했습니다.
+- 제공 fixture를 사용해 `PostService` 2개, `AuthService` 2개 test body를 완성했습니다.
+- 생성 성공에서 저장 인자와 응답을 모두 검증했습니다.
+- 로그인 성공에서 정규화와 collaborator 협력을, 실패에서 JWT 미호출을 검증했습니다.
+- 대상 테스트, 전체 테스트와 `--rerun-tasks` 실행이 통과합니다.
+- 신규 Service 테스트와 기존 400·401·403 통합 테스트의 증거 범위를 설명할 수 있습니다.
+- Google·SMTP credential 없이 자동 테스트를 완료했습니다.
 
 ## 정답과 비교하는 방법
 
@@ -112,6 +127,8 @@ docker compose up -d
 ```bash
 git diff 06-implementation..06-answer
 ```
+
+두 브랜치의 학습 diff는 `AuthServiceTest.kt`, `PostServiceTest.kt`의 test body로 제한됩니다.
 
 ## 다음 시퀀스
 
